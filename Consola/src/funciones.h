@@ -14,6 +14,11 @@
 #include <sys/socket.h>
 #include <parser/parser.h>
 #include <commons/collections/list.h>
+#include <stdio.h>
+#include <commons/log.h>
+#include <string.h>
+#include <commons/string.h>
+#include <stdint.h>
 
 
 t_puntero definirVariable(t_nombre_variable variable);

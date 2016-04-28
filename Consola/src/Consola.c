@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <commons/log.h>
-#include <string.h>
-#include <commons/string.h>
-#include <stdint.h>
+
 #include "funciones.h"
 
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
@@ -60,7 +56,7 @@ int main(int argc, char **argv) {
 			if (codigoValido) {
 				printf("%s\n", linea);
 
-				//analizadorLinea(strdup("variable a"), &functions, &kernel_functions);
+				analizadorLinea(strdup(linea), &functions, &kernel_functions);
 			}
 
 			if (!strcmp(linea, "begin")) {
@@ -102,24 +98,24 @@ int main(int argc, char **argv) {
 }
 
 t_puntero definirVariable(t_nombre_variable variable) {
-	printf("Defino variable");
+	printf("Defino variable\n");
 	return variable;
 }
 t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
-	printf("Obtengo posicion variable");
+	printf("Obtengo posición variable\n");
 	return variable;
 }
 t_valor_variable dereferenciar(t_puntero puntero) {
-	printf("Dereferenciar");
+	printf("Dereferenciar\n");
 	return puntero;
 }
 void asignar(t_puntero puntero, t_valor_variable variable) {
-	printf("Asignar");
+	printf("Asignar\n");
 }
 void imprimir(t_valor_variable valor) {
-	printf("Imprimir");
+	printf("Imprimir\n");
 }
 void imprimirTexto(char* texto) {
-	printf("Imprimir texto");
+	printf("Imprimir texto\n");
 }
 
