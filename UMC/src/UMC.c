@@ -15,8 +15,7 @@
 #include <sys/socket.h>
 
 enum handshake {
-	NUCLEO = 3,
-	CPU = 4,
+	NUCLEO = 3, CPU = 4,
 };
 
 static const int PUERTO_SERVIDOR_UMC = 9000;
@@ -25,7 +24,6 @@ static const int PUERTO_SWAP = 9001;
 int main(void) {
 
 	//aca creo un hilo para la consola UMC
-
 
 	/*---------SOCKET SERVIDOR------------*/
 
@@ -37,9 +35,11 @@ int main(void) {
 	int servidorUMC = socket(AF_INET, SOCK_STREAM, 0);
 
 	int activado = 1;
-	setsockopt(servidorUMC, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
+	setsockopt(servidorUMC, SOL_SOCKET, SO_REUSEADDR, &activado,
+			sizeof(activado));
 
-	if (bind(servidorUMC, (void*) &direccionServidorUMC, sizeof(direccionServidorUMC)) != 0) {
+	if (bind(servidorUMC, (void*) &direccionServidorUMC,
+			sizeof(direccionServidorUMC)) != 0) {
 		perror("Falló el bind");
 		return 1;
 	}
@@ -57,26 +57,29 @@ int main(void) {
 	int socketCPU = accept(servidorUMC, (void*) &direccionCliente, &len);
 	printf("Recibí una conexión de la CPU\n");
 
-	char* buffer = malloc(100);
+	char* bufferServidor = malloc(100);
+	recv(socketCPU, bufferServidor, 100, 0);
+	printf("%s\n", bufferServidor);
 
-	//int bytesRecibidos = recv(socketCPU, buffer, strlen(buffer), 0);
+	free(bufferServidor);
 
-	//printf("CPU dice: %s\n", buffer);
+	/*---------SOCKET CLIENTE------------*/
 
-	while (1) {
-		recv(socketCPU, buffer, 100, 0);
-		printf("%s\n", buffer);
+	struct sockaddr_in direccionSwap;
+	direccionSwap.sin_family = AF_INET;
+	direccionSwap.sin_addr.s_addr = inet_addr("127.0.0.1");
+	direccionSwap.sin_port = htons(PUERTO_SWAP);
 
-		/*if (bytesRecibidos <= 0) {
-			perror("El chabón se desconectó o bla.");
-			return 1;
-		}
-
-		buffer[bytesRecibidos] = '\0';
-		printf("Me llegaron %d bytes con %s\n", bytesRecibidos, buffer);*/
+	int clienteUMC = socket(AF_INET, SOCK_STREAM, 0);
+	if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap)) != 0) {
+		perror("No se pudo conectar con el socket de SWAP");
+		return 1;
 	}
 
-	free(buffer);
+	char bufferCliente[100];
+	scanf("%s\n", bufferCliente);
+	send(clienteUMC, bufferCliente, 100, 0);
+
 
 	return EXIT_SUCCESS;
 
