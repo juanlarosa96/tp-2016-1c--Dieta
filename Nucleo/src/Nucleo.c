@@ -45,6 +45,9 @@ int main(void){
 		printf("Recibí una conexión de la consola \n");
 
 		//send(socketConsola, "Hola NetCat!", 13, 0);
+		char * codigoHandshake = malloc(15);
+		recv(socketConsola,codigoHandshake,15,0);
+		printf("%s\n",codigoHandshake);
 
 		char* buffer = malloc(7);
 
