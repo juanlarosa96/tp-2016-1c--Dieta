@@ -16,8 +16,8 @@ int main(void){
 	//socket SERVIDOR, falta refactor
 
 	struct sockaddr_in direccionServidor;
-		direccionServidor.sin_family = AF_INET;
-		direccionServidor.sin_addr.s_addr = INADDR_ANY;
+	direccionServidor.sin_family = AF_INET;
+	direccionServidor.sin_addr.s_addr = INADDR_ANY;
 	direccionServidor.sin_port = htons(PUERTO_SERVIDOR);
 
 		int servidorNucleo = socket(AF_INET, SOCK_STREAM, 0);
@@ -53,7 +53,7 @@ int main(void){
 		printf("Consola dice: %s\n", buffer);
 
 
-		listen(servidorNucleo, 100);
+		listen(servidorNucleo, 100); //Esperando que se conecte el CPU
 
 		int socketCpu = accept(servidorNucleo, (void*) &direccionCliente, &len);
 
