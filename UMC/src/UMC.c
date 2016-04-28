@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <commons/config.h>
 
 enum handshake {
 	NUCLEO = 3, CPU = 4,
@@ -21,9 +22,21 @@ enum handshake {
 static const int PUERTO_SERVIDOR_UMC = 9000;
 static const int PUERTO_SWAP = 9001;
 
-int main(void) {
+int main(int argc, char *argv[]) {
 
 	//aca creo un hilo para la consola UMC
+
+	//Recibe el archivo de config por parametro
+	if(argc != 2)
+	{
+		printf("Número incorrecto de parámetros\n");
+	}
+
+	else {
+ 	t_config* configuracion = config_create(argv[1]);
+	} //no estoy segura si lo lee bien o mal, tampoco se como probarlo
+
+
 
 	/*---------SOCKET SERVIDOR------------*/
 
