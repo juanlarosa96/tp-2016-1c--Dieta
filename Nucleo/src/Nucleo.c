@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include "commons/log.h"
 
 int main(int argc, char **argv){
 	argc = 2;
@@ -20,6 +21,11 @@ int main(int argc, char **argv){
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
 	//puts(value);
 
+	//Creo log para el Núcleo
+	t_log* 	logger;
+	logger = log_create("Núcelo.log", "NUCELO", 1, log_level_from_string("INFO"));
+	char *texto;
+	texto= "info";
 
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
@@ -34,9 +40,11 @@ int main(int argc, char **argv){
 		if (bind(servidorNucleo, (void*) &direccionServidor, sizeof(direccionServidor)) != 0) //bind reserva un puerto
 		{
 			perror("Falló el bind");
+			log_error(logger, "Se produjo un error creando el socket servidor", texto);
 			return 1;
 		}
 
+		log_info(logger, "Se estableciió correctamente el socket servidor", texto);
 		printf("Escuchando\n");
 		listen(servidorNucleo, 100);
 
@@ -48,6 +56,8 @@ int main(int argc, char **argv){
 		len = sizeof(struct sockaddr_in);
 		int socketConsola = accept(servidorNucleo, (void*) &direccionCliente, &len);
 
+		log_info(logger, "Se conectó con la consola", texto);
+
 		printf("Recibí una conexión de la consola \n");
 
 		char* buffer = malloc(100);
@@ -55,6 +65,7 @@ int main(int argc, char **argv){
 		buffer[bytesRecibidos] = '\0';
 
 		printf("Consola dice: %s\n", buffer);
+		log_info(logger, "Se recibió un mensaje", texto);
 
 
 		struct sockaddr_in direccionUmc;
@@ -81,9 +92,15 @@ int main(int argc, char **argv){
 
 		printf("Se conecto el CPU");
 
+		log_info(logger, "Se conectó al CPU", texto);
+
 		send(socketCpu, buffer, 100, 0);
 
+		log_info(logger, "Se envió un buffer al CPU", texto);
+
 		free(buffer);
+
+		log_destroy(logger);
 
 
 
