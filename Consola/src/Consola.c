@@ -1,4 +1,5 @@
 #include "funciones.h"
+#include "commons/log.h"
 
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
 		.AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
@@ -29,7 +30,7 @@ int main(int argc, char **argv) {
 		puts("ERROR");
 	}
 
-	int largoLinea = 128;
+	int largoLinea = 100;
 	char *linea = (char *) malloc(sizeof(char) * largoLinea); //Buffer de linea
 
 	char caracter = getc(archivo);
@@ -84,6 +85,12 @@ int main(int argc, char **argv) {
 		scanf("%s", comando);
 	}
 
+	//Creo log para la consola
+	t_log* 	logger;
+	logger = log_create("Consola.log", "CONSOLA", 1, log_level_from_string("INFO"));
+	char *texto;
+	texto= "info";
+
 	struct sockaddr_in direccionNucleo;
 
 	direccionNucleo.sin_family = AF_INET;
@@ -95,13 +102,21 @@ int main(int argc, char **argv) {
 	if (connect(socketNucleo, (void*) &direccionNucleo, sizeof(direccionNucleo))
 			!= 0) {
 		perror("No se pudo conectar");
+		log_error(logger, "No se pudo conectar al nucleo", texto);
 		return 1;
 	}
 
-	char mensaje[1000];
-	printf("Escriba mensaje: ");
+
+	log_info(logger, "Se conectó al núcleo", texto);
+
+	char mensaje[100];
+	printf("Escriba mensaje: \n");
 	scanf("%s", mensaje);
 	send(socketNucleo, mensaje, strlen(mensaje), 0);
+	log_info(logger, "Envió un mensaje a núcleo", texto);
+	log_destroy(logger);
+
+
 
 	return EXIT_SUCCESS;
 }
@@ -127,4 +142,7 @@ void imprimir(t_valor_variable valor) {
 void imprimirTexto(char* texto) {
 	printf("Imprimir texto\n");
 }
+
+
+
 
