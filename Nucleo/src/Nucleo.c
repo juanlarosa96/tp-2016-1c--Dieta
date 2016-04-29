@@ -6,13 +6,12 @@
 #include <sys/socket.h>
 
 int main(int argc, char **argv){
-	argc = 2;
+
 	if (argc != 2) {
 			printf("Número incorrecto de parámetros\n");
 			return -1;
 		}
 
-	argv[1] = "/home/utnso/Escritorio/TP/tp-2016-1c--Dieta/Nucleo/Configuracion/config";
 	t_config* config = config_create(argv[1]);
 
 	int PUERTO_SERVIDOR = config_get_int_value(config, "PUERTO_SERVIDOR");
@@ -50,8 +49,14 @@ int main(int argc, char **argv){
 
 		printf("Recibí una conexión de la consola \n");
 
+		int bytesRecibidos;
+		char* ruta = malloc(100);
+		bytesRecibidos = recv(socketConsola, ruta, 100, 0);
+		ruta[bytesRecibidos] = '\0';
+		printf("Consola dice: %s\n", ruta);
+
 		char* buffer = malloc(100);
-		int bytesRecibidos = recv(socketConsola, buffer, 100, 0);
+		bytesRecibidos = recv(socketConsola, buffer, 100, 0);
 		buffer[bytesRecibidos] = '\0';
 
 		printf("Consola dice: %s\n", buffer);
@@ -81,6 +86,7 @@ int main(int argc, char **argv){
 
 		printf("Se conecto el CPU");
 
+		//send(socketCpu,ruta,100,0);
 		send(socketCpu, buffer, 100, 0);
 
 		free(buffer);
