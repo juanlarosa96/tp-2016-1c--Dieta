@@ -8,70 +8,76 @@ AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
 };
 AnSISOP_kernel kernel_functions = { };
 
-static const int PUERTO_NUCLEO = 8080;
-
 int main(int argc, char **argv) {
 
-	if (argc == 2) {
-		char ruta[strlen(argv[1])];
+	if (argc != 3) {
+		printf("Número incorrecto de parámetros\n");
+		return -1;
+	}
 
-		strcpy(ruta, argv[1]); //Recibe ruta de programa ansisop
-		FILE* archivo;
-		archivo = fopen(ruta, "r");
-		if (archivo == NULL) {
-			puts("ERROR");
-		}
+	t_config* config = config_create(argv[1]);
 
-		int largoLinea = 128;
-		char *linea = (char *) malloc(sizeof(char) * largoLinea); //Buffer de linea
+	int PUERTO_NUCLEO = config_get_int_value(config, "PUERTO_NUCLEO");
+	char* IP_NUCLEO = config_get_string_value(config, "IP_NUCLEO");
 
-		char caracter = getc(archivo);
-		int codigoValido = 0;	//Flag. Indica si esta dentro del begin-end
+	char ruta[strlen(argv[2])];
 
-		while (caracter != EOF) {	//Lee linea por linea
-			int contador = 0;
+	strcpy(ruta, argv[2]); //Recibe ruta de programa ansisop
+	FILE* archivo;
+	archivo = fopen(ruta, "r");
+	if (archivo == NULL) {
+		puts("ERROR");
+	}
 
-			while ((caracter != '\n') && (caracter != EOF)) {
-				linea[contador] = caracter;
-				contador++;
-				caracter = getc(archivo);
-			}
+	int largoLinea = 128;
+	char *linea = (char *) malloc(sizeof(char) * largoLinea); //Buffer de linea
 
-			linea[contador] = '\0';
+	char caracter = getc(archivo);
+	int codigoValido = 0;	//Flag. Indica si esta dentro del begin-end
 
-			int comentario = 0;
-			int i;
-			for (i = 0; i < contador; i++) {
-				if (linea[i] == '#') {
-					comentario = 1;
-				}
-			}
+	while (caracter != EOF) {	//Lee linea por linea
+		int contador = 0;
 
-			if (!comentario) { //Saltea lineas de comentario
-
-				if (!strcmp(linea, "end")) {
-					codigoValido = 0;
-				}
-
-				//Ejecutar parser con la Linea
-				if (codigoValido) {
-					printf("%s\n", linea);
-
-					analizadorLinea(strdup(linea), &functions,
-							&kernel_functions);
-				}
-
-				if (!strcmp(linea, "begin")) {
-					codigoValido = 1;
-
-				}
-			}
-
+		while ((caracter != '\n') && (caracter != EOF)) {
+			linea[contador] = caracter;
+			contador++;
 			caracter = getc(archivo);
 		}
+
+		linea[contador] = '\0';
+
+		int comentario = 0;
+		int i;
+		for (i = 0; i < contador; i++) {
+			if (linea[i] == '#') {
+				comentario = 1;
+			}
+		}
+
+		if (!comentario) { //Saltea lineas de comentario
+
+			if (!strcmp(linea, "end")) {
+				codigoValido = 0;
+			}
+
+			//Ejecutar parser con la Linea
+			if (codigoValido) {
+				printf("%s\n", linea);
+
+				analizadorLinea(strdup(linea), &functions, &kernel_functions);
+			}
+
+			if (!strcmp(linea, "begin")) {
+				codigoValido = 1;
+
+			}
+		}
+
+		caracter = getc(archivo);
 	}
 
 	char comando[10];
+	printf("\nEscriba comando\n");
 	scanf("%s", comando);
 	while (strcmp(comando, "Prueba")) {
 		printf("Comando no valido \n");
@@ -81,7 +87,7 @@ int main(int argc, char **argv) {
 	struct sockaddr_in direccionNucleo;
 
 	direccionNucleo.sin_family = AF_INET;
-	direccionNucleo.sin_addr.s_addr = inet_addr("127.0.0.1");
+	direccionNucleo.sin_addr.s_addr = inet_addr(IP_NUCLEO);
 	direccionNucleo.sin_port = htons(PUERTO_NUCLEO);
 
 	int socketNucleo = socket(AF_INET, SOCK_STREAM, 0);
@@ -91,9 +97,6 @@ int main(int argc, char **argv) {
 		perror("No se pudo conectar");
 		return 1;
 	}
-	char codigoConsola[] = "Soy la consola";
-	printf("%s",codigoConsola);
-	send(socketNucleo, codigoConsola, 15, 0);
 
 	char mensaje[1000];
 	printf("Escriba mensaje: ");
