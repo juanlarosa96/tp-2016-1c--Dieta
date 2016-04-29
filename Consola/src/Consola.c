@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 
 	log_info(logger, "Se conectó al núcleo", texto);
 
-	char mensaje[100];
+	char * mensaje = malloc(100);
 	printf("Escriba mensaje: \n");
 	scanf("%s", mensaje);
 	send(socketNucleo, mensaje, strlen(mensaje), 0);
