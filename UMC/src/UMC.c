@@ -21,7 +21,7 @@ enum handshake {
 
 int main(int argc, char *argv[]) {
 
-	//aca creo un hilo para la consola UMC
+	//Crear hilo para la consola UMC
 
 	//Recibe el archivo de config por parametro
 	if (argc != 2) {
@@ -33,8 +33,7 @@ int main(int argc, char *argv[]) {
 
 	int puerto_servidor = config_get_int_value(config,"PUERTO");
 	int puerto_swap = config_get_int_value(config,"PUERTO_SWAP");
-	int ip_swap = config_get_int_value(config,"IP_SWAP");
-
+	char* ip_swap = config_get_string_value(config,"IP_SWAP");
 
 	/*---------SOCKET SERVIDOR------------*/
 
@@ -64,13 +63,27 @@ int main(int argc, char *argv[]) {
 	unsigned int len;
 	len = sizeof(struct sockaddr_in);
 
-	//Acepta la conexion con CPU
-	//falta handshake
-	int socketCPU = accept(servidorUMC, (void*) &direccionCliente, &len);
-	printf("Recibí una conexión de la CPU\n");
+	int socketCliente = accept(servidorUMC, (void*) &direccionCliente, &len);
+	printf("Recibí una conexión\n");
 
 	char* bufferServidor = malloc(100);
-	recv(socketCPU, bufferServidor, 100, 0);
+	recv(socketCliente, bufferServidor, 100, 0); //Recibe "HEADER: Hola UMC"
+
+	/* FALTA IMPLEMENTAR HANDSHAKE
+	char * quienSos = string_substring_until(bufferServidor, 1); //Supongo que el header tiene 1 byte
+	int quienMeHabla = atoi(quienSos); //capaz esto me conviene encapsularlo en una funcion
+
+	switch(quienMeHabla){
+		case NUCLEO: send(socketCliente, "Hola Núcleo!", 13, 0);
+		break;
+		case CPU: send(socketCliente,"Hola CPU!",10, 0);
+		break;
+		default:
+			send(socketCliente,"No te conozco",100,0);
+			//aca corta la conexion ?
+	}
+	*/
+
 	printf("%s\n", bufferServidor);
 
 	free(bufferServidor);
