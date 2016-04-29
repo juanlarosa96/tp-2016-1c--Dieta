@@ -19,7 +19,6 @@ enum handshake {
 	NUCLEO = 3, CPU = 4,
 };
 
-static const int PUERTO_SERVIDOR_UMC = 9000;
 static const int PUERTO_SWAP = 9001;
 
 int main(int argc, char *argv[]) {
@@ -27,15 +26,14 @@ int main(int argc, char *argv[]) {
 	//aca creo un hilo para la consola UMC
 
 	//Recibe el archivo de config por parametro
-	if(argc != 2)
-	{
+	if (argc != 2) {
 		printf("Número incorrecto de parámetros\n");
+		return -1;
 	}
 
-	else {
- 	t_config* configuracion = config_create(argv[1]);
-	} //no estoy segura si lo lee bien o mal, tampoco se como probarlo
+	t_config* config = config_create(argv[1]);
 
+	int puerto_servidor = config_get_int_value(config,"PUERTO");
 
 
 	/*---------SOCKET SERVIDOR------------*/
@@ -43,7 +41,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in direccionServidorUMC;
 	direccionServidorUMC.sin_family = AF_INET;
 	direccionServidorUMC.sin_addr.s_addr = INADDR_ANY;
-	direccionServidorUMC.sin_port = htons(PUERTO_SERVIDOR_UMC);
+	direccionServidorUMC.sin_port = htons(puerto_servidor);
 
 	int servidorUMC = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -84,7 +82,8 @@ int main(int argc, char *argv[]) {
 	direccionSwap.sin_port = htons(PUERTO_SWAP);
 
 	int clienteUMC = socket(AF_INET, SOCK_STREAM, 0);
-	if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap)) != 0) {
+	if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap))
+			!= 0) {
 		perror("No se pudo conectar con el socket de SWAP");
 		return 1;
 	}
@@ -93,10 +92,8 @@ int main(int argc, char *argv[]) {
 	scanf("%s\n", bufferCliente);
 	send(clienteUMC, bufferCliente, 100, 0);
 
+	//config_destroy();
 
 	return EXIT_SUCCESS;
-
-	//servidor de nucleo y cpu
-	//cliente de swap
 
 }
