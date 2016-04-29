@@ -19,8 +19,6 @@ enum handshake {
 	NUCLEO = 3, CPU = 4,
 };
 
-static const int PUERTO_SWAP = 9001;
-
 int main(int argc, char *argv[]) {
 
 	//aca creo un hilo para la consola UMC
@@ -34,6 +32,8 @@ int main(int argc, char *argv[]) {
 	t_config* config = config_create(argv[1]);
 
 	int puerto_servidor = config_get_int_value(config,"PUERTO");
+	int puerto_swap = config_get_int_value(config,"PUERTO_SWAP");
+	int ip_swap = config_get_int_value(config,"IP_SWAP");
 
 
 	/*---------SOCKET SERVIDOR------------*/
@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
 	len = sizeof(struct sockaddr_in);
 
 	//Acepta la conexion con CPU
+	//falta handshake
 	int socketCPU = accept(servidorUMC, (void*) &direccionCliente, &len);
 	printf("Recibí una conexión de la CPU\n");
 
@@ -74,16 +75,17 @@ int main(int argc, char *argv[]) {
 
 	free(bufferServidor);
 
+	/*---------FIN SOCKET SERVIDOR-------*/
+
 	/*---------SOCKET CLIENTE------------*/
 
 	struct sockaddr_in direccionSwap;
 	direccionSwap.sin_family = AF_INET;
-	direccionSwap.sin_addr.s_addr = inet_addr("127.0.0.1");
-	direccionSwap.sin_port = htons(PUERTO_SWAP);
+	direccionSwap.sin_addr.s_addr = inet_addr(ip_swap);
+	direccionSwap.sin_port = htons(puerto_swap);
 
 	int clienteUMC = socket(AF_INET, SOCK_STREAM, 0);
-	if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap))
-			!= 0) {
+	if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap)) != 0) {
 		perror("No se pudo conectar con el socket de SWAP");
 		return 1;
 	}
@@ -92,7 +94,11 @@ int main(int argc, char *argv[]) {
 	scanf("%s\n", bufferCliente);
 	send(clienteUMC, bufferCliente, 100, 0);
 
-	//config_destroy();
+	free(bufferCliente);
+
+	/*---------FIN SOCKET CLIENTE-------*/
+
+	config_destroy(config);
 
 	return EXIT_SUCCESS;
 
