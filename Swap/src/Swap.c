@@ -12,11 +12,28 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include<commons/config.h>
+#include <commons/config.h>
 
 static const int PUERTO_SERVIDOR_SWAP = 9001;
 
-int main(void) {
+int main(int argc, char *argv[]) {
+
+	if (argc != 2) {
+			printf("Número incorrecto de parámetros\n");
+			return -1;
+		}
+
+	t_config *config = config_create(argv[1]);
+
+	int puertoServidor =   config_get_int_value(config,"PUERTO_ESCUCHA");
+	int cantidadDePaginas =   config_get_int_value(config,"CANTIDAD_PAGINAS");
+	int sizePagina =   config_get_int_value(config,"TAMANIO_PAGINA");
+	int retardoCompactacion =   config_get_int_value(config,"RETARDO_COMPACTACION");
+
+	char*nombre = config_get_string_value(config,"NOMBRE_SWAP");
+
+
+//---------------------------------------------------------------------------
 	struct sockaddr_in direccionServidorSwap;
 	direccionServidorSwap.sin_family = AF_INET;
 	direccionServidorSwap.sin_addr.s_addr = INADDR_ANY;
@@ -58,6 +75,8 @@ int main(void) {
 	printf("Me llegaron %d bytes con %s", bytesRecibidos, bufferServidor);
 
 	free(bufferServidor);
+//---------------------------------------------------------------------------
+	config_destroy(config);
 
 	return 0;
 }
