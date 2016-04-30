@@ -14,8 +14,6 @@
 #include <sys/socket.h>
 #include <commons/config.h>
 
-static const int PUERTO_SERVIDOR_SWAP = 9001;
-
 int main(int argc, char *argv[]) {
 
 	if (argc != 2) {
@@ -37,7 +35,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in direccionServidorSwap;
 	direccionServidorSwap.sin_family = AF_INET;
 	direccionServidorSwap.sin_addr.s_addr = INADDR_ANY;
-	direccionServidorSwap.sin_port = htons(PUERTO_SERVIDOR_SWAP);
+	direccionServidorSwap.sin_port = htons(puertoServidor);
 
 	int servidorSwap = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -59,22 +57,20 @@ int main(int argc, char *argv[]) {
 	len = sizeof(struct sockaddr_in);
 
 	int cliente = accept(servidorSwap, (void*) &direccionCliente, &len);
-	printf("Recibí una conexión en %d!!\n", cliente);
+	printf("Recibí una conexión\n");
 
 	//------------------------------
 
-	char* bufferServidor = malloc(100);
+	char* buffer = malloc(100);
 
-	int bytesRecibidos = recv(cliente, bufferServidor, 100, 0);
-	if (bytesRecibidos < 0) {
-		perror("Se Desconecto");
-		return 1;
-	}
+	int bytesRecibidos = recv(cliente, buffer, 100, 0);
+	buffer[bytesRecibidos] = '\0';
 
-	bufferServidor[bytesRecibidos] = '\0';
-	printf("Me llegaron %d bytes con %s", bytesRecibidos, bufferServidor);
+	printf("UMC dice: %s\n", buffer);
 
-	free(bufferServidor);
+	//printf("Me llegaron %d bytes con %s", bytesRecibidos, buffer;
+
+	free(buffer);
 //---------------------------------------------------------------------------
 	config_destroy(config);
 
