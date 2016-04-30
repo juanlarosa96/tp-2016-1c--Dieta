@@ -63,7 +63,6 @@ int main(int argc, char **argv){
 		char* ruta = malloc(100);
 		bytesRecibidos = recv(socketConsola, ruta, 100, 0);
 		ruta[bytesRecibidos] = '\0';
-		printf("Consola dice: %s\n", ruta);
 
 		char* buffer = malloc(100);
 		bytesRecibidos = recv(socketConsola, buffer, 100, 0);
@@ -98,7 +97,7 @@ int main(int argc, char **argv){
 		printf("Se conecto el CPU");
 
 
-		//send(socketCpu,ruta,100,0);
+		send(socketCpu,ruta,100,0);
 
 		log_info(logger, "Se conectó al CPU", texto);
 
