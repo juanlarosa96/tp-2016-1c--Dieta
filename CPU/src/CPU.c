@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 	char* buffer = malloc(100);
 	int bytesRecibidos = recv(clienteNucleo, buffer, 100, 0);
 	buffer[bytesRecibidos] = '\0';
-	printf("%s\n", buffer);
+	printf("Nucleo dice: %s\n", buffer);
 
 	//cliente de UMC
 	struct sockaddr_in direccionServidorUMC;
