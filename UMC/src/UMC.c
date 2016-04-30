@@ -67,7 +67,8 @@ int main(int argc, char *argv[]) {
 	printf("Recibí una conexión\n");
 
 	char* bufferServidor = malloc(100);
-	recv(socketCliente, bufferServidor, 100, 0); //Recibe "HEADER: Hola UMC"
+	int bytesRecibidos = recv(socketCliente, bufferServidor, 100, 0); //Recibe "HEADER: Hola UMC"
+	bufferServidor[bytesRecibidos] = '\0';
 
 	/* FALTA IMPLEMENTAR HANDSHAKE
 	char * quienSos = string_substring_until(bufferServidor, 1); //Supongo que el header tiene 1 byte

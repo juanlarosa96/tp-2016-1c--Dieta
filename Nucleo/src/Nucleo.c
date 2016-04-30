@@ -73,7 +73,7 @@ int main(int argc, char **argv){
 		log_info(logger, "Se recibió un mensaje", texto);
 
 
-		struct sockaddr_in direccionUmc;
+		/*struct sockaddr_in direccionUmc;
 
 			direccionUmc.sin_family = AF_INET;
 			direccionUmc.sin_addr.s_addr = inet_addr(IP_UMC);
@@ -87,7 +87,7 @@ int main(int argc, char **argv){
 				return 1;
 			}
 
-			send(socketUmc, buffer, 100, 0);
+			send(socketUmc, buffer, 100, 0);*/
 
 
 
