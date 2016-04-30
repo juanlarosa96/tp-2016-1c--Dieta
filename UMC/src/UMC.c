@@ -15,9 +15,11 @@
 #include <sys/socket.h>
 #include <commons/config.h>
 
+/*
 enum handshake {
 	NUCLEO = 3, CPU = 4,
 };
+*/
 
 int main(int argc, char *argv[]) {
 
@@ -66,9 +68,9 @@ int main(int argc, char *argv[]) {
 	int socketCliente = accept(servidorUMC, (void*) &direccionCliente, &len);
 	printf("Recibí una conexión\n");
 
-	char* bufferServidor = malloc(100);
-	int bytesRecibidos = recv(socketCliente, bufferServidor, 100, 0); //Recibe "HEADER: Hola UMC"
-	bufferServidor[bytesRecibidos] = '\0';
+	char* buffer = malloc(100);
+	int bytesRecibidos = recv(socketCliente, buffer, 100, 0); //Recibe "HEADER: Hola UMC"
+	buffer[bytesRecibidos] = '\0';
 
 	/* FALTA IMPLEMENTAR HANDSHAKE
 	char * quienSos = string_substring_until(bufferServidor, 1); //Supongo que el header tiene 1 byte
@@ -85,9 +87,8 @@ int main(int argc, char *argv[]) {
 	}
 	*/
 
-	printf("%s\n", bufferServidor);
+	printf("CPU dice: %s\n", buffer);
 
-	free(bufferServidor);
 
 	/*---------FIN SOCKET SERVIDOR-------*/
 
@@ -104,11 +105,10 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	char bufferCliente[100];
-	scanf("%s\n", bufferCliente);
-	send(clienteUMC, bufferCliente, 100, 0);
+	//scanf("%s\n", buffer);
+	send(clienteUMC, buffer, 100, 0);
 
-	free(bufferCliente);
+	free(buffer);
 
 	/*---------FIN SOCKET CLIENTE-------*/
 
