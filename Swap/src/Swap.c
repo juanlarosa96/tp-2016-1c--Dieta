@@ -61,9 +61,9 @@ int main(int argc, char *argv[]) {
 
 	//------------------------------
 
-	char* buffer = malloc(100);
+	char* buffer = malloc(10);
 
-	int bytesRecibidos = recv(cliente, buffer, 100, 0);
+	int bytesRecibidos = recv(cliente, buffer, 10, 0);
 	buffer[bytesRecibidos] = '\0';
 
 	printf("UMC dice: %s\n", buffer);

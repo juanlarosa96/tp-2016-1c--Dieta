@@ -60,12 +60,12 @@ int main(int argc, char **argv){
 		printf("Recibí una conexión de la consola \n");
 
 		int bytesRecibidos;
-		char* ruta = malloc(100);
-		bytesRecibidos = recv(socketConsola, ruta, 100, 0);
+		char* ruta = malloc(30);
+		bytesRecibidos = recv(socketConsola, ruta, 30, 0);
 		ruta[bytesRecibidos] = '\0';
 
-		char* buffer = malloc(100);
-		bytesRecibidos = recv(socketConsola, buffer, 100, 0);
+		char* buffer = malloc(10);
+		bytesRecibidos = recv(socketConsola, buffer, 10, 0);
 		buffer[bytesRecibidos] = '\0';
 
 		printf("Consola dice: %s\n", buffer);
@@ -97,11 +97,11 @@ int main(int argc, char **argv){
 		printf("Se conecto el CPU");
 
 
-		send(socketCpu,ruta,100,0);
+		send(socketCpu,ruta,30,0);
 
 		log_info(logger, "Se conectó al CPU", texto);
 
-		send(socketCpu, buffer, 100, 0);
+		send(socketCpu, buffer, 10, 0);
 
 		log_info(logger, "Se envió un buffer al CPU", texto);
 

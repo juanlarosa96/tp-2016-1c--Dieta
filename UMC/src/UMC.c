@@ -68,8 +68,8 @@ int main(int argc, char *argv[]) {
 	int socketCliente = accept(servidorUMC, (void*) &direccionCliente, &len);
 	printf("Recibí una conexión\n");
 
-	char* buffer = malloc(100);
-	int bytesRecibidos = recv(socketCliente, buffer, 100, 0); //Recibe "HEADER: Hola UMC"
+	char* buffer = malloc(10);
+	int bytesRecibidos = recv(socketCliente, buffer, 10, 0); //Recibe "HEADER: Hola UMC"
 	buffer[bytesRecibidos] = '\0';
 
 	/* FALTA IMPLEMENTAR HANDSHAKE
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//scanf("%s\n", buffer);
-	send(clienteUMC, buffer, 100, 0);
+	send(clienteUMC, buffer, 10, 0);
 
 	free(buffer);
 

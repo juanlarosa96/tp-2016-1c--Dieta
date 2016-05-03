@@ -42,13 +42,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	//recibo ruta del nucleo
-	char* ruta = malloc(100);
-	int bytesRecibidosRuta = recv(clienteNucleo, ruta, 100, 0);
+	char* ruta = malloc(30);
+	int bytesRecibidosRuta = recv(clienteNucleo, ruta, 30, 0);
 	ruta[bytesRecibidosRuta] = '\0';
 
 	//recibo mensaje del nucleo
-	char* buffer = malloc(100);
-	int bytesRecibidos = recv(clienteNucleo, buffer, 100, 0);
+	char* buffer = malloc(10);
+	int bytesRecibidos = recv(clienteNucleo, buffer, 10, 0);
 	buffer[bytesRecibidos] = '\0';
 	printf("Nucleo dice: %s\n", buffer);
 
@@ -73,14 +73,14 @@ int main(int argc, char *argv[]) {
 	//free(buffer);
 
 	//parser
-	/*FILE* archivo;
+	FILE* archivo;
 	archivo = fopen(ruta, "r");
 	if (archivo == NULL) {
 		puts("ERROR");
 	}
 	free(ruta);
 
-	int largoLinea = 100;
+	int largoLinea = 30;
 	char *linea = (char *) malloc(sizeof(char) * largoLinea); //Buffer de linea
 
 	char caracter = getc(archivo);
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		caracter = getc(archivo);
-	}*/
+	}
 
 	return 0;
 

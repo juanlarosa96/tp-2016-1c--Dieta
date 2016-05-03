@@ -16,7 +16,8 @@ int main(int argc, char **argv) {
 	char ruta[strlen(argv[2])];
 
 	strcpy(ruta, argv[2]); //Recibe ruta de programa ansisop
-		char comando[10];
+
+	char comando[10];
 	printf("\nEscriba comando\n");
 	scanf("%s", comando);
 	while (strcmp(comando, "Prueba")) {
@@ -48,12 +49,12 @@ int main(int argc, char **argv) {
 
 	log_info(logger, "Se conectó al núcleo", texto);
 
-	send(socketNucleo, ruta, strlen(ruta), 0);
+	send(socketNucleo, ruta, 30, 0);
 
-	char * mensaje = malloc(100);
+	char * mensaje = malloc(10);
 	printf("Escriba mensaje: \n");
 	scanf("%s", mensaje);
-	send(socketNucleo, mensaje, strlen(mensaje), 0);
+	send(socketNucleo, mensaje, 10, 0);
 	log_info(logger, "Envió un mensaje a núcleo", texto);
 	log_destroy(logger);
 
@@ -61,8 +62,3 @@ int main(int argc, char **argv) {
 
 	return EXIT_SUCCESS;
 }
-
-
-
-
-
