@@ -108,6 +108,7 @@ int main(int argc, char *argv[]) {
 
 	int i;
 
+
 	//struct addrinfo hints, *ai, *p;
 
 	for (;;) {
@@ -126,6 +127,7 @@ int main(int argc, char *argv[]) {
 					newfd = accept(listener, (struct sockaddr *) &remoteaddr,
 							&addrlen);
 
+
 					if (newfd == -1) {
 						perror("accept");
 					} else {
@@ -133,6 +135,7 @@ int main(int argc, char *argv[]) {
 						if (newfd > fdmax) {    // keep track of the max
 							fdmax = newfd;
 						}
+						printf("Nueva Conexion\n");
 						/*printf("selectserver: new connection from %s on "
 						 "socket %d\n",
 						 inet_ntop(remoteaddr.ss_family,
