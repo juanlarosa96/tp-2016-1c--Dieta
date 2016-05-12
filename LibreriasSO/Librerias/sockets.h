@@ -5,8 +5,8 @@
 #include <stdio.h>
 
     int crearSocket(int *unSocket);
-    int escucharEn(int *unSocket, int puerto);
-    int conectarA(int *unSocket, char* ip, int puerto);
+    int escucharEn(int unSocket, int puerto);
+    int conectarA(int unSocket, char* ip, int puerto);
 
 
 
