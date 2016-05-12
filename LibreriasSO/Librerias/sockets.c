@@ -57,3 +57,37 @@ int crearSocket(int *unSocket) {
 	}
 }
 
+int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
+	uint8_t idRecibido;
+	int bytesRecibidos = 0;
+	send(socketDestino, &idOrigen, sizeof(uint8_t), 0);
+
+	bytesRecibidos = recv(&socketDestino, &idRecibido, sizeof(uint8_t));
+	while (bytesRecibidos < sizeof(uint8_t)) {
+		bytesRecibidos = bytesRecibidos - recv(&socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos);
+	}
+	if (idRecibido != idEsperado){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+int responderHandshake(int socketDestino, int idOrigen, int idEsperado) {
+	uint8_t idRecibido;
+	int bytesRecibidos = 0;
+	bytesRecibidos = recv(&socketDestino, &idRecibido, sizeof(uint8_t));
+		while (bytesRecibidos < sizeof(uint8_t)) {
+			bytesRecibidos = bytesRecibidos - recv(&socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos);
+		}
+		if (idRecibido != idEsperado){
+			send(socketDestino, 0, sizeof(uint8_t), 0);
+			return 1;
+		}else{
+			send(socketDestino, idOrigen, sizeof(uint8_t), 0);
+			return 0;
+		}
+
+
+
+}
