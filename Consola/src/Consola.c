@@ -1,5 +1,6 @@
 #include "funciones.h"
 #include "commons/log.h"
+#include <sockets.h>
 
 int main(int argc, char **argv) {
 
@@ -31,6 +32,7 @@ int main(int argc, char **argv) {
 	char *texto;
 	texto= "info";
 
+/*
 	struct sockaddr_in direccionNucleo;
 
 	direccionNucleo.sin_family = AF_INET;
@@ -39,8 +41,14 @@ int main(int argc, char **argv) {
 
 	int socketNucleo = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (connect(socketNucleo, (void*) &direccionNucleo, sizeof(direccionNucleo))
-			!= 0) {
+	if (connect(socketNucleo, (void*) &direccionNucleo, sizeof(direccionNucleo)) != 0) {
+*/
+
+
+	int socketNucleo;
+	crearSocket(&socketNucleo);
+
+	if(conectarA(&socketNucleo,IP_NUCLEO,PUERTO_NUCLEO) != 0){
 		perror("No se pudo conectar");
 		log_error(logger, "No se pudo conectar al nucleo", texto);
 		return 1;
@@ -51,7 +59,7 @@ int main(int argc, char **argv) {
 
 	send(socketNucleo, ruta, 30, 0);
 
-	char * mensaje = malloc(10);
+	char mensaje[10];
 	printf("Escriba mensaje: \n");
 	scanf("%s", mensaje);
 	send(socketNucleo, mensaje, 10, 0);
