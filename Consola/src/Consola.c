@@ -3,13 +3,20 @@
 #include <Librerias/sockets.h>
 
 int main(int argc, char **argv) {
-
+	uint8_t IDCONSOLA = 6;
+	uint8_t IDNUCLEO = 2;
+	uint8_t IDCPU = 3;
+	uint8_t IDUMC = 4;
+	uint8_t IDSWAP = 5;
+	t_config* config;
 	if (argc != 3) {
-		printf("Número incorrecto de parámetros\n");
-		return -1;
-	}
+		//printf("Número incorrecto de parámetros\n");
+		//return -1;
+		config = config_create("./Configuracion/config");
+	} else {
 
-	t_config* config = config_create(argv[1]);
+		config = config_create(argv[1]);
+	}
 
 	int PUERTO_NUCLEO = config_get_int_value(config, "PUERTO_NUCLEO");
 	char* IP_NUCLEO = config_get_string_value(config, "IP_NUCLEO");
@@ -27,35 +34,39 @@ int main(int argc, char **argv) {
 	}
 
 	//Creo log para la consola
-	t_log* 	logger;
-	logger = log_create("Consola.log", "CONSOLA", 1, log_level_from_string("INFO"));
+	t_log* logger;
+	logger = log_create("Consola.log", "CONSOLA", 1,
+			log_level_from_string("INFO"));
 	char *texto;
-	texto= "info";
+	texto = "info";
 
-/*
-	struct sockaddr_in direccionNucleo;
+	/*
+	 struct sockaddr_in direccionNucleo;
 
-	direccionNucleo.sin_family = AF_INET;
-	direccionNucleo.sin_addr.s_addr = inet_addr(IP_NUCLEO);
-	direccionNucleo.sin_port = htons(PUERTO_NUCLEO);
+	 direccionNucleo.sin_family = AF_INET;
+	 direccionNucleo.sin_addr.s_addr = inet_addr(IP_NUCLEO);
+	 direccionNucleo.sin_port = htons(PUERTO_NUCLEO);
 
-	int socketNucleo = socket(AF_INET, SOCK_STREAM, 0);
+	 int socketNucleo = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (connect(socketNucleo, (void*) &direccionNucleo, sizeof(direccionNucleo)) != 0) {
-*/
-
+	 if (connect(socketNucleo, (void*) &direccionNucleo, sizeof(direccionNucleo)) != 0) {
+	 */
 
 	int socketNucleo;
 	crearSocket(&socketNucleo);
 
-	if(conectarA(&socketNucleo,IP_NUCLEO,PUERTO_NUCLEO) != 0){
+	if (conectarA(socketNucleo, IP_NUCLEO, PUERTO_NUCLEO) != 0) {
 		perror("No se pudo conectar");
 		log_error(logger, "No se pudo conectar al nucleo", texto);
 		return 1;
 	}
 
-
 	log_info(logger, "Se conectó al núcleo", texto);
+
+	if (responderHandshake(socketNucleo, IDCONSOLA, IDNUCLEO)) {
+		log_error(logger, "Error en el handshake", texto);
+		return 1;
+	}
 
 	send(socketNucleo, ruta, 30, 0);
 
@@ -65,8 +76,6 @@ int main(int argc, char **argv) {
 	send(socketNucleo, mensaje, 10, 0);
 	log_info(logger, "Envió un mensaje a núcleo", texto);
 	log_destroy(logger);
-
-
 
 	return EXIT_SUCCESS;
 }
