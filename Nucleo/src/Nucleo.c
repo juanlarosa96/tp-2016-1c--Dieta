@@ -9,12 +9,21 @@
 
 int main(int argc, char **argv) {
 
-	if (argc != 2) {
-		printf("Número incorrecto de parámetros\n");
-		return -1;
-	}
+	uint8_t IDCONSOLA = 1;
+	uint8_t IDNUCLEO = 2;
+	uint8_t IDCPU = 3;
+	uint8_t IDUMC = 4;
+	uint8_t IDSWAP = 5;
 
-	t_config* config = config_create(argv[1]);
+	t_config* config;
+	if (argc != 2) {
+		//printf("Número incorrecto de parámetros\n");
+		//return -1;
+		config = config_create("./Configuracion/config");
+	} else {
+
+		config = config_create(argv[1]);
+	}
 
 	int PUERTO_SERVIDOR = config_get_int_value(config, "PUERTO_SERVIDOR");
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
@@ -23,7 +32,7 @@ int main(int argc, char **argv) {
 
 	//Creo log para el Núcleo
 	t_log* logger;
-	logger = log_create("Núcelo.log", "NUCELO", 1,
+	logger = log_create("Núcelo.log", "NUCLEO", 1,
 			log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
@@ -48,16 +57,20 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	log_info(logger, "Se estableciió correctamente el socket servidor", texto);
+	log_info(logger, "Se estableció correctamente el socket servidor", texto);
 	printf("Escuchando\n");
 
 //------------------------------
 
 	struct sockaddr_in direccionCliente;
-	unsigned int len;
-	len = sizeof(struct sockaddr_in);
-	int socketConsola = accept(servidorNucleo, (void*) &direccionCliente, &len);
 
+	int socketConsola = aceptarConexion(servidorNucleo, &direccionCliente);
+
+	if (iniciarHandshake(socketConsola, IDNUCLEO, IDCONSOLA)) {
+		log_info(logger, "Error en el handshake", texto);
+		printf("Conexion no esperada");
+		//rechazar conexion
+	}
 	log_info(logger, "Se conectó con la consola", texto);
 
 	printf("Recibí una conexión de la consola \n");
@@ -67,7 +80,7 @@ int main(int argc, char **argv) {
 	bytesRecibidos = recv(socketConsola, ruta, 30, 0);
 	ruta[bytesRecibidos] = '\0';
 
-	char* buffer = malloc(10);
+	char buffer[10];
 	bytesRecibidos = recv(socketConsola, buffer, 10, 0);
 	buffer[bytesRecibidos] = '\0';
 
@@ -92,7 +105,7 @@ int main(int argc, char **argv) {
 
 	listen(servidorNucleo, 100); //Esperando que se conecte el CPU
 
-	int socketCpu = accept(servidorNucleo, (void*) &direccionCliente, &len);
+	int socketCpu = aceptarConexion(servidorNucleo, &direccionCliente);
 
 	printf("Se conecto el CPU");
 
