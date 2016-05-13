@@ -3,7 +3,7 @@
 #include <Librerias/sockets.h>
 
 int main(int argc, char **argv) {
-	uint8_t IDCONSOLA = 6;
+	uint8_t IDCONSOLA = 1;
 	uint8_t IDNUCLEO = 2;
 	uint8_t IDCPU = 3;
 	uint8_t IDUMC = 4;
