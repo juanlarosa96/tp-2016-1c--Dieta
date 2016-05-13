@@ -1,5 +1,12 @@
 #include "sockets.h"
 
+
+uint8_t IDCONSOLA = 1;
+uint8_t IDNUCLEO = 2;
+uint8_t IDCPU = 3;
+uint8_t IDUMC = 4;
+uint8_t IDSWAP = 5;
+
 int escucharEn(int unSocket, int puerto) {
 
 	struct sockaddr_in address;
@@ -62,9 +69,9 @@ int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
 	int bytesRecibidos = 0;
 	send(socketDestino, &idOrigen, sizeof(uint8_t), 0);
 
-	bytesRecibidos = recv(&socketDestino, &idRecibido, sizeof(uint8_t));
+	bytesRecibidos = recv(socketDestino, &idRecibido, sizeof(uint8_t),0);
 	while (bytesRecibidos < sizeof(uint8_t)) {
-		bytesRecibidos = bytesRecibidos - recv(&socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos);
+		bytesRecibidos = bytesRecibidos - recv(socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos,0);
 	}
 	if (idRecibido != idEsperado){
 		return 1;
@@ -73,21 +80,28 @@ int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
 	}
 }
 
-int responderHandshake(int socketDestino, int idOrigen, int idEsperado) {
+int responderHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
 	uint8_t idRecibido;
 	int bytesRecibidos = 0;
-	bytesRecibidos = recv(&socketDestino, &idRecibido, sizeof(uint8_t));
+	bytesRecibidos = recv(socketDestino, &idRecibido, sizeof(uint8_t),0);
 		while (bytesRecibidos < sizeof(uint8_t)) {
-			bytesRecibidos = bytesRecibidos - recv(&socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos);
+			bytesRecibidos = bytesRecibidos - recv(socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos,0);
 		}
 		if (idRecibido != idEsperado){
 			send(socketDestino, 0, sizeof(uint8_t), 0);
 			return 1;
 		}else{
-			send(socketDestino, idOrigen, sizeof(uint8_t), 0);
+			send(socketDestino, &idOrigen, sizeof(uint8_t), 0);
 			return 0;
 		}
 
 
+
+}
+
+int aceptarConexion(int socketServidor, struct sockaddr_in * direccionCliente){
+	unsigned int len;
+	len = sizeof(struct sockaddr_in);
+	return accept(socketServidor, (void*) &direccionCliente, &len);
 
 }
