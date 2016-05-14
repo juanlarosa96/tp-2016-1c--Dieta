@@ -9,6 +9,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -16,20 +17,41 @@
 
 int main(int argc, char *argv[]) {
 
-	if (argc != 2) {
-			printf("Número incorrecto de parámetros\n");
-			return -1;
-		}
+//	if (argc != 2) {
+//			printf("Número incorrecto de parámetros\n");
+//			return -1;
+//		}
+//	t_config *config = config_create(argv[1]);
 
-	t_config *config = config_create(argv[1]);
+	t_config *config = config_create("/home/utnso/Projects/tp-2016-1c--Dieta/Swap/Configuracion/config");
 
 	int puertoServidor =   config_get_int_value(config,"PUERTO_ESCUCHA");
 	int cantidadDePaginas =   config_get_int_value(config,"CANTIDAD_PAGINAS");
 	int sizePagina =   config_get_int_value(config,"TAMANIO_PAGINA");
 	int retardoCompactacion =   config_get_int_value(config,"RETARDO_COMPACTACION");
-
 	char*nombre = config_get_string_value(config,"NOMBRE_SWAP");
 
+	int sizeTotal = sizePagina * cantidadDePaginas;
+	char st[50];
+	sprintf(st, "%d", sizeTotal);
+
+	char comando[100]= "dd if=/dev/zero of=./";
+	strcat(comando,nombre);
+	strcat(comando," bs=");
+	strcat(comando,st);
+	strcat(comando," count=1");
+
+	if ( system(comando) !=0){
+		printf("No se creo el archivo");
+	}
+
+
+
+
+	//	FILE*ArchivoSwap=fopen("./nombre","r");
+
+
+/*
 
 //---------------------------------------------------------------------------
 	struct sockaddr_in direccionServidorSwap;
@@ -72,7 +94,8 @@ int main(int argc, char *argv[]) {
 
 	free(buffer);
 //---------------------------------------------------------------------------
-	config_destroy(config);
+	config_destroy(config);*/
 
 	return 0;
 }
+
