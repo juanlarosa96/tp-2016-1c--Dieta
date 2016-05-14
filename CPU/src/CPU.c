@@ -17,12 +17,23 @@ AnSISOP_kernel kernel_functions = { };
 
 int main(int argc, char *argv[]) {
 	//Recibe el archivo de config por parametro
-	if (argc != 2) {
+	/*if (argc != 2) {
 		printf("Número incorrecto de parámetros\n");
 		return -1;
 	}
 
-	t_config* config = config_create(argv[1]);
+	t_config* config = config_create(argv[1]);*/
+
+	t_config* config;
+		if (argc != 2) {
+			//printf("Número incorrecto de parámetros\n");
+			//return -1;
+			config = config_create("./Configuracion/config");
+		} else {
+
+			config = config_create(argv[1]);
+		}
+
 
 	int puerto_umc = config_get_int_value(config,"PUERTO_UMC");
 	int puerto_nucleo = config_get_int_value(config,"PUERTO_NUCLEO");
