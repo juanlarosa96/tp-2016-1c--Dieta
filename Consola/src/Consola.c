@@ -57,20 +57,25 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	log_info(logger, "Se conectó al núcleo", texto);
+
 
 	if (responderHandshake(socketNucleo, IDCONSOLA, IDNUCLEO)) {
 		log_error(logger, "Error en el handshake", texto);
 		return 1;
 	}
 
+	log_info(logger, "Se conectó al núcleo", texto);
+
+
 	send(socketNucleo, ruta, 30, 0);
 
-	char mensaje[10];
-	printf("Escriba mensaje: \n");
-	scanf("%s", mensaje);
-	send(socketNucleo, mensaje, 10, 0);
+	char * programaAnsisop;
+	int largoPrograma;
+
+	enviarProgramaAnsisop(socketNucleo,programaAnsisop,largoPrograma);
 	log_info(logger, "Envió un mensaje a núcleo \n", texto);
+
+
 	log_destroy(logger);
 
 	return EXIT_SUCCESS;
