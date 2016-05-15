@@ -36,3 +36,6 @@ UMC/Debug/*
 Swap/Debug/*
 Nucleo/Debug/*
 CPU/Debug/*
+LibreriasSO/.cproject
+LibreriasSO/.project
+LibreriasSO/Debug/*
