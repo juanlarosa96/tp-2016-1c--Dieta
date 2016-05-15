@@ -9,12 +9,6 @@
 
 int main(int argc, char **argv) {
 
-	uint8_t IDCONSOLA = 1;
-	uint8_t IDNUCLEO = 2;
-	uint8_t IDCPU = 3;
-	uint8_t IDUMC = 4;
-	uint8_t IDSWAP = 5;
-
 	t_config* config;
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");

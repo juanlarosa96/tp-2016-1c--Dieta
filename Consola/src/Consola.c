@@ -3,11 +3,7 @@
 #include <Librerias/sockets.h>
 
 int main(int argc, char **argv) {
-	uint8_t IDCONSOLA = 1;
-	uint8_t IDNUCLEO = 2;
-	uint8_t IDCPU = 3;
-	uint8_t IDUMC = 4;
-	uint8_t IDSWAP = 5;
+
 	t_config* config;
 	if (argc != 3) {
 		//printf("Número incorrecto de parámetros\n");
@@ -74,7 +70,7 @@ int main(int argc, char **argv) {
 	printf("Escriba mensaje: \n");
 	scanf("%s", mensaje);
 	send(socketNucleo, mensaje, 10, 0);
-	log_info(logger, "Envió un mensaje a núcleo", texto);
+	log_info(logger, "Envió un mensaje a núcleo \n", texto);
 	log_destroy(logger);
 
 	return EXIT_SUCCESS;

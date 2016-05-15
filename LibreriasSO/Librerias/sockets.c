@@ -1,11 +1,12 @@
 #include "sockets.h"
 
-
+/*
 uint8_t IDCONSOLA = 1;
 uint8_t IDNUCLEO = 2;
 uint8_t IDCPU = 3;
 uint8_t IDUMC = 4;
 uint8_t IDSWAP = 5;
+*/
 
 int escucharEn(int unSocket, int puerto) {
 
