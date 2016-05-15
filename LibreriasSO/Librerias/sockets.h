@@ -14,4 +14,5 @@ int conectarA(int unSocket, char* ip, int puerto);
 int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado);
 int responderHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado);
 int aceptarConexion(int socketServidor, struct sockaddr_in * direccionCliente);
+void recibirTodo(int socketOrigen,void * buffer, int largo);
 

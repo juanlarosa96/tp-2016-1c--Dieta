@@ -67,13 +67,11 @@ int crearSocket(int *unSocket) {
 
 int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
 	uint8_t idRecibido;
-	int bytesRecibidos = 0;
+
 	send(socketDestino, &idOrigen, sizeof(uint8_t), 0);
 
-	bytesRecibidos = recv(socketDestino, &idRecibido, sizeof(uint8_t),0);
-	while (bytesRecibidos < sizeof(uint8_t)) {
-		bytesRecibidos = bytesRecibidos - recv(socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos,0);
-	}
+	recibirTodo(socketDestino,&idRecibido,sizeof(uint8_t));
+
 	if (idRecibido != idEsperado){
 		return 1;
 	}else{
@@ -83,11 +81,8 @@ int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
 
 int responderHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
 	uint8_t idRecibido;
-	int bytesRecibidos = 0;
-	bytesRecibidos = recv(socketDestino, &idRecibido, sizeof(uint8_t),0);
-		while (bytesRecibidos < sizeof(uint8_t)) {
-			bytesRecibidos = bytesRecibidos - recv(socketDestino, &idRecibido + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos,0);
-		}
+	recibirTodo(socketDestino,&idRecibido,sizeof(uint8_t));
+
 		if (idRecibido != idEsperado){
 			send(socketDestino, 0, sizeof(uint8_t), 0);
 			return 1;
@@ -96,13 +91,20 @@ int responderHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) 
 			return 0;
 		}
 
-
-
 }
 
 int aceptarConexion(int socketServidor, struct sockaddr_in * direccionCliente){
 	unsigned int len;
 	len = sizeof(struct sockaddr_in);
 	return accept(socketServidor, (void*) &direccionCliente, &len);
+
+}
+
+void recibirTodo(int socketOrigen, void * buffer,int largo){
+	int bytesRecibidos = 0;
+	bytesRecibidos = recv(socketOrigen, buffer, sizeof(uint8_t),0);
+	while (bytesRecibidos < sizeof(uint8_t)) {
+		bytesRecibidos = bytesRecibidos - recv(socketOrigen, buffer + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos,0);
+	}
 
 }
