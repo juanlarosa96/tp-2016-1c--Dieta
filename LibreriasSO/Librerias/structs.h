@@ -30,9 +30,9 @@ typedef struct {
 	t_posicion_memoria variable_retorno;
 } t_registro_pila;
 
-typedef struct {
+typedef struct t_pila{
 	t_registro_pila registro;
-	t_pila indice_stack;
+	struct t_pila * indice_stack;
 } t_pila;
 
 typedef struct {
