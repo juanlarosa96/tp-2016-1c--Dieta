@@ -2,10 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include "commons/log.h"
-#include <Librerias/sockets.h>
+#include "funciones.h"
 
 int main(int argc, char **argv) {
 
@@ -39,10 +36,24 @@ int main(int argc, char **argv) {
 
 	 int servidorNucleo = socket(AF_INET, SOCK_STREAM, 0);
 	 */
+	int clienteUMC;
+	if (crearSocket(&clienteUMC)) {
+		printf("Error creando socket\n");
+		log_error(logger, "Se produjo un error creando el socket de UMC",texto);
+		return 1;
+	}
+	if (conectarA(clienteUMC, IP_UMC, PUERTO_UMC)) {
+		printf("Error al conectar\n");
+		log_error(logger, "Se produjo un error conectandose a la UMC",
+				texto);
+		return 1;
+	}
+
+	log_info(logger, "Se estableció la conexion con la UMC", texto);
 	int servidorNucleo;
 	if (crearSocket(&servidorNucleo)) {
 		printf("Error creando socket");
-		return -1;
+		return 1;
 	}
 	if (escucharEn(servidorNucleo, PUERTO_SERVIDOR)) {
 		printf("Error al conectar");
@@ -54,66 +65,81 @@ int main(int argc, char **argv) {
 	log_info(logger, "Se estableció correctamente el socket servidor", texto);
 	printf("Escuchando\n");
 
-//------------------------------
+//------------------------------ SELECT
 
+	fd_set bolsaDeSockets;
+	fd_set bolsaAuxiliar;  // temp file descriptor list for select()
+	int listener = servidorNucleo;     // listening socket descriptor
+
+	FD_ZERO(&bolsaDeSockets);    // clear the master and temp sets
+	FD_ZERO(&bolsaAuxiliar);
+
+	FD_SET(listener, &bolsaDeSockets);
+
+	int fdmax;        // maximum file descriptor number
+	fdmax = listener;
+
+	int nuevaConexion;
 	struct sockaddr_in direccionCliente;
 
-	int socketConsola = aceptarConexion(servidorNucleo, &direccionCliente);
+	char buf[256];    // buffer for client data
+	int nbytesRecibidos;
+	int i;
 
-	if (iniciarHandshake(socketConsola, IDNUCLEO, IDCONSOLA)) {
-		log_info(logger, "Error en el handshake", texto);
-		printf("Conexion no esperada");
-		//rechazar conexion
+	while (1) {
+		bolsaAuxiliar = bolsaDeSockets; // copy it
+		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1) {
+			perror("select");
+			return 1;
+		}
+
+		// run through the existing connections looking for data to read
+		for (i = 0; i <= fdmax; i++) {
+			if (FD_ISSET(i, &bolsaAuxiliar)) { // we got one!!
+				if (i == listener) {
+					// handle new connections
+					nuevaConexion = aceptarConexion(i, &direccionCliente);
+					int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
+
+					switch (idRecibido) {
+					case -1:
+						log_info(logger, "Se desconecto el socket", texto);
+						break;
+					case IDCONSOLA:
+						FD_SET(nuevaConexion, &bolsaDeSockets);
+						log_info(logger, "Nueva consola conectada", texto);
+						break;
+					case IDCPU:
+						FD_SET(nuevaConexion, &bolsaDeSockets);
+						log_info(logger, "Nuevo CPU conectado", texto);
+						break;
+					default:
+						close(nuevaConexion);
+						log_error(logger,
+								"Error en el handshake. Conexion inesperada",
+								texto);
+						break;
+					}
+				}
+			} else {
+				// handle data from a client
+
+				if ((nbytesRecibidos = recv(i, buf, sizeof buf, 0)) <= 0) {
+					// got error or connection closed by client
+					if (nbytesRecibidos == 0) {
+						// connection closed
+						log_info(logger, "Se desconecto el socket", texto);
+					} else {
+						log_error(logger, "Error al recibir mensaje", texto);
+					}
+					close(i); // bye!
+					FD_CLR(i, &bolsaDeSockets); // remove from master set
+				} else {
+					printf("Holis\n"); //aca va el tp :D
+				}
+			}
+		}
 	}
-	log_info(logger, "Se conectó con la consola", texto);
-
-	printf("Recibí una conexión de la consola \n");
-
-	int bytesRecibidos;
-	char* ruta = malloc(30);
-	bytesRecibidos = recv(socketConsola, ruta, 30, 0);
-	ruta[bytesRecibidos] = '\0';
-
-	char buffer[10];
-	bytesRecibidos = recv(socketConsola, buffer, 10, 0);
-	buffer[bytesRecibidos] = '\0';
-
-	printf("Consola dice: %s\n", buffer);
-	log_info(logger, "Se recibió un mensaje", texto);
-
-	/*struct sockaddr_in direccionUmc;
-
-	 direccionUmc.sin_family = AF_INET;
-	 direccionUmc.sin_addr.s_addr = inet_addr(IP_UMC);
-	 direccionUmc.sin_port = htons(PUERTO_UMC);
-
-	 int socketUmc = socket(AF_INET, SOCK_STREAM, 0);
-
-	 if (connect(socketUmc, (void*) &direccionUmc , sizeof(direccionUmc))
-	 != 0) {
-	 perror("No se pudo conectar");
-	 return 1;
-	 }
-
-	 send(socketUmc, buffer, 100, 0);*/
-
-	listen(servidorNucleo, 100); //Esperando que se conecte el CPU
-
-	int socketCpu = aceptarConexion(servidorNucleo, &direccionCliente);
-
-	printf("Se conecto el CPU");
-
-	send(socketCpu, ruta, 30, 0);
-
-	log_info(logger, "Se conectó al CPU", texto);
-
-	send(socketCpu, buffer, 10, 0);
-
-	log_info(logger, "Se envió un buffer al CPU", texto);
-
-	free(buffer);
-
-	log_destroy(logger);
 
 	return EXIT_SUCCESS;
 
