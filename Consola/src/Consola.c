@@ -1,5 +1,5 @@
 #include "funciones.h"
-#include <commons/log.h>
+#include "commons/log.h"
 #include <Librerias/sockets.h>
 
 int main(int argc, char **argv) {
@@ -59,8 +59,7 @@ int main(int argc, char **argv) {
 
 
 
-	//if (responderHandshake(socketNucleo, IDCONSOLA, IDNUCLEO)) {
-	if (responderHandshake(socketNucleo, 1, 2)) {
+	if (responderHandshake(socketNucleo, IDCONSOLA, IDNUCLEO)) {
 		log_error(logger, "Error en el handshake", texto);
 		return 1;
 	}
