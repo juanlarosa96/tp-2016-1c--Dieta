@@ -31,7 +31,7 @@
 # Debug files
 *.dSYM/
 
-
+*.metadata
 
 
 *Consola/Debug/*
@@ -40,3 +40,6 @@
 *Nucleo/Debug/*
 *CPU/Debug/*
 *LibreriasSO/Debug/*
+*.cproject
+*.project
+*.log
