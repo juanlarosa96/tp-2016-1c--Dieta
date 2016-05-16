@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "funciones.h"
 
+
 int main(int argc, char **argv) {
 
 	t_config* config;
@@ -86,6 +87,8 @@ int main(int argc, char **argv) {
 	int nbytesRecibidos;
 	int i;
 
+	t_list listaCPUsConectados;
+
 	while (1) {
 		bolsaAuxiliar = bolsaDeSockets; // copy it
 		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1) {
@@ -110,7 +113,9 @@ int main(int argc, char **argv) {
 						log_info(logger, "Nueva consola conectada", texto);
 						break;
 					case IDCPU:
-						FD_SET(nuevaConexion, &bolsaDeSockets);
+						pthread_t nuevoHilo;
+						pthread_create(&nuevoHilo,NULL,manejarCPU,(void*) &i);  //Creo hilo que maneje el nuevo CPU
+						list_add(&listaCPUsConectados, nuevoHilo);
 						log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					default:
