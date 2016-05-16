@@ -65,18 +65,14 @@ int crearSocket(int *unSocket) {
 	}
 }
 
-int iniciarHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
+int iniciarHandshake(int socketDestino, uint8_t idOrigen) {
 	uint8_t idRecibido;
 
 	send(socketDestino, &idOrigen, sizeof(uint8_t), 0);
 
 	recibirTodo(socketDestino,&idRecibido,sizeof(uint8_t));
 
-	if (idRecibido != idEsperado){
-		return 1;
-	}else{
-		return 0;
-	}
+	return idRecibido;
 }
 
 int responderHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) {
