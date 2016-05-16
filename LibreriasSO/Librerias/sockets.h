@@ -5,7 +5,7 @@
 
 enum {
 
-	IDCONSOLA = 1, IDNUCLEO = 2, IDCPU = 3, IDUMC = 4, IDSWAP = 5
+	ERROR = 0, IDCONSOLA = 1, IDNUCLEO = 2, IDCPU = 3, IDUMC = 4, IDSWAP = 5
 };
 
 int crearSocket(int *unSocket);
