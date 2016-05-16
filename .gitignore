@@ -31,15 +31,11 @@
 # Debug files
 *.dSYM/
 
-*.metadata
-
-
-*Consola/Debug/*
-*UMC/Debug/*
-*Swap/Debug/*
-*Nucleo/Debug/*
-*CPU/Debug/*
-*LibreriasSO/Debug/*
-*.cproject
-*.project
-*.log
+Consola/Debug/*
+UMC/Debug/*
+Swap/Debug/*
+Nucleo/Debug/*
+CPU/Debug/*
+LibreriasSO/.cproject
+LibreriasSO/.project
+LibreriasSO/Debug/*
