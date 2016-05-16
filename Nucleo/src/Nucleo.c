@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "funciones.h"
 
-
 int main(int argc, char **argv) {
 
 	t_config* config;
@@ -40,13 +39,13 @@ int main(int argc, char **argv) {
 	int clienteUMC;
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
-		log_error(logger, "Se produjo un error creando el socket de UMC",texto);
+		log_error(logger, "Se produjo un error creando el socket de UMC",
+				texto);
 		return 1;
 	}
 	if (conectarA(clienteUMC, IP_UMC, PUERTO_UMC)) {
 		printf("Error al conectar\n");
-		log_error(logger, "Se produjo un error conectandose a la UMC",
-				texto);
+		log_error(logger, "Se produjo un error conectandose a la UMC", texto);
 		return 1;
 	}
 
@@ -105,17 +104,20 @@ int main(int argc, char **argv) {
 					int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
 
 					switch (idRecibido) {
-					case -1:
+					//case IDERROR: IDERROR no lo reconoce because reasons
+					case 0:
 						log_info(logger, "Se desconecto el socket", texto);
+						close(nuevaConexion);
 						break;
 					case IDCONSOLA:
 						FD_SET(nuevaConexion, &bolsaDeSockets);
 						log_info(logger, "Nueva consola conectada", texto);
 						break;
 					case IDCPU:
+						;
 						pthread_t nuevoHilo;
-						pthread_create(&nuevoHilo,NULL,manejarCPU,(void*) &i);  //Creo hilo que maneje el nuevo CPU
-						list_add(&listaCPUsConectados, nuevoHilo);
+						pthread_create(&nuevoHilo, NULL, manejarCPU, (void *) &i); //Creo hilo que maneje el nuevo CPU
+						list_add(&listaCPUsConectados, (void *) &nuevoHilo);
 						log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					default:
@@ -127,28 +129,14 @@ int main(int argc, char **argv) {
 					}
 				}
 			} else {
-				// handle data from a client
+				// Manejo consolas
 
-				if ((nbytesRecibidos = recv(i, buf, sizeof buf, 0)) <= 0) {
-					// got error or connection closed by client
-					if (nbytesRecibidos == 0) {
-						// connection closed
-						log_info(logger, "Se desconecto el socket", texto);
-					} else {
-						log_error(logger, "Error al recibir mensaje", texto);
-					}
-					close(i); // bye!
-					FD_CLR(i, &bolsaDeSockets); // remove from master set
-				} else {
-					printf("Holis\n"); //aca va el tp :D
-				}
 			}
 		}
 	}
 
 	return EXIT_SUCCESS;
+}
 
 //servidor para consola y cpu
 //cliente de umc
-
-}
