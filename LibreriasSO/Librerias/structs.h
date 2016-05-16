@@ -7,9 +7,9 @@
 
 #ifndef LIBRERIAS_STRUCTS_H_
 #define LIBRERIAS_STRUCTS_H_
-#include <"commons/collections/list.h">
-#include <"commons/collections/dictionary.h">
-#include <"parser/metadata_program.h">
+#include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
+#include <parser/metadata_program.h>
 
 typedef struct {
 	uint32_t inicio;
