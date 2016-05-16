@@ -80,7 +80,7 @@ int responderHandshake(int socketDestino, uint8_t idOrigen, uint8_t idEsperado) 
 	recibirTodo(socketDestino,&idRecibido,sizeof(uint8_t));
 
 		if (idRecibido != idEsperado){
-			send(socketDestino, 0, sizeof(uint8_t), 0);
+			send(socketDestino, ERROR, sizeof(uint8_t), 0);
 			return 1;
 		}else{
 			send(socketDestino, &idOrigen, sizeof(uint8_t), 0);
