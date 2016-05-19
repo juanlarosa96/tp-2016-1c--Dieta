@@ -5,9 +5,9 @@
  *      Author: utnso
  */
 
+#include "funciones.h"
 
-
-void * manejarCPU(int socketCpu){
+void manejarCPU(int socketCpu){
 
 	/*
 	 * chequeo que el CPU no haya hecho un hot plug
@@ -25,8 +25,8 @@ void * manejarCPU(int socketCpu){
 void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal){
 	t_colaPcb * nuevoElementoCola = malloc(sizeof(t_colaPcb));
 	nuevoElementoCola->pcb = elemento;
-	colaFinal.siguientePcb = nuevoElementoCola;
-	nuevoElementoCola.siguientePcb = (void *) 0;
+	colaFinal->siguientePcb = nuevoElementoCola;
+	nuevoElementoCola->siguientePcb = (void *) 0;
 	colaFinal = nuevoElementoCola;
 	return;
 }

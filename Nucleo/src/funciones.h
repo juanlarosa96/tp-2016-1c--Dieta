@@ -24,9 +24,9 @@ typedef struct {
 
 
 
-typedef struct {
+typedef struct t_colaPcb{
 	t_pcbConConsola pcb;
-	t_pcbConConsola * siguientePcb;
+	t_colaPcb * siguientePcb;
 }t_colaPcb;
 
 t_colaPcb cola_PCBListos;
@@ -40,7 +40,9 @@ t_pcbConConsola DevolverProcesoColaListos();
 
 t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola);
 
-void AgregarACola(t_pcbConConsola elemento, t_colaPcb cola);
+void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal);
+
+
 
 
 #endif /* FUNCIONES_H_ */
