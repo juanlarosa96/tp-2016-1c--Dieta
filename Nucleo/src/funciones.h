@@ -19,19 +19,25 @@
 
 typedef struct {
 	t_pcb pcb;
-	uint8_t estado;
-}pcbConEstado;
-
-t_list lista_PCB;
+	int socketConsola;
+}t_pcbConConsola;
 
 
 
-enum estados {
-	NUEVO = 1, LISTO = 2, EJECUCION = 3, BLOQUEADO = 4, FINALIZADO = 5
-};
+typedef struct {
+	t_pcbConConsola pcb;
+	t_pcbConConsola * siguientePcb;
+}t_colaPcb;
+
+t_colaPcb cola_PCB;
 
 void manejarCPU(int socketCpu);
 
+t_pcbConConsola DevolverProcesoColaListos();
+
+t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola);
+
+void AgregarACola(t_pcbConConsola elemento, t_colaPcb cola);
 
 
 #endif /* FUNCIONES_H_ */

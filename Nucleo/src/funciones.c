@@ -5,6 +5,8 @@
  *      Author: utnso
  */
 
+
+
 void * manejarCPU(int socketCpu){
 
 	/*
@@ -17,4 +19,25 @@ void * manejarCPU(int socketCpu){
 	 * Se pone pcb en cola de listo/bloqueado segun corresponda
 	 * repetir
 	 */
+}
+
+
+void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal){
+	t_colaPcb * nuevoElementoCola = malloc(sizeof(t_colaPcb));
+	nuevoElementoCola->pcb = elemento;
+	colaFinal.siguientePcb = nuevoElementoCola;
+	nuevoElementoCola.siguientePcb = (void *) 0;
+	colaFinal = nuevoElementoCola;
+	return;
+}
+
+t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola){
+	t_pcbConConsola elemento;
+	t_colaPcb * auxiliar;
+	elemento = inicioCola->pcb;
+	auxiliar = inicioCola;
+	inicioCola = inicioCola->siguientePcb;
+	free(auxiliar);
+	return elemento;
+
 }
