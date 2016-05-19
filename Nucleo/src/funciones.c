@@ -41,3 +41,36 @@ t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola){
 	return elemento;
 
 }
+
+
+t_pcbConConsola DevolverProcesoColaListos(){
+	return (sacarPrimeroCola(&cola_PCBListos));
+}
+
+t_pcbConConsola DevolverProcesoColaNuevos(){
+	return (sacarPrimeroCola(&cola_PCBNuevos));
+}
+
+t_pcbConConsola DevolverProcesoColaFinalizados(){
+	return (sacarPrimeroCola(&cola_PCBFinalizados));
+}
+
+t_pcbConConsola DevolverProcesoColaLBloqueados(){
+	return (sacarPrimeroCola(&cola_PCBListos));
+}
+
+void AgregarAProcesoColaListos(t_pcbConConsola elemento){
+	AgregarACola(elemento,&cola_PCBListos);
+}
+
+void AgregarAProcesoColaNuevos(t_pcbConConsola elemento){
+	AgregarACola(elemento,&cola_PCBNuevos);
+}
+
+void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento){
+	AgregarACola(elemento,&cola_PCBFinalizados);
+}
+
+void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento){
+	AgregarACola(elemento,&cola_PCBBloqueados);
+}

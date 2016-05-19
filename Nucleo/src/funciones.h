@@ -29,7 +29,10 @@ typedef struct {
 	t_pcbConConsola * siguientePcb;
 }t_colaPcb;
 
-t_colaPcb cola_PCB;
+t_colaPcb cola_PCBListos;
+t_colaPcb cola_PCBNuevos;
+t_colaPcb cola_PCBFinalizados;
+t_colaPcb cola_PCBBloqueados;
 
 void manejarCPU(int socketCpu);
 
