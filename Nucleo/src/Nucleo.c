@@ -23,8 +23,7 @@ int main(int argc, char **argv) {
 
 	//Creo log para el Núcleo
 	t_log* logger;
-	logger = log_create("Núcelo.log", "NUCLEO", 1,
-			log_level_from_string("INFO"));
+	logger = log_create("Núcelo.log", "NUCLEO", 1, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
@@ -39,8 +38,7 @@ int main(int argc, char **argv) {
 	int clienteUMC;
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
-		log_error(logger, "Se produjo un error creando el socket de UMC",
-				texto);
+		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
 		return 1;
 	}
 	if (conectarA(clienteUMC, IP_UMC, PUERTO_UMC)) {
@@ -50,6 +48,7 @@ int main(int argc, char **argv) {
 	}
 
 	log_info(logger, "Se estableció la conexion con la UMC", texto);
+
 	int servidorNucleo;
 	if (crearSocket(&servidorNucleo)) {
 		printf("Error creando socket");
@@ -57,8 +56,7 @@ int main(int argc, char **argv) {
 	}
 	if (escucharEn(servidorNucleo, PUERTO_SERVIDOR)) {
 		printf("Error al conectar");
-		log_error(logger, "Se produjo un error creando el socket servidor",
-				texto);
+		log_error(logger, "Se produjo un error creando el socket servidor", texto);
 		return 1;
 	}
 
@@ -103,6 +101,7 @@ int main(int argc, char **argv) {
 					nuevaConexion = aceptarConexion(i, &direccionCliente);
 					int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
 
+
 					switch (idRecibido) {
 					//case IDERROR: IDERROR no lo reconoce because reasons
 					case 0:
@@ -116,15 +115,13 @@ int main(int argc, char **argv) {
 					case IDCPU:
 						;
 						pthread_t nuevoHilo;
-						pthread_create(&nuevoHilo, NULL, manejarCPU, (void *) &i); //Creo hilo que maneje el nuevo CPU
+						pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i); //Creo hilo que maneje el nuevo CPU
 						list_add(&listaCPUsConectados, (void *) &nuevoHilo);
 						log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					default:
 						close(nuevaConexion);
-						log_error(logger,
-								"Error en el handshake. Conexion inesperada",
-								texto);
+						log_error(logger, "Error en el handshake. Conexion inesperada", texto);
 						break;
 					}
 				}

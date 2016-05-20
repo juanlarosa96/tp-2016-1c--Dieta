@@ -12,25 +12,36 @@
 #include <sys/socket.h>
 #include "commons/log.h"
 #include <commons/collections/list.h>
-#include <Librerias/sockets.h>
-#include <Librerias/structs.h>
+#include <sockets.h>
+#include <structs.h>
 #include <unistd.h>
 #include <pthread.h>
 
 typedef struct {
 	t_pcb pcb;
-	uint8_t estado;
-}pcbConEstado;
-
-t_list lista_PCB;
+	int socketConsola;
+}t_pcbConConsola;
 
 
 
-enum estados {
-	NUEVO = 1, LISTO = 2, EJECUCION = 3, BLOQUEADO = 4, FINALIZADO = 5
-};
+typedef struct t_colaPcb{
+	t_pcbConConsola pcb;
+	t_colaPcb * siguientePcb;
+}t_colaPcb;
+
+t_colaPcb cola_PCBListos;
+t_colaPcb cola_PCBNuevos;
+t_colaPcb cola_PCBFinalizados;
+t_colaPcb cola_PCBBloqueados;
 
 void manejarCPU(int socketCpu);
+
+t_pcbConConsola DevolverProcesoColaListos();
+
+t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola);
+
+void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal);
+
 
 
 
