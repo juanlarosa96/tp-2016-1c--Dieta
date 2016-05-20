@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -24,23 +25,22 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-/*
- enum handshake {
- NUCLEO = 3, CPU = 4,
- };
- */
+
+#include <sockets.h>
+
+
 
 int main(int argc, char *argv[]) {
 
-	//Crear hilo para la consola UMC
-
-	//Recibe el archivo de config por parametro
+	t_config* config;
 	if (argc != 2) {
-		printf("Número incorrecto de parámetros\n");
-		return -1;
-	}
+		//printf("Número incorrecto de parámetros\n");
+		//return -1;
+		config = config_create("./Configuracion/config");
+	} else {
 
-	t_config* config = config_create(argv[1]);
+		config = config_create(argv[1]);
+	}
 
 	int puerto_servidor = config_get_int_value(config, "PUERTO");
 	int puerto_swap = config_get_int_value(config, "PUERTO_SWAP");
@@ -48,7 +48,23 @@ int main(int argc, char *argv[]) {
 
 	/*---------SOCKET SERVIDOR------------*/
 
-	struct sockaddr_in direccionServidorUMC;
+	int servidorUMC;
+		if (crearSocket(&servidorUMC)) {
+			printf("Error creando socket");
+			return 1;
+		}
+		if (escucharEn(servidorUMC, puerto_servidor)) {
+			printf("Error al conectar");
+			//log_error(logger, "Se produjo un error creando el socket servidor", texto);
+			return 1;
+		}
+
+		//log_info(logger, "Se estableció correctamente el socket servidor", texto);
+		printf("Escuchando\n");
+
+
+
+	/*struct sockaddr_in direccionServidorUMC;
 	direccionServidorUMC.sin_family = AF_INET;
 	direccionServidorUMC.sin_addr.s_addr = INADDR_ANY;
 	direccionServidorUMC.sin_port = htons(puerto_servidor);
@@ -67,20 +83,21 @@ int main(int argc, char *argv[]) {
 
 	printf("Estoy escuchando\n");
 
-	listen(servidorUMC, 100);
+	listen(servidorUMC, 100);*/
 
 	//clientes de UMC: núcleo, CPU.
 
-	struct sockaddr_in direccionCliente;
+	/*struct sockaddr_in direccionCliente;
 	unsigned int len;
 	len = sizeof(struct sockaddr_in);
 
 	int socketCliente = accept(servidorUMC, (void*) &direccionCliente, &len);
 	printf("Recibí una conexión\n");
+	*/
 
-	char* buffer = malloc(10);
-	int bytesRecibidos = recv(socketCliente, buffer, 10, 0); //Recibe "HEADER: Hola UMC"
-	buffer[bytesRecibidos] = '\0';
+
+	//int bytesRecibidos = recv(socketCliente, buffer, 10, 0); //Recibe "HEADER: Hola UMC"
+	//buffer[bytesRecibidos] = '\0';
 
 	/*----------SELECT----------------*/
 
@@ -92,14 +109,19 @@ int main(int argc, char *argv[]) {
 	FD_ZERO(&bolsaAuxiliar);
 
 	FD_SET(listener, &bolsaDeSockets);
-	FD_SET(socketCliente, &bolsaDeSockets);
+	//FD_SET(socketCliente, &bolsaDeSockets);
 
 	int fdmax;        // maximum file descriptor number
-	fdmax = (servidorUMC > socketCliente) ? servidorUMC : socketCliente;
+	//fdmax = (servidorUMC > socketCliente) ? servidorUMC : socketCliente;
 
-	int newfd;        // newly accept()ed socket descriptor
-	struct sockaddr_storage remoteaddr; // client address
-	socklen_t addrlen;
+	fdmax = listener;
+
+	int nuevaConexion;        // newly accept()ed socket descriptor
+	struct sockaddr_in direccionCliente;
+
+	//struct sockaddr_storage remoteaddr; // client address
+	//socklen_t addrlen;
+
 
 	char buf[256];    // buffer for client data
 	int nbytesRecibidos;
@@ -108,40 +130,74 @@ int main(int argc, char *argv[]) {
 
 	int i;
 
-
 	//struct addrinfo hints, *ai, *p;
 
-	for (;;) {
+	while(1) {
 		bolsaAuxiliar = bolsaDeSockets; // copy it
-		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1) {
+		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1)
+		{
 			perror("select");
 			exit(4);
 		}
 
 		// run through the existing connections looking for data to read
-		for (i = 0; i <= fdmax; i++) {
-			if (FD_ISSET(i, &bolsaAuxiliar)) { // we got one!!
-				if (i == listener) {
+		for (i = 0; i <= fdmax; i++)
+		{
+			if (FD_ISSET(i, &bolsaAuxiliar))
+			{ // we got one!!
+				if (i == listener)
+				{
+					nuevaConexion = aceptarConexion(i, &direccionCliente);
+					int idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
+
+					switch (idRecibido) {
+										case 0:
+											//log_info(logger, "Se desconecto el socket", texto);
+											close(nuevaConexion);
+											break;
+										case IDCPU:
+											FD_SET(nuevaConexion, &bolsaDeSockets);
+											pthread_t nuevoHilo;
+											//pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i);
+											//Creo hilo que maneje el nuevo CPU
+											//log_info(logger, "Nuevo CPU conectado", texto);
+											break;
+										default:
+											close(nuevaConexion);
+											//log_error(logger, "Error en el handshake. Conexion inesperada", texto);
+											break;
+										}
+				} else
+					{
+						printf("Holis\n");//aca va el tp :D
+				    }
+			 }
+		}
+	}
+
+
 					// handle new connections
-					addrlen = sizeof remoteaddr;
+					/*addrlen = sizeof remoteaddr;
 					newfd = accept(listener, (struct sockaddr *) &remoteaddr,
 							&addrlen);
 
 
 					if (newfd == -1) {
 						perror("accept");
+
+
 					} else {
 						FD_SET(newfd, &bolsaDeSockets); // add to master set
 						if (newfd > fdmax) {    // keep track of the max
 							fdmax = newfd;
 						}
 						printf("Nueva Conexion\n");
-						/*printf("selectserver: new connection from %s on "
+						printf("selectserver: new connection from %s on "
 						 "socket %d\n",
 						 inet_ntop(remoteaddr.ss_family,
 						 get_in_addr((struct sockaddr*)&remoteaddr),
 						 remoteIP, INET6_ADDRSTRLEN),
-						 newfd);*/
+						 newfd);
 					}
 				} else {
 					// handle data from a client
@@ -154,14 +210,12 @@ int main(int argc, char *argv[]) {
 							perror("recv");
 						}
 						close(i); // bye!
-						FD_CLR(i, &bolsaDeSockets); // remove from master set
-					} else {
-						printf("Holis\n");//aca va el tp :D
-									}
-								}
-							}
-						}
-					}
+						FD_CLR(i, &bolsaDeSockets); // remove from master set*/
+
+
+
+
+
 				 // END handle data from client
 			 // END got new incoming connection
 		 // END looping through file descriptors
@@ -192,24 +246,11 @@ int main(int argc, char *argv[]) {
 		}
 
 		break;
-	}
+	}*/
 
-	FALTA IMPLEMENTAR HANDSHAKE
-	 char * quienSos = string_substring_until(bufferServidor, 1); //Supongo que el header tiene 1 byte
-	 int quienMeHabla = atoi(quienSos); //capaz esto me conviene encapsularlo en una funcion
 
-	 switch(quienMeHabla){
-	 case NUCLEO: send(socketCliente, "Hola Núcleo!", 13, 0);
-	 break;
-	 case CPU: send(socketCliente,"Hola CPU!",10, 0);
-	 break;
-	 default:
-	 send(socketCliente,"No te conozco",100,0);
-	 //aca corta la conexion ?
-	 }
-	 */
 
-	printf("CPU dice: %s\n", buffer);
+	//printf("CPU dice: %s\n", buffer);
 
 	/*---------FIN SOCKET SERVIDOR-------*/
 
@@ -227,7 +268,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	//scanf("%s\n", buffer);
+	char* buffer = malloc(10);
+	scanf("%s\n", buffer);
 	send(clienteUMC, buffer, 10, 0);
 
 	free(buffer);
