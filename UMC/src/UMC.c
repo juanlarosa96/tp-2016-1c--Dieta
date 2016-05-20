@@ -25,10 +25,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-
 #include <sockets.h>
-
-
 
 int main(int argc, char *argv[]) {
 
@@ -48,57 +45,86 @@ int main(int argc, char *argv[]) {
 
 	/*---------SOCKET SERVIDOR------------*/
 
+	//servidor de Nucleo y CPUs
 	int servidorUMC;
-		if (crearSocket(&servidorUMC)) {
-			printf("Error creando socket");
-			return 1;
-		}
-		if (escucharEn(servidorUMC, puerto_servidor)) {
-			printf("Error al conectar");
-			//log_error(logger, "Se produjo un error creando el socket servidor", texto);
-			return 1;
-		}
-
-		//log_info(logger, "Se estableció correctamente el socket servidor", texto);
-		printf("Escuchando\n");
-
-
-
-	/*struct sockaddr_in direccionServidorUMC;
-	direccionServidorUMC.sin_family = AF_INET;
-	direccionServidorUMC.sin_addr.s_addr = INADDR_ANY;
-	direccionServidorUMC.sin_port = htons(puerto_servidor);
-
-	int servidorUMC = socket(AF_INET, SOCK_STREAM, 0);
-
-	int activado = 1;
-	setsockopt(servidorUMC, SOL_SOCKET, SO_REUSEADDR, &activado,
-			sizeof(activado));
-
-	if (bind(servidorUMC, (void*) &direccionServidorUMC,
-			sizeof(direccionServidorUMC)) != 0) {
-		perror("Falló el bind");
+	if (crearSocket(&servidorUMC)) {
+		printf("Error creando socket");
+		return 1;
+	}
+	if (escucharEn(servidorUMC, puerto_servidor)) {
+		printf("Error al conectar");
+		//log_error(logger, "Se produjo un error creando el socket servidor", texto);
 		return 1;
 	}
 
-	printf("Estoy escuchando\n");
+	//log_info(logger, "Se estableció correctamente el socket servidor", texto);
+	printf("Escuchando\n");
 
-	listen(servidorUMC, 100);*/
+	/*---------SOCKET CLIENTE------------*/
+	//cliente de Swap
+
+	int clienteSwap;
+	if (crearSocket(&clienteSwap)) {
+		printf("Error creando socket\n");
+		//log_error(logger, "Se produjo un error creando el socket de UMC", texto);
+		return 1;
+	}
+	if (conectarA(clienteSwap, ip_swap, puerto_swap)) {
+		printf("Error al conectar\n");
+		//log_error(logger, "Se produjo un error conectandose a la UMC", texto);
+		return 1;
+	}
+
+	/*struct sockaddr_in direccionSwap;
+	 direccionSwap.sin_family = AF_INET;
+	 direccionSwap.sin_addr.s_addr = inet_addr(ip_swap);
+	 direccionSwap.sin_port = htons(puerto_swap);
+
+	 int clienteUMC = socket(AF_INET, SOCK_STREAM, 0);
+	 if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap))
+	 != 0) {
+	 perror("No se pudo conectar con el socket de SWAP");
+	 return 1;
+	 }
+
+	 char* buffer = malloc(10);
+	 scanf("%s\n", buffer);
+	 send(clienteUMC, buffer, 10, 0);
+
+	 free(buffer);*/
+
+	/*struct sockaddr_in direccionServidorUMC;
+	 direccionServidorUMC.sin_family = AF_INET;
+	 direccionServidorUMC.sin_addr.s_addr = INADDR_ANY;
+	 direccionServidorUMC.sin_port = htons(puerto_servidor);
+
+	 int servidorUMC = socket(AF_INET, SOCK_STREAM, 0);
+
+	 int activado = 1;
+	 setsockopt(servidorUMC, SOL_SOCKET, SO_REUSEADDR, &activado,
+	 sizeof(activado));
+
+	 if (bind(servidorUMC, (void*) &direccionServidorUMC,
+	 sizeof(direccionServidorUMC)) != 0) {
+	 perror("Falló el bind");
+	 return 1;
+	 }
+
+	 printf("Estoy escuchando\n");
+
+	 listen(servidorUMC, 100);*/
 
 	//clientes de UMC: núcleo, CPU.
-
 	/*struct sockaddr_in direccionCliente;
-	unsigned int len;
-	len = sizeof(struct sockaddr_in);
+	 unsigned int len;
+	 len = sizeof(struct sockaddr_in);
 
-	int socketCliente = accept(servidorUMC, (void*) &direccionCliente, &len);
-	printf("Recibí una conexión\n");
-	*/
-
+	 int socketCliente = accept(servidorUMC, (void*) &direccionCliente, &len);
+	 printf("Recibí una conexión\n");
+	 */
 
 	//int bytesRecibidos = recv(socketCliente, buffer, 10, 0); //Recibe "HEADER: Hola UMC"
 	//buffer[bytesRecibidos] = '\0';
-
 	/*----------SELECT----------------*/
 
 	fd_set bolsaDeSockets;
@@ -122,7 +148,6 @@ int main(int argc, char *argv[]) {
 	//struct sockaddr_storage remoteaddr; // client address
 	//socklen_t addrlen;
 
-
 	char buf[256];    // buffer for client data
 	int nbytesRecibidos;
 
@@ -132,149 +157,113 @@ int main(int argc, char *argv[]) {
 
 	//struct addrinfo hints, *ai, *p;
 
-	while(1) {
+	while (1) {
 		bolsaAuxiliar = bolsaDeSockets; // copy it
-		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1)
-		{
+		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1) {
 			perror("select");
 			exit(4);
 		}
 
 		// run through the existing connections looking for data to read
-		for (i = 0; i <= fdmax; i++)
-		{
-			if (FD_ISSET(i, &bolsaAuxiliar))
-			{ // we got one!!
-				if (i == listener)
-				{
+		for (i = 0; i <= fdmax; i++) {
+			if (FD_ISSET(i, &bolsaAuxiliar)) { // we got one!!
+				if (i == listener) {
 					nuevaConexion = aceptarConexion(i, &direccionCliente);
 					int idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
 
 					switch (idRecibido) {
-										case 0:
-											//log_info(logger, "Se desconecto el socket", texto);
-											close(nuevaConexion);
-											break;
-										case IDCPU:
-											FD_SET(nuevaConexion, &bolsaDeSockets);
-											pthread_t nuevoHilo;
-											//pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i);
-											//Creo hilo que maneje el nuevo CPU
-											//log_info(logger, "Nuevo CPU conectado", texto);
-											break;
-										default:
-											close(nuevaConexion);
-											//log_error(logger, "Error en el handshake. Conexion inesperada", texto);
-											break;
-										}
-				} else
-					{
-						printf("Holis\n");//aca va el tp :D
-				    }
-			 }
+					case 0:
+						//log_info(logger, "Se desconecto el socket", texto);
+						close(nuevaConexion);
+						break;
+					case IDCPU:
+						FD_SET(nuevaConexion, &bolsaDeSockets);
+						pthread_t nuevoHilo;
+						//pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i);
+						//Creo hilo que maneje el nuevo CPU
+						//log_info(logger, "Nuevo CPU conectado", texto);
+						break;
+					default:
+						close(nuevaConexion);
+						//log_error(logger, "Error en el handshake. Conexion inesperada", texto);
+						break;
+					}
+				} else {
+					printf("Holis\n");						//aca va el tp :D
+				}
+			}
 		}
 	}
 
-
-					// handle new connections
-					/*addrlen = sizeof remoteaddr;
-					newfd = accept(listener, (struct sockaddr *) &remoteaddr,
-							&addrlen);
-
-
-					if (newfd == -1) {
-						perror("accept");
+	// handle new connections
+	/*addrlen = sizeof remoteaddr;
+	 newfd = accept(listener, (struct sockaddr *) &remoteaddr,
+	 &addrlen);
 
 
-					} else {
-						FD_SET(newfd, &bolsaDeSockets); // add to master set
-						if (newfd > fdmax) {    // keep track of the max
-							fdmax = newfd;
-						}
-						printf("Nueva Conexion\n");
-						printf("selectserver: new connection from %s on "
-						 "socket %d\n",
-						 inet_ntop(remoteaddr.ss_family,
-						 get_in_addr((struct sockaddr*)&remoteaddr),
-						 remoteIP, INET6_ADDRSTRLEN),
-						 newfd);
-					}
-				} else {
-					// handle data from a client
-					if ((nbytesRecibidos = recv(i, buf, sizeof buf, 0)) <= 0) {
-						// got error or connection closed by client
-						if (nbytesRecibidos == 0) {
-							// connection closed
-							printf("selectserver: socket %d hung up\n", i);
-						} else {
-							perror("recv");
-						}
-						close(i); // bye!
-						FD_CLR(i, &bolsaDeSockets); // remove from master set*/
+	 if (newfd == -1) {
+	 perror("accept");
 
 
+	 } else {
+	 FD_SET(newfd, &bolsaDeSockets); // add to master set
+	 if (newfd > fdmax) {    // keep track of the max
+	 fdmax = newfd;
+	 }
+	 printf("Nueva Conexion\n");
+	 printf("selectserver: new connection from %s on "
+	 "socket %d\n",
+	 inet_ntop(remoteaddr.ss_family,
+	 get_in_addr((struct sockaddr*)&remoteaddr),
+	 remoteIP, INET6_ADDRSTRLEN),
+	 newfd);
+	 }
+	 } else {
+	 // handle data from a client
+	 if ((nbytesRecibidos = recv(i, buf, sizeof buf, 0)) <= 0) {
+	 // got error or connection closed by client
+	 if (nbytesRecibidos == 0) {
+	 // connection closed
+	 printf("selectserver: socket %d hung up\n", i);
+	 } else {
+	 perror("recv");
+	 }
+	 close(i); // bye!
+	 FD_CLR(i, &bolsaDeSockets); // remove from master set*/
 
-
-
-				 // END handle data from client
-			 // END got new incoming connection
-		 // END looping through file descriptors
-	 // END for(;;)--and you thought it would never end!
-
+	// END handle data from client
+	// END got new incoming connection
+	// END looping through file descriptors
+	// END for(;;)--and you thought it would never end!
 	/*memset(&hints, 0, sizeof hints);
 	 hints.ai_family = AF_UNSPEC;
 	 hints.ai_socktype = SOCK_STREAM;
 	 hints.ai_flags = AI_PASSIVE;
 
-	if ((rv = getaddrinfo(NULL, PORT, &hints, &ai)) != 0) {
+	 if ((rv = getaddrinfo(NULL, PORT, &hints, &ai)) != 0) {
 	 fprintf(stderr, "selectserver: %s\n", gai_strerror(rv));
 	 exit(1);
 	 }
 
-	for (p = ai; p != NULL; p = p->ai_next) {
-		listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-		if (listener < 0) {
-			continue;
-		}
+	 for (p = ai; p != NULL; p = p->ai_next) {
+	 listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+	 if (listener < 0) {
+	 continue;
+	 }
 
-		// lose the pesky "address already in use" error message
-		setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	 // lose the pesky "address already in use" error message
+	 setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-		if (bind(listener, p->ai_addr, p->ai_addrlen) < 0) {
-			close(listener);
-			continue;
-		}
+	 if (bind(listener, p->ai_addr, p->ai_addrlen) < 0) {
+	 close(listener);
+	 continue;
+	 }
 
-		break;
-	}*/
-
-
+	 break;
+	 }*/
 
 	//printf("CPU dice: %s\n", buffer);
 
-	/*---------FIN SOCKET SERVIDOR-------*/
-
-	/*---------SOCKET CLIENTE------------*/
-
-	struct sockaddr_in direccionSwap;
-	direccionSwap.sin_family = AF_INET;
-	direccionSwap.sin_addr.s_addr = inet_addr(ip_swap);
-	direccionSwap.sin_port = htons(puerto_swap);
-
-	int clienteUMC = socket(AF_INET, SOCK_STREAM, 0);
-	if (connect(clienteUMC, (void*) &direccionSwap, sizeof(direccionSwap))
-			!= 0) {
-		perror("No se pudo conectar con el socket de SWAP");
-		return 1;
-	}
-
-	char* buffer = malloc(10);
-	scanf("%s\n", buffer);
-	send(clienteUMC, buffer, 10, 0);
-
-	free(buffer);
-
-	/*---------FIN SOCKET CLIENTE-------*/
 
 	config_destroy(config);
 
