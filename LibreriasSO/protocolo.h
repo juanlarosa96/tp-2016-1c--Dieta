@@ -13,7 +13,7 @@
 
 enum headers { //Constantes que identifican los headers de los mensajes
 
-	programaAnsisop = 1, largoProgramaAnsisop = 2
+	programaAnsisop = 1, largoProgramaAnsisop = 2, tamanioDePagina = 3
 };
 int recibirHeader(int socketOrigen);
 void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo);
