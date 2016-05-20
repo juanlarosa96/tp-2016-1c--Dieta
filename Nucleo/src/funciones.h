@@ -12,8 +12,8 @@
 #include <sys/socket.h>
 #include "commons/log.h"
 #include <commons/collections/list.h>
-#include <Librerias/sockets.h>
-#include <Librerias/structs.h>
+#include <sockets.h>
+#include <structs.h>
 #include <unistd.h>
 #include <pthread.h>
 

@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
 	}
 
 	log_info(logger, "Se estableció la conexion con la UMC", texto);
+
 	int servidorNucleo;
 	if (crearSocket(&servidorNucleo)) {
 		printf("Error creando socket");
@@ -99,6 +100,7 @@ int main(int argc, char **argv) {
 					// handle new connections
 					nuevaConexion = aceptarConexion(i, &direccionCliente);
 					int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
+
 
 					switch (idRecibido) {
 					//case IDERROR: IDERROR no lo reconoce because reasons
