@@ -1,6 +1,6 @@
 #include "funciones.h"
 #include "commons/log.h"
-#include <Librerias/sockets.h>
+#include <sockets.h>
 
 int main(int argc, char **argv) {
 
