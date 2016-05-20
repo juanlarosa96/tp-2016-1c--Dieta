@@ -33,3 +33,10 @@ int recibirLargoProgramaAnsisop(int socketOrigen) {
 	return largoCodigo;
 
 }
+
+int recibirTamanioPagina(int socketOrigen) {
+	int tamanio;
+	recibirTodo(socketOrigen, &tamanio, sizeof(int));
+	return tamanio;
+
+}

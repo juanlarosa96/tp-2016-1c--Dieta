@@ -19,5 +19,6 @@ int recibirHeader(int socketOrigen);
 void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo);
 void recibirProgramaAnsisop(int socketOrigen, char * codigo, int largoCodigo);
 int recibirLargoProgramaAnsisop(int socketOrigen);
+int recibirTamanioPagina(int socketOrigen);
 
 #endif /* PROTOCOLO_H_ */
