@@ -17,13 +17,14 @@
 
 int main(int argc, char *argv[]) {
 
-//	if (argc != 2) {
-//			printf("Número incorrecto de parámetros\n");
-//			return -1;
-//		}
-//	t_config *config = config_create(argv[1]);
+	t_config *config;
 
-	t_config *config = config_create("/home/utnso/Projects/tp-2016-1c--Dieta/Swap/Configuracion/config");
+	if (argc != 2) {
+		//	printf("Número incorrecto de parámetros\n");
+		//	return -1;
+		 config= config_create("/home/utnso/Projects/tp-2016-1c--Dieta/Swap/Configuracion/config");
+		}else{
+			config = config_create(argv[1]);}
 
 	int puertoServidor =   config_get_int_value(config,"PUERTO_ESCUCHA");
 	int cantidadDePaginas =   config_get_int_value(config,"CANTIDAD_PAGINAS");
@@ -43,15 +44,17 @@ int main(int argc, char *argv[]) {
 
 	if ( system(comando) !=0){
 		printf("No se creo el archivo");
+		return -1;
 	}
 
 
+	FILE*archivoSwap=fopen("./nombre","r");
 
+	if (archivoSwap == NULL){
+		printf("No se pudo abrir el archivo");
+		return -1;
+	};
 
-	//	FILE*ArchivoSwap=fopen("./nombre","r");
-
-
-/*
 
 //---------------------------------------------------------------------------
 	struct sockaddr_in direccionServidorSwap;
@@ -94,8 +97,9 @@ int main(int argc, char *argv[]) {
 
 	free(buffer);
 //---------------------------------------------------------------------------
-	config_destroy(config);*/
 
+	config_destroy(config);
+	fclose(archivoSwap);
 	return 0;
 }
 
