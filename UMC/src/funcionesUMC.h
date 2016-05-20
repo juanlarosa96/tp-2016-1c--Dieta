@@ -21,6 +21,9 @@ void finalizarPrograma(uint32_t idPrograma);
 
 void cambioProceso(uint32_t idPrograma);
 
+/*----Otras----*/
+
+void procesarSolicitudOperacion();
 
 
 #endif /* FUNCIONESUMC_H_ */
