@@ -23,6 +23,6 @@ void recibirProgramaAnsisop(int socketOrigen, char * codigo, int largoCodigo);
 int recibirLargoProgramaAnsisop(int socketOrigen);
 int recibirTamanioPagina(int socketOrigen);
 void enviarTamanioPagina(int socketDestino, int tamanioPagina);
-int enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
+void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 
 #endif /* PROTOCOLO_H_ */

@@ -51,3 +51,9 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina){
 	send(socketDestino, buffer, len, 0); //implementado de forma horrenda
 
 }
+
+void enviarPedidoPaginas(int socketUMC, int cantidadPaginas){
+	int header = programaAnsisop;
+		send(socketUMC, &header, sizeof(int), 0);
+		send(socketUMC, &cantidadPaginas, sizeof(int), 0);
+}
