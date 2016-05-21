@@ -16,6 +16,9 @@
 #include <Librerias/Librerias/structs.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <protocolo.h>
+
+int tamanioPagina;
 
 typedef struct {
 	t_pcb pcb;
@@ -42,7 +45,8 @@ t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola);
 
 void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal);
 
+t_pcb crearPcb(char * programa, int largoPrograma);
 
-
+int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina);
 
 #endif /* FUNCIONES_H_ */

@@ -26,6 +26,8 @@
 #include <netdb.h>
 
 #include <sockets.h>
+#include <protocolo.h>
+
 
 int main(int argc, char *argv[]) {
 
@@ -39,9 +41,17 @@ int main(int argc, char *argv[]) {
 		config = config_create(argv[1]);
 	}
 
+	int cant_frames = config_get_int_value(config,"MARCOS");
+	int size_frames = config_get_int_value(config, "MARCOS_SIZE");
+	int memoriaDisponible = cant_frames * size_frames;
+
+	int * memoria = malloc(memoriaDisponible);
+	memset(memoria,0,sizeof(memoriaDisponible)); //en el tercer parametro va memoria o memoria disponible?
+
 	int puerto_servidor = config_get_int_value(config, "PUERTO");
 	int puerto_swap = config_get_int_value(config, "PUERTO_SWAP");
 	char* ip_swap = config_get_string_value(config, "IP_SWAP");
+
 
 	/*---------SOCKET SERVIDOR------------*/
 
@@ -178,10 +188,14 @@ int main(int argc, char *argv[]) {
 						break;
 					case IDCPU:
 						FD_SET(nuevaConexion, &bolsaDeSockets);
+						enviarTamanioPagina(nuevaConexion, size_frames);
 						pthread_t nuevoHilo;
 						//pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i);
 						//Creo hilo que maneje el nuevo CPU
 						//log_info(logger, "Nuevo CPU conectado", texto);
+						break;
+					case IDNUCLEO:
+						enviarTamanioPagina(nuevaConexion, size_frames);
 						break;
 					default:
 						close(nuevaConexion);
@@ -194,6 +208,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+
 
 	// handle new connections
 	/*addrlen = sizeof remoteaddr;
