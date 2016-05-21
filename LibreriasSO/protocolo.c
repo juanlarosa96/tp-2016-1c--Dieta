@@ -20,7 +20,7 @@ void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo) {
 	int header = programaAnsisop;
 	send(socketDestino, &header, sizeof(int), 0);
 	send(socketDestino, &largoCodigo, sizeof(int), 0);
-	send(socketDestino, codigo, largoCodigo, 0);
+	send(socketDestino, codigo, largoCodigo, 0); //hay que serializar algo acá?
 }
 
 void recibirProgramaAnsisop(int socketOrigen, char * codigo, int largoCodigo) {
@@ -38,5 +38,16 @@ int recibirTamanioPagina(int socketOrigen) {
 	int tamanio;
 	recibirTodo(socketOrigen, &tamanio, sizeof(int));
 	return tamanio;
+
+}
+
+void enviarTamanioPagina(int socketDestino, int tamanioPagina){
+	char temporal[5];
+	sprintf(temporal, "%d", tamanioPagina);
+	char buffer[2 + 5]; //header + payload
+	strcpy(buffer, "3"); //header, protocolo
+	strcat(buffer, temporal);
+	int len = strlen(buffer);
+	send(socketDestino, buffer, len, 0); //implementado de forma horrenda
 
 }
