@@ -80,7 +80,7 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 }
 
 
-int pedirPaginasAUMC(int socketUMC, int cantidadBytes, tamanioPagina){
+int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina){
 	int cantidadPaginas = cantidadBytes / tamanioPagina;
 	if(cantidadBytes % tamanioPagina != 0){
 		cantidadPaginas++;
