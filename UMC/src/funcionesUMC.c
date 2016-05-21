@@ -6,6 +6,7 @@
  */
 
 #include "funcionesUMC.h"
+#include <stdint.h>
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas){
 };

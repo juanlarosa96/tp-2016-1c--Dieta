@@ -8,6 +8,7 @@
 #ifndef FUNCIONESUMC_H_
 #define FUNCIONESUMC_H_
 
+#include <stdint.h>
 
 /*-------OperatoriaUMC-------*/
 
