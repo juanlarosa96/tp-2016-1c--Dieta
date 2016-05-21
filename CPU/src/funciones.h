@@ -20,13 +20,21 @@
 #include <commons/string.h>
 #include <stdint.h>
 #include <commons/config.h>
+#include <Librerias/Librerias/structs.h>
 
 
-t_puntero definirVariable(t_nombre_variable variable);
-t_puntero obtenerPosicionVariable(t_nombre_variable variable);
-t_valor_variable dereferenciar(t_puntero puntero);
-void asignar(t_puntero puntero, t_valor_variable variable);
-void imprimir(t_valor_variable valor);
-void imprimirTexto(char* texto);
+
+//void recibirLineaCodigo(socketUMC, pcbRecibido);
+
+t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
+char* recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* holis);
+
+/* char [ pedirLineaCodigo(socketUMC, pcbRecibido){
+ * char[ resultado = enviarPedidoLineaAnSISOP(socketUMC, pcbRecibido);
+ * return resultado;
+ */
+
+
+
 
 #endif /* FUNCIONES_H_ */

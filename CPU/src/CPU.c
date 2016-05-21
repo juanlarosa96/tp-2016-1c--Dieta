@@ -6,13 +6,23 @@
 #include <sys/socket.h>
 #include "funciones.h"
 #include "commons/log.h"
+#include <Librerias/Librerias/sockets.h>
+#include <Librerias/Librerias/protocolo.h>
+#include <Librerias/Librerias/structs.h>
+#include <parser/metadata_program.h>
+#include "primitivas.h";
+#include "variables_globales.h"
 
-AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
+AnSISOP_funciones functions = {
+		.AnSISOP_definirVariable = definirVariable,
 		.AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
-		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar,
-		.AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
+		.AnSISOP_dereferenciar = dereferenciar,
+		.AnSISOP_asignar = asignar,
+		.AnSISOP_imprimir = imprimir,
+		.AnSISOP_imprimirTexto = imprimirTexto,
 
 };
+
 AnSISOP_kernel kernel_functions = { };
 
 int main(int argc, char *argv[]) {
@@ -24,21 +34,68 @@ int main(int argc, char *argv[]) {
 
 	t_config* config = config_create(argv[1]);*/
 
-	t_config* config;
-		if (argc != 2) {
-			//printf("Número incorrecto de parámetros\n");
-			//return -1;
-			config = config_create("./Configuracion/config");
-		} else {
+	//t_config* config;
+	if (argc != 2) {
+		config = config_create("./Configuracion/config");
+	} else {
 
-			config = config_create(argv[1]);
-		}
+		config = config_create(argv[1]);
+	}
 
+
+	t_log* logger;
+	logger = log_create("Consola.log", "CONSOLA", 1,
+			log_level_from_string("INFO"));
+	char *texto;
+	texto = "info";
 
 	int puerto_umc = config_get_int_value(config,"PUERTO_UMC");
 	int puerto_nucleo = config_get_int_value(config,"PUERTO_NUCLEO");
 	char* ip_umc = config_get_string_value(config,"IP_UMC");
 	char* ip_nucleo = config_get_string_value(config,"IP_NUCLEO");
+
+	//creo socket nucleo
+	int socketNucleo;
+	if (crearSocket(&socketNucleo)){
+		//error
+	}
+	//me intento conectar
+	if (conectarA(socketNucleo, ip_nucleo, puerto_nucleo)){
+		//error
+	}
+	//handshake
+	if (responderHandshake(socketNucleo, IDCPU, IDNUCLEO)){
+		//error
+	}
+
+	//creo socket umc
+	int socketUMC;
+	if (crearSocket(&socketUMC)){
+		//error
+	}
+	//me intento conectar
+	if (conectarA(socketUMC, ip_umc, puerto_umc)){
+		perror("No se pudo conectar");
+		log_error(logger, "No se pudo conectar a la UMC", texto);
+		return 1;
+	}
+	//handshake
+	if (responderHandshake(socketNucleo, IDCPU, IDUMC)){
+		perror("No se pudo conectar");
+		log_error(logger, "No se pudo conectar a la UMC", texto);
+		return 1;
+	}
+
+	if (recibirHeader(socketNucleo)==headerPcb){
+		t_pcb pcbRecibido ;
+		pcbRecibido = recibirPcb(socketNucleo);
+		int tamanioPagina = recibirTamanioPagina(socketUMC);
+		t_posicion_memoria posicionPagina = obtenerPosicionPagina(tamanioPagina, pcbRecibido);
+		char lineaAnsisop [posicionPagina.size];
+		recibirLineaAnsisop(socketUMC, posicionPagina, &lineaAnsisop);
+		analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
+	}
+
 
 	//socket cliente nucleo
 	struct sockaddr_in direccionServidorNucleo;
@@ -77,14 +134,10 @@ int main(int argc, char *argv[]) {
 
 
 	send(clienteUMC, buffer, strlen(buffer), 0);
-	/*printf("%s\n", buffer);
-	printf("%s\n", ruta);*/
 
-
-	//free(buffer);
 
 	//parser
-	FILE* archivo;
+	/*FILE* archivo;
 	archivo = fopen(ruta, "r");
 	if (archivo == NULL) {
 		puts("ERROR");
@@ -136,31 +189,12 @@ int main(int argc, char *argv[]) {
 		}
 
 		caracter = getc(archivo);
-	}
+	}*/
 
 	return 0;
 
 }
 //primitivas
+//puedo pasar esto a otro archivo
 
-t_puntero definirVariable(t_nombre_variable variable) {
-	printf("Defino variable\n");
-	return variable;
-}
-t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
-	printf("Obtengo posición variable\n");
-	return variable;
-}
-t_valor_variable dereferenciar(t_puntero puntero) {
-	printf("Dereferenciar\n");
-	return puntero;
-}
-void asignar(t_puntero puntero, t_valor_variable variable) {
-	printf("Asignar\n");
-}
-void imprimir(t_valor_variable valor) {
-	printf("Imprimir\n");
-}
-void imprimirTexto(char* texto) {
-	printf("Imprimir texto\n");
-}
+

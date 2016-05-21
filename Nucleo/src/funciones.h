@@ -12,8 +12,8 @@
 #include <sys/socket.h>
 #include "commons/log.h"
 #include <commons/collections/list.h>
-#include <sockets.h>
-#include <structs.h>
+#include <Librerias/Librerias/sockets.h>
+#include <Librerias/Librerias/structs.h>
 #include <unistd.h>
 #include <pthread.h>
 
@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct t_colaPcb{
 	t_pcbConConsola pcb;
-	t_colaPcb * siguientePcb;
+	struct t_colaPcb * siguientePcb;
 }t_colaPcb;
 
 t_colaPcb cola_PCBListos;
