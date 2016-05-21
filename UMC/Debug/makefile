@@ -26,13 +26,13 @@ endif
 all: UMC
 
 dependents:
-	-cd /home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Librerias/Debug && $(MAKE) all
+	-cd /home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug && $(MAKE) all
 
 # Tool invocations
-UMC: $(OBJS) $(USER_OBJS) /home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Librerias/Debug/libLibrerias.so
+UMC: $(OBJS) $(USER_OBJS) /home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug/libLibreriasSO.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Librerias/Debug" -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug" -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -43,6 +43,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Librerias/Debug/libLibrerias.so:
+/home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug/libLibreriasSO.so:
 
 -include ../makefile.targets

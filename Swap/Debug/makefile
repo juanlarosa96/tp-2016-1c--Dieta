@@ -25,11 +25,14 @@ endif
 # All Target
 all: Swap
 
+dependents:
+	-cd /home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug && $(MAKE) all
+
 # Tool invocations
-Swap: $(OBJS) $(USER_OBJS)
+Swap: $(OBJS) $(USER_OBJS) /home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug/libLibreriasSO.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc  -o "Swap" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug" -o "Swap" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -40,5 +43,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
+/home/utnso/TP/tp-2016-1c--Dieta/LibreriasSO/Debug/libLibreriasSO.so:
 
 -include ../makefile.targets
