@@ -20,8 +20,6 @@
 #include <stdint.h>
 #include <commons/config.h>
 
-extern uint32_t TAM_VAR;
-
 t_puntero definirVariable(t_nombre_variable variable);
 t_puntero obtenerPosicionVariable(t_nombre_variable variable);
 t_valor_variable dereferenciar(t_puntero puntero);

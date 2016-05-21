@@ -20,19 +20,11 @@
 #include <commons/string.h>
 #include <stdint.h>
 #include <commons/config.h>
-#include <Librerias/Librerias/structs.h>
+#include <structs.h>
 
-
-
-//void recibirLineaCodigo(socketUMC, pcbRecibido);
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
 char* recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* holis);
-
-/* char [ pedirLineaCodigo(socketUMC, pcbRecibido){
- * char[ resultado = enviarPedidoLineaAnSISOP(socketUMC, pcbRecibido);
- * return resultado;
- */
 
 
 

@@ -24,14 +24,13 @@ void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo) {
 }
 
 void recibirProgramaAnsisop(int socketOrigen, char * codigo, int largoCodigo) {
-
 	recibirTodo(socketOrigen, codigo, &largoCodigo);
 }
+
 int recibirLargoProgramaAnsisop(int socketOrigen) {
 	int largoCodigo;
 	recibirTodo(socketOrigen, &largoCodigo, sizeof(int));
 	return largoCodigo;
-
 }
 
 int recibirTamanioPagina(int socketOrigen) {
@@ -50,4 +49,10 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina){
 	int len = strlen(buffer);
 	send(socketDestino, buffer, len, 0); //implementado de forma horrenda
 
+}
+
+t_pcb recibirPcb(int socketOrigen) {
+	t_pcb pcbNuevo;
+	recibirTodo(socketOrigen, &pcbNuevo, sizeof(t_pcb));
+	return pcbNuevo;
 }

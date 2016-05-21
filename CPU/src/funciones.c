@@ -6,7 +6,7 @@
  */
 #include "funciones.h"
 #include <stdint.h>
-#include <Librerias/Librerias/structs.h>
+#include <structs.h>
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb){
 	uint32_t pc = unPcb.pc;
@@ -27,8 +27,6 @@ t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb){
 }
 
 char* recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* lineaAnsisop){
-	//char lineaAnsisop [posicionPagina.size];
 	recibirTodo(socketUMC, &lineaAnsisop, posicionPagina.size);
-	//return lineaAnsisop;
 }
 

@@ -6,9 +6,9 @@
 #include <sys/socket.h>
 #include "funciones.h"
 #include "commons/log.h"
-#include <Librerias/Librerias/sockets.h>
-#include <Librerias/Librerias/protocolo.h>
-#include <Librerias/Librerias/structs.h>
+#include <sockets.h>
+#include <protocolo.h>
+#include <structs.h>
 #include <parser/metadata_program.h>
 #include "primitivas.h";
 #include "variables_globales.h"
@@ -56,23 +56,24 @@ int main(int argc, char *argv[]) {
 
 	//creo socket nucleo
 	int socketNucleo;
-	if (crearSocket(&socketNucleo)){
-		//error
-	}
+	crearSocket(&socketNucleo);
+
 	//me intento conectar
 	if (conectarA(socketNucleo, ip_nucleo, puerto_nucleo)){
-		//error
+		perror("No se pudo conectar");
+		log_error(logger, "No se pudo conectar a la UMC", texto);
+		return 1;
 	}
 	//handshake
 	if (responderHandshake(socketNucleo, IDCPU, IDNUCLEO)){
-		//error
+		log_error(logger, "Error en el handshake", texto);
+		return 1;
 	}
 
 	//creo socket umc
 	int socketUMC;
-	if (crearSocket(&socketUMC)){
-		//error
-	}
+	crearSocket(&socketUMC);
+
 	//me intento conectar
 	if (conectarA(socketUMC, ip_umc, puerto_umc)){
 		perror("No se pudo conectar");
@@ -81,8 +82,7 @@ int main(int argc, char *argv[]) {
 	}
 	//handshake
 	if (responderHandshake(socketNucleo, IDCPU, IDUMC)){
-		perror("No se pudo conectar");
-		log_error(logger, "No se pudo conectar a la UMC", texto);
+		log_error(logger, "Error en el handshake", texto);
 		return 1;
 	}
 
