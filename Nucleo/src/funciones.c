@@ -85,5 +85,10 @@ int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina){
 	if(cantidadBytes % tamanioPagina != 0){
 		cantidadPaginas++;
 	}
-	return enviarPedidoPaginas(socketUMC,cantidadPaginas);
+	return pedirPaginas(socketUMC,cantidadPaginas);
+}
+
+int pedirPaginas(socketUMC,cantidadPaginas){
+	enviarPedidoPaginas(socketUMC,cantidadPaginas);
+	//recibirPedidoPaginas(socketUMC)
 }

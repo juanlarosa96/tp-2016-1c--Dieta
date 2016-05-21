@@ -56,3 +56,9 @@ t_pcb recibirPcb(int socketOrigen) {
 	recibirTodo(socketOrigen, &pcbNuevo, sizeof(t_pcb));
 	return pcbNuevo;
 }
+
+void enviarPedidoPaginas(int socketUMC, int cantidadPaginas){
+	int header = programaAnsisop;
+		send(socketUMC, &header, sizeof(int), 0);
+		send(socketUMC, &cantidadPaginas, sizeof(int), 0);
+}

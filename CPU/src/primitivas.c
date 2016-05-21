@@ -6,7 +6,6 @@
  */
 
 #include "primitivas.h"
-#include "variables_globales.h"
 
 t_puntero definirVariable(t_nombre_variable variable) {
 	printf("Defino variable\n");

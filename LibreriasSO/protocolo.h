@@ -28,5 +28,6 @@ int recibirLargoProgramaAnsisop(int socketOrigen);
 int recibirTamanioPagina(int socketOrigen);
 void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 t_pcb recibirPcb(int socketOrigen);
+void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 
 #endif /* PROTOCOLO_H_ */

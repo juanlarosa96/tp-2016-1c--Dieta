@@ -12,13 +12,12 @@
 #include <sys/socket.h>
 #include "commons/log.h"
 #include <commons/collections/list.h>
-#include <Librerias/Librerias/sockets.h>
-#include <Librerias/Librerias/structs.h>
+#include <sockets.h>
+#include <structs.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <protocolo.h>
 
-int tamanioPagina;
 
 typedef struct {
 	t_pcb pcb;

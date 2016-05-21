@@ -11,7 +11,6 @@
 #include <structs.h>
 #include <parser/metadata_program.h>
 #include "primitivas.h";
-#include "variables_globales.h"
 
 AnSISOP_funciones functions = {
 		.AnSISOP_definirVariable = definirVariable,
@@ -34,7 +33,7 @@ int main(int argc, char *argv[]) {
 
 	t_config* config = config_create(argv[1]);*/
 
-	//t_config* config;
+	t_config* config;
 	if (argc != 2) {
 		config = config_create("./Configuracion/config");
 	} else {

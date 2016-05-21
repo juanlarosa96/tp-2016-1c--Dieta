@@ -6,6 +6,8 @@
 
 int main(int argc, char **argv) {
 
+	int tamanioPagina;
+
 	t_config* config;
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
@@ -55,7 +57,6 @@ int main(int argc, char **argv) {
 
 	}
 	if (recibirHeader(clienteUMC) == tamanioDePagina) {
-
 		tamanioPagina = recibirTamanioPagina(clienteUMC);
 	} else {
 		printf("Error recibiendo tamanio pagina");
