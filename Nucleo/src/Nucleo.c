@@ -84,6 +84,9 @@ int main(int argc, char **argv) {
 	log_info(logger, "Se estableció correctamente el socket servidor", texto);
 	printf("Escuchando\n");
 
+	pidPcb = 0;
+
+
 //------------------------------ SELECT
 
 	fd_set bolsaDeSockets;
