@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv) {
 
-	int tamanioPagina;
+
 
 	t_config* config;
 	if (argc != 2) {

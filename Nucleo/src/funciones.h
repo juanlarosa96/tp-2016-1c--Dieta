@@ -38,6 +38,7 @@ t_colaPcb cola_PCBFinalizados;
 t_colaPcb cola_PCBBloqueados;
 
 int pidPcb = 0;
+int tamanioPagina;
 
 void manejarCPU(int socketCpu);
 
