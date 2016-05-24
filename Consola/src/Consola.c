@@ -66,11 +66,25 @@ int main(int argc, char **argv) {
 
 	log_info(logger, "Se conectó al núcleo", texto);
 
+	unsigned long largoPrograma;
 
-	send(socketNucleo, ruta, 30, 0);
+	FILE * archivo = fopen(ruta, "r");
+	    fseek(archivo, 0, SEEK_END);
+	    largoPrograma = (unsigned long)ftell(archivo);
+	    fseek(archivo, 0, SEEK_SET);
 
-	char * programaAnsisop;
-	int largoPrograma;
+	    char programaAnsisop[largoPrograma+1];
+	    int i = 0;
+
+	    for(i; i <largoPrograma;i++){
+	    	programaAnsisop[i] = fgetc(archivo);
+	    }
+	    fclose(archivo);
+
+	    programaAnsisop[largoPrograma+1] = '\0';
+
+	//send(socketNucleo, ruta, 30, 0);
+
 
 	enviarProgramaAnsisop(socketNucleo,programaAnsisop,largoPrograma);
 	log_info(logger, "Envió un mensaje a núcleo \n", texto);
