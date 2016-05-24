@@ -147,6 +147,9 @@ int main(int argc, char **argv) {
 								texto);
 						break;
 					}
+					if (i> fdmax){
+						fdmax = i;
+					}
 				}
 			} else {
 				// Manejo consolas
