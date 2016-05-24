@@ -8,6 +8,9 @@
 #include "funcionesUMC.h"
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas){
+	//reservo las paginas que necesito para el programa
+	//le aviso a swap?
+
 };
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio){

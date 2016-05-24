@@ -23,7 +23,7 @@ void cambioProceso(uint32_t idPrograma);
 
 /*----Otras----*/
 
-void procesarSolicitudOperacion();
+void procesarSolicitudOperacion(); //valido las operaciones y ejecuto
 
 
 #endif /* FUNCIONESUMC_H_ */
