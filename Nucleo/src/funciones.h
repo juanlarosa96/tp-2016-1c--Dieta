@@ -50,8 +50,6 @@ void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal);
 
 t_pcb crearPcb(char * programa, int largoPrograma);
 
-int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina);
-
 int calcularPaginasCodigo (int largoPrograma);
 
 int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa);
