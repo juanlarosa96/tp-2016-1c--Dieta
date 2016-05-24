@@ -10,7 +10,7 @@
 #include <protocolo.h>
 #include <structs.h>
 #include <parser/metadata_program.h>
-#include "primitivas.h";
+#include "primitivas.h"
 
 AnSISOP_funciones functions = {
 		.AnSISOP_definirVariable = definirVariable,
