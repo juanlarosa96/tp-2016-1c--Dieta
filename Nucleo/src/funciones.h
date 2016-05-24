@@ -36,6 +36,8 @@ t_colaPcb cola_PCBNuevos;
 t_colaPcb cola_PCBFinalizados;
 t_colaPcb cola_PCBBloqueados;
 
+int pidPcb = 0;
+
 void manejarCPU(int socketCpu);
 
 t_pcbConConsola DevolverProcesoColaListos();
