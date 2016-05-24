@@ -10,15 +10,16 @@
 
 struct nodo_lista_frames {
 	uint32_t pid;
+	uint8_t nro_pagina; //?
 	uint8_t bitReferencia;
 	uint8_t bitModificado;
-	uint8_t paginaModificada;
+	//uint8_t paginaModificada;
 };
 
 typedef struct nodo_lista_frames t_nodo_lista_frames;
 
 struct nodo_lista_paginas {
-	int nro_pagina; //?
+	uint8_t nro_pagina; //?
 	char status; // M = memoria, S = SWAP
 };
 
@@ -29,12 +30,9 @@ struct nodo_lista_procesos {
 	uint8_t tamanioProceso;
 	//uint8_t paginasAsignadas;
 	t_list * lista_paginas;
-
 };
 
 typedef struct nodo_lista_procesos t_nodo_lista_procesos;
-
-
 
 
 #endif /* STRUCTS_H_ */
