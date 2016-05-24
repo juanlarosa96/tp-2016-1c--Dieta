@@ -6,6 +6,8 @@
 
 int main(int argc, char **argv) {
 
+
+
 	t_config* config;
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
@@ -23,7 +25,8 @@ int main(int argc, char **argv) {
 
 	//Creo log para el Núcleo
 	t_log* logger;
-	logger = log_create("Núcelo.log", "NUCLEO", 1, log_level_from_string("INFO"));
+	logger = log_create("Núcelo.log", "NUCLEO", 1,
+			log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
@@ -38,13 +41,30 @@ int main(int argc, char **argv) {
 	int clienteUMC;
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
-		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
+		log_error(logger, "Se produjo un error creando el socket de UMC",
+				texto);
 		return 1;
 	}
 	if (conectarA(clienteUMC, IP_UMC, PUERTO_UMC)) {
 		printf("Error al conectar\n");
 		log_error(logger, "Se produjo un error conectandose a la UMC", texto);
 		return 1;
+	}
+
+	if (responderHandshake(clienteUMC, IDNUCLEO, IDUMC)) {
+		log_error(logger, "Error en el handshake", texto);
+		return 1;
+
+	}
+	if (recibirHeader(clienteUMC) == tamanioDePagina) {
+		tamanioPagina = recibirTamanioPagina(clienteUMC);
+	} else {
+		printf("Error recibiendo tamanio pagina");
+		log_error(logger,
+				"Se produjo un error recibiendo el tamanio de pagina de la UMC",
+				texto);
+		return 1;
+
 	}
 
 	log_info(logger, "Se estableció la conexion con la UMC", texto);
@@ -56,7 +76,8 @@ int main(int argc, char **argv) {
 	}
 	if (escucharEn(servidorNucleo, PUERTO_SERVIDOR)) {
 		printf("Error al conectar");
-		log_error(logger, "Se produjo un error creando el socket servidor", texto);
+		log_error(logger, "Se produjo un error creando el socket servidor",
+				texto);
 		return 1;
 	}
 
@@ -101,7 +122,6 @@ int main(int argc, char **argv) {
 					nuevaConexion = aceptarConexion(i, &direccionCliente);
 					int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
 
-
 					switch (idRecibido) {
 					//case IDERROR: IDERROR no lo reconoce because reasons
 					case 0:
@@ -115,18 +135,42 @@ int main(int argc, char **argv) {
 					case IDCPU:
 						;
 						pthread_t nuevoHilo;
-						pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i); //Creo hilo que maneje el nuevo CPU
+						pthread_create(&nuevoHilo, NULL, (void *) &manejarCPU,
+								(void *) &i); //Creo hilo que maneje el nuevo CPU
 						list_add(&listaCPUsConectados, (void *) &nuevoHilo);
 						log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					default:
 						close(nuevaConexion);
-						log_error(logger, "Error en el handshake. Conexion inesperada", texto);
+						log_error(logger,
+								"Error en el handshake. Conexion inesperada",
+								texto);
 						break;
 					}
 				}
 			} else {
 				// Manejo consolas
+				if (recibirHeader(i) == largoProgramaAnsisop) {
+					int largoPrograma = recibirLargoProgramaAnsisop(i);
+					char *programa;
+					recibirProgramaAnsisop(i, programa, largoPrograma);
+
+					t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
+
+					if (pedirPaginasAUMC(clienteUMC, largoPrograma,tamanioPagina)) {
+
+						printf("No se pudo reservar espacio para el programa");
+
+					} else {
+						enviarProgramaAnsisop(clienteUMC, programa,
+								largoPrograma);
+						t_pcbConConsola pcbListo;
+						pcbListo.pcb = nuevoPcb;
+						pcbListo.socketConsola = i;
+						AgregarAProcesoColaListos(pcbListo);
+					}
+
+				}
 
 			}
 		}

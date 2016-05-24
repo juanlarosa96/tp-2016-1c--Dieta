@@ -7,7 +7,7 @@
 
 #include "funciones.h"
 
-void manejarCPU(int socketCpu){
+void manejarCPU(int socketCpu) {
 
 	/*
 	 * chequeo que el CPU no haya hecho un hot plug
@@ -21,8 +21,7 @@ void manejarCPU(int socketCpu){
 	 */
 }
 
-
-void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal){
+void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal) {
 	t_colaPcb * nuevoElementoCola = malloc(sizeof(t_colaPcb));
 	nuevoElementoCola->pcb = elemento;
 	colaFinal->siguientePcb = nuevoElementoCola;
@@ -31,7 +30,7 @@ void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal){
 	return;
 }
 
-t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola){
+t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola) {
 	t_pcbConConsola elemento;
 	t_colaPcb * auxiliar;
 	elemento = inicioCola->pcb;
@@ -42,35 +41,72 @@ t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola){
 
 }
 
-
-t_pcbConConsola DevolverProcesoColaListos(){
+t_pcbConConsola DevolverProcesoColaListos() {
 	return (sacarPrimeroCola(&cola_PCBListos));
 }
 
-t_pcbConConsola DevolverProcesoColaNuevos(){
+t_pcbConConsola DevolverProcesoColaNuevos() {
 	return (sacarPrimeroCola(&cola_PCBNuevos));
 }
 
-t_pcbConConsola DevolverProcesoColaFinalizados(){
+t_pcbConConsola DevolverProcesoColaFinalizados() {
 	return (sacarPrimeroCola(&cola_PCBFinalizados));
 }
 
-t_pcbConConsola DevolverProcesoColaLBloqueados(){
+t_pcbConConsola DevolverProcesoColaLBloqueados() {
 	return (sacarPrimeroCola(&cola_PCBListos));
 }
 
-void AgregarAProcesoColaListos(t_pcbConConsola elemento){
-	AgregarACola(elemento,&cola_PCBListos);
+void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
+	AgregarACola(elemento, &cola_PCBListos);
 }
 
-void AgregarAProcesoColaNuevos(t_pcbConConsola elemento){
-	AgregarACola(elemento,&cola_PCBNuevos);
+void AgregarAProcesoColaNuevos(t_pcbConConsola elemento) {
+	AgregarACola(elemento, &cola_PCBNuevos);
 }
 
-void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento){
-	AgregarACola(elemento,&cola_PCBFinalizados);
+void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento) {
+	AgregarACola(elemento, &cola_PCBFinalizados);
 }
 
-void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento){
-	AgregarACola(elemento,&cola_PCBBloqueados);
+void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento) {
+	AgregarACola(elemento, &cola_PCBBloqueados);
+}
+
+t_pcb crearPcb(char * programa, int largoPrograma) {
+	t_pcb nuevoPcb;
+	nuevoPcb.pid = pidPcb;
+	pidPcb++;
+	nuevoPcb.pc = 0;
+	nuevoPcb.indice_etiquetas = *metadata_desde_literal(programa);
+	nuevoPcb.indice_codigo = nuevoPcb.indice_etiquetas.instrucciones_serializado;
+	nuevoPcb.indice_stack;
+	nuevoPcb.paginas_codigo = calcularPaginasCodigo (largoPrograma);
+
+	return nuevoPcb;
+}
+
+
+int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina){
+	int cantidadPaginas = cantidadBytes / tamanioPagina;
+	if(cantidadBytes % tamanioPagina != 0){
+		cantidadPaginas++;
+	}
+	return pedirPaginas(socketUMC,cantidadPaginas);
+}
+
+int pedirPaginas(socketUMC,cantidadPaginas){
+	enviarPedidoPaginas(socketUMC,cantidadPaginas);
+	//recibirPedidoPaginas(socketUMC)
+}
+
+int calcularPaginasCodigo (int largoPrograma){
+	int paginas = 0;
+	paginas = largoPrograma / tamanioPagina;
+	if (largoPrograma % tamanioPagina){
+		paginas++;
+	}
+	return paginas;
+
+
 }

@@ -3,7 +3,7 @@
 	<name>UMC</name>
 	<comment></comment>
 	<projects>
-		<project>Librerias</project>
+		<project>LibreriasSO</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

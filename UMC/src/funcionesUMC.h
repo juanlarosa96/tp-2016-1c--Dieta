@@ -8,10 +8,11 @@
 #ifndef FUNCIONESUMC_H_
 #define FUNCIONESUMC_H_
 
+#include <stdint.h>
 
 /*-------OperatoriaUMC-------*/
 
-void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas);
+/*void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas);
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio);
 
@@ -19,7 +20,7 @@ void guardarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer)
 
 void finalizarPrograma(uint32_t idPrograma);
 
-void cambioProceso(uint32_t idPrograma);
+void cambioProceso(uint32_t idPrograma);*/
 
 /*----Otras----*/
 
