@@ -87,19 +87,6 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 }
 
 
-int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina){
-	int cantidadPaginas = cantidadBytes / tamanioPagina;
-	if(cantidadBytes % tamanioPagina != 0){
-		cantidadPaginas++;
-	}
-	return pedirPaginas(socketUMC,cantidadPaginas);
-}
-
-int pedirPaginas(socketUMC,cantidadPaginas){
-	enviarPedidoPaginas(socketUMC,cantidadPaginas);
-	//recibirPedidoPaginas(socketUMC)
-}
-
 int calcularPaginasCodigo (int largoPrograma){
 	int paginas = 0;
 	paginas = largoPrograma / tamanioPagina;
@@ -108,5 +95,12 @@ int calcularPaginasCodigo (int largoPrograma){
 	}
 	return paginas;
 
+
+}
+
+int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char programa,int tamanioPagina){
+	int cantidadPaginas = calcularPaginasCodigo(largoPrograma);
+	enviarInicializacionPrograma(clienteUMC,nuevoPcb, largoPrograma, programa);
+	return recibirRespuestaInicialicacion();
 
 }

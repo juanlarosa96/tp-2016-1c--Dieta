@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
 
 					t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-					if (pedirPaginasAUMC(clienteUMC, largoPrograma,tamanioPagina)) {
+					if (iniciarPrograma(clienteUMC, nuevoPcb, largoPrograma,programa, tamanioPagina)) { // agregue esto
 
 						printf("No se pudo reservar espacio para el programa");
 

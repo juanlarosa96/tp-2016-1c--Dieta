@@ -54,4 +54,6 @@ int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina);
 
 int calcularPaginasCodigo (int largoPrograma);
 
+int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char programa,int tamanioPagina);
+
 #endif /* FUNCIONES_H_ */
