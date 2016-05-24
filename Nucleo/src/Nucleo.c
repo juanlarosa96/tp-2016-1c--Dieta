@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 
 					t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-					if (iniciarPrograma(clienteUMC, nuevoPcb, largoPrograma, programa) == inicioProgramaError) {
+					if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa) == inicioProgramaError) {
 
 						printf("No se pudo reservar espacio para el programa");
 
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
 				}
 
 				if (header <= 0) {
-					FD_CLR(i,bolsaDeSockets);
+					FD_CLR(i,&bolsaDeSockets);
 
 				}
 			}
