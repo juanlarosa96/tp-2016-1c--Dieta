@@ -145,14 +145,15 @@ int main(int argc, char **argv) {
 				}
 			} else {
 				// Manejo consolas
-				if (recibirHeader(i) == largoProgramaAnsisop) {
+				int header = recibirHeader(i);
+				if (header == largoProgramaAnsisop) {
 					int largoPrograma = recibirLargoProgramaAnsisop(i);
 					char *programa;
 					recibirProgramaAnsisop(i, programa, largoPrograma);
 
 					t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-					if (iniciarPrograma(clienteUMC, nuevoPcb, largoPrograma, programa)==inicioProgramaError) {
+					if (iniciarPrograma(clienteUMC, nuevoPcb, largoPrograma, programa) == inicioProgramaError) {
 
 						printf("No se pudo reservar espacio para el programa");
 
@@ -166,6 +167,10 @@ int main(int argc, char **argv) {
 
 				}
 
+				if (header <= 0) {
+					FD_CLR(i,bolsaDeSockets);
+
+				}
 			}
 		}
 	}
