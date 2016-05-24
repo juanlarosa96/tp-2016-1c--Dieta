@@ -70,13 +70,13 @@ void enviarInicializacionPrograma(int socketUMC, uint32_t pid,
 	void * buffer = malloc(sizeof(uint32_t) * 2 + sizeof(int) + largoPrograma);
 	int cursorMemoria = 0;
 
-	memccpy(buffer, &pid, sizeof(uint32_t));
+	memcpy(buffer, &pid, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memccpy(buffer + cursorMemoria, &paginas_codigo, sizeof(uint32_t));
+	memcpy(buffer + cursorMemoria, &paginas_codigo, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memccpy(buffer + cursorMemoria, &largoPrograma, sizeof(int));
+	memcpy(buffer + cursorMemoria, &largoPrograma, sizeof(int));
 	cursorMemoria += sizeof(int);
-	memccpy(buffer + cursorMemoria, programa, largoPrograma);
+	memcpy(buffer + cursorMemoria, programa, largoPrograma);
 	cursorMemoria += largoPrograma;
 	send(socketUMC,buffer,cursorMemoria,0);
 	free(buffer);
@@ -87,4 +87,11 @@ void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoProgram
 	recibirTodo(socketUMC,largoPrograma,sizeof(int));
 	programa = malloc(*largoPrograma);
 	recibirTodo(socketUMC,programa,largoPrograma);
+}
+
+int recibirRespuestaInicialicacion(int socketUMC){
+	int respuesta;
+	recibirTodo(socketUMC,&respuesta,sizeof(int));
+	return respuesta;
+
 }

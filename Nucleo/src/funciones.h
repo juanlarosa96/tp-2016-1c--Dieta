@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <protocolo.h>
-#include <parser/metadata_program.h>s
+#include <parser/metadata_program.h>
 
 
 typedef struct {
@@ -54,6 +54,6 @@ int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina);
 
 int calcularPaginasCodigo (int largoPrograma);
 
-int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char programa,int tamanioPagina);
+int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa);
 
 #endif /* FUNCIONES_H_ */
