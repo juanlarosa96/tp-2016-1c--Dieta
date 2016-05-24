@@ -31,5 +31,5 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 t_pcb recibirPcb(int socketOrigen);
 void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
-
+void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoPrograma,char * programa, uint32_t *paginas_codigo);
 #endif /* PROTOCOLO_H_ */
