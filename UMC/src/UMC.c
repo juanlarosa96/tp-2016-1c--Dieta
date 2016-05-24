@@ -31,6 +31,8 @@
 
 int main(int argc, char *argv[]) {
 
+	//aca va el CALLOC gigante paara que inicialize toodo en cero?
+
 	t_config* config;
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
@@ -186,12 +188,21 @@ int main(int argc, char *argv[]) {
 						//log_info(logger, "Se desconecto el socket", texto);
 						close(nuevaConexion);
 						break;
+					case IDNUCLEO:
+						//tambien un hilo para nucleo?
+						break;
 					case IDCPU:
 						FD_SET(nuevaConexion, &bolsaDeSockets);
+
+						pthread_t nuevoHiloCPU;
+						//pthread_create(&nuevoHilo, NULL,(void *) &procesarSolicitudOperacion, (void *) &i);
+						//el hilo va a servir para las solicitudes de operaciones
+
 						enviarTamanioPagina(nuevaConexion, size_frames);
 						pthread_t nuevoHilo;
 						//pthread_create(&nuevoHilo, NULL,(void *) &manejarCPU, (void *) &i);
 						//Creo hilo que maneje el nuevo CPU
+
 						//log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					case IDNUCLEO:
