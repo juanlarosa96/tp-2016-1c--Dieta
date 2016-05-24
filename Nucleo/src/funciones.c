@@ -75,6 +75,13 @@ void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento) {
 
 t_pcb crearPcb(char * programa, int largoPrograma) {
 	t_pcb nuevoPcb;
+	nuevoPcb.pid = pidPcb;
+	pidPcb++;
+	nuevoPcb.pc = 0;
+	nuevoPcb.indice_etiquetas = *metadata_desde_literal(programa);
+	nuevoPcb.indice_codigo = nuevoPcb.indice_etiquetas.instrucciones_serializado;
+	nuevoPcb.indice_stack;
+	nuevoPcb.paginas_codigo = calcularPaginasCodigo (largoPrograma);
 
 	return nuevoPcb;
 }
@@ -91,4 +98,15 @@ int pedirPaginasAUMC(int socketUMC, int cantidadBytes, int tamanioPagina){
 int pedirPaginas(socketUMC,cantidadPaginas){
 	enviarPedidoPaginas(socketUMC,cantidadPaginas);
 	//recibirPedidoPaginas(socketUMC)
+}
+
+int calcularPaginasCodigo (int largoPrograma){
+	int paginas = 0;
+	paginas = largoPrograma / tamanioPagina;
+	if (largoPrograma % tamanioPagina){
+		paginas++;
+	}
+	return paginas;
+
+
 }
