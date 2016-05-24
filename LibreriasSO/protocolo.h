@@ -19,7 +19,8 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	programaAnsisop = 1,
 	largoProgramaAnsisop = 2,
 	tamanioDePagina = 3,
-	headerPcb = 4
+	headerPcb = 4,
+	iniciarPrograma = 5
 };
 int recibirHeader(int socketOrigen);
 void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo);
@@ -29,5 +30,6 @@ int recibirTamanioPagina(int socketOrigen);
 void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 t_pcb recibirPcb(int socketOrigen);
 void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
+void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
 
 #endif /* PROTOCOLO_H_ */

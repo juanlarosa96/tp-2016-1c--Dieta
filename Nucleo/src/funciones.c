@@ -98,9 +98,8 @@ int calcularPaginasCodigo (int largoPrograma){
 
 }
 
-int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char programa,int tamanioPagina){
-	int cantidadPaginas = calcularPaginasCodigo(largoPrograma);
-	enviarInicializacionPrograma(clienteUMC,nuevoPcb, largoPrograma, programa);
+int iniciarPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char programa){
+	enviarInicializacionPrograma(clienteUMC,nuevoPcb.pid, largoPrograma, programa, nuevoPcb.paginas_codigo);
 	return recibirRespuestaInicialicacion();
 
 }

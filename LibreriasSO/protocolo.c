@@ -40,7 +40,7 @@ int recibirTamanioPagina(int socketOrigen) {
 
 }
 
-void enviarTamanioPagina(int socketDestino, int tamanioPagina){
+void enviarTamanioPagina(int socketDestino, int tamanioPagina) {
 	char temporal[5];
 	sprintf(temporal, "%d", tamanioPagina);
 	char buffer[2 + 5]; //header + payload
@@ -57,8 +57,26 @@ t_pcb recibirPcb(int socketOrigen) {
 	return pcbNuevo;
 }
 
-void enviarPedidoPaginas(int socketUMC, int cantidadPaginas){
+void enviarPedidoPaginas(int socketUMC, int cantidadPaginas) {
 	int header = programaAnsisop;
-		send(socketUMC, &header, sizeof(int), 0);
-		send(socketUMC, &cantidadPaginas, sizeof(int), 0);
+	send(socketUMC, &header, sizeof(int), 0);
+	send(socketUMC, &cantidadPaginas, sizeof(int), 0);
+}
+
+void enviarInicializacionPrograma(int socketUMC, uint32_t pid,
+		int largoPrograma, char * programa, uint32_t paginas_codigo) {
+	int header = iniciarPrograma;
+	send(socketUMC, &header, sizeof(int), 0);
+	void * buffer = malloc(sizeof(uint32_t) * 2 + sizeof(int) + largoPrograma);
+	int cursorMemoria = 0;
+
+	memccpy(buffer, &pid, sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memccpy(buffer + cursorMemoria, &paginas_codigo, sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memccpy(buffer + cursorMemoria, &largoPrograma, sizeof(int));
+	cursorMemoria += sizeof(int)
+	memccpy(buffer + cursorMemoria, programa, largoPrograma);
+	cursorMemoria += largoPrograma;
+	send(socketUMC,buffer,cursorMemoria,0);
 }
