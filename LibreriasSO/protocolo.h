@@ -40,5 +40,6 @@ void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,c
 void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoPrograma,char * programa, uint32_t *paginas_codigo);
 int recibirRespuestaInicialicacion(int socketUMC);
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size);
+void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size);
 
 #endif /* PROTOCOLO_H_ */
