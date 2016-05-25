@@ -12,11 +12,6 @@
 #include <parser/metadata_program.h>
 
 typedef struct {
-	uint32_t inicio;
-	uint32_t longitud;
-}t_posicion_instruccion;
-
-typedef struct {
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
