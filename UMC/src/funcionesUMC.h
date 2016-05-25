@@ -9,10 +9,12 @@
 #define FUNCIONESUMC_H_
 
 #include <stdint.h>
+#include <sockets.h>
+#include <protocolo.h>
 
 /*-------OperatoriaUMC-------*/
 
-void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas);
+void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma);
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio);
 

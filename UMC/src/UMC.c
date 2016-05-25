@@ -135,13 +135,11 @@ int main(int argc, char *argv[]) {
 						break;
 					case IDCPU:
 						FD_SET(nuevaConexion, &setSockets);
-
-						pthread_t nuevoHiloCPU;
-						//pthread_create(&nuevoHilo, NULL,(void *) &procesarSolicitudOperacion, (void *) &i);
-						//el hilo va a servir para las solicitudes de operaciones
-
 						enviarTamanioPagina(nuevaConexion, size_frames);
-						pthread_t nuevoHilo;
+						pthread_t nuevoHiloCPU;
+						//pthread_create(&nuevoHiloCPU, NULL,(void *) &procesarSolicitudOperacion, (void *) &i);
+  					     //el hilo va a servir para las solicitudes de operaciones
+
 						//log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					case IDNUCLEO:
