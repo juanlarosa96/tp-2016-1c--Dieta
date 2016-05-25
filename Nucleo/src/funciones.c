@@ -80,7 +80,9 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	nuevoPcb.pc = 0;
 	nuevoPcb.indice_etiquetas = *metadata_desde_literal(programa);
 	nuevoPcb.indice_codigo = nuevoPcb.indice_etiquetas.instrucciones_serializado;
-	nuevoPcb.indice_stack;
+	t_pila pilaInicial;
+	pilaInicial.indice_stack = (t_pila *) 0;
+	nuevoPcb.indice_stack = pilaInicial;
 	nuevoPcb.paginas_codigo = calcularPaginasCodigo (largoPrograma);
 
 	return nuevoPcb;
