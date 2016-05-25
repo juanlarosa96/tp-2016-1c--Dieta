@@ -95,3 +95,24 @@ int recibirRespuestaInicialicacion(int socketUMC){
 	return respuesta;
 
 }
+
+void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size){
+	int header = solicitarBytes;
+	send(socketUMC, &header, sizeof(int), 0);
+
+	void * buffer = malloc(sizeof(uint32_t)*3);
+	int cursorMemoria = 0;
+
+	memcpy(buffer,&nroPagina,sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(buffer,&offset, sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(buffer,&size, sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+
+	send(socketUMC, buffer, cursorMemoria, 0);
+
+	free(buffer);
+
+}
+
