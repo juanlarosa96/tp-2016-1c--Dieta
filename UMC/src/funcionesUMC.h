@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <sockets.h>
 #include <protocolo.h>
+#include "structs.h"
 
 /*-------OperatoriaUMC-------*/
 

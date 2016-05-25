@@ -24,9 +24,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
-#include <sockets.h>
-#include <protocolo.h>
 #include <pthread.h>
 #include "funcionesUMC.h"
 
