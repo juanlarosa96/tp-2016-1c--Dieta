@@ -54,6 +54,9 @@ int calcularPaginasCodigo (int largoPrograma);
 
 int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa);
 
+void AgregarAProcesoColaListos(t_pcbConConsola elemento);
+
+t_pcbConConsola DevolverProcesoColaListos();
 
 
 #endif /* FUNCIONES_H_ */
