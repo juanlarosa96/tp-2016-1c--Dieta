@@ -9,6 +9,7 @@
 #define FUNCIONESUMC_H_
 
 #include <stdint.h>
+#include <pthread.h>
 #include <sockets.h>
 #include <protocolo.h>
 
@@ -26,7 +27,7 @@ void cambioProceso(uint32_t idPrograma);
 
 /*----Otras----*/
 
-void procesarSolicitudOperacion();
+void procesarSolicitudOperacion(int * socketCPU);
 
 
 #endif /* FUNCIONESUMC_H_ */
