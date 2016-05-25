@@ -35,9 +35,11 @@ struct nodo_lista_procesos {
 typedef struct nodo_lista_procesos t_nodo_lista_procesos;
 
 typedef struct {
-	int socketCPU;
+	int socketCliente;
 	int listener;
-}t_datos_hilo_cpu;
+}t_datos_hilo;
+
+
 
 
 
