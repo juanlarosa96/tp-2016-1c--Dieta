@@ -37,6 +37,7 @@
 									<listOptionValue builtIn="false" value="LibreriasSO"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="commons"/>
+									<listOptionValue builtIn="false" value="parser-ansisop"/>
 								</option>
 								<option id="gnu.c.link.option.paths.1320291181" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/LibreriasSO/Debug}&quot;"/>
