@@ -27,6 +27,8 @@
 
 #include <sockets.h>
 #include <protocolo.h>
+#include <pthread.h>
+#include "funcionesUMC.h"
 
 
 int main(int argc, char *argv[]) {
@@ -88,6 +90,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	if (responderHandshake(clienteSwap, IDUMC, IDSWAP)) {
+	//log_error(logger, "Error en el handshake", texto);
+		return 1;
+
+	}
+
 	
 	/*----------SELECT----------------*/
 
@@ -101,9 +109,6 @@ int main(int argc, char *argv[]) {
 	FD_ZERO(&setAuxiliar);
 
 	FD_SET(listener, &setSockets);
-
-	//fdmax = (servidorUMC > socketCliente) ? servidorUMC : socketCliente;
-
 	fdmax = listener;
 
 	struct sockaddr_in direccionCliente;
@@ -137,8 +142,8 @@ int main(int argc, char *argv[]) {
 						FD_SET(nuevaConexion, &setSockets);
 						enviarTamanioPagina(nuevaConexion, size_frames);
 						pthread_t nuevoHiloCPU;
-						//pthread_create(&nuevoHiloCPU, NULL,(void *) &procesarSolicitudOperacion, (void *) &i);
-  					     //el hilo va a servir para las solicitudes de operaciones
+						pthread_create(&nuevoHiloCPU, NULL,(void *) &procesarSolicitudOperacion, (void *) &i);
+  					    //el hilo va a servir para las solicitudes de operaciones
 
 						//log_info(logger, "Nuevo CPU conectado", texto);
 						break;
