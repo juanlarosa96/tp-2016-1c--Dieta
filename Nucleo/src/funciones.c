@@ -19,6 +19,27 @@ void manejarCPU(int socketCpu) {
 	 * Se pone pcb en cola de listo/bloqueado segun corresponda
 	 * repetir
 	 */
+	t_pcbConConsola siguientePcb = DevolverProcesoColaListos();
+	enviarPcb(socketCpu, siguientePcb.pcb);
+	int respuesta;
+	while (1) {
+		if (recibirRespuestaCPU(socketCpu, &respuesta)) {
+			//Se desconecto el CPU
+			finalizarProceso(siguientePcb);
+			return;
+		}
+		switch (respuesta) {
+
+		case 99: //Fin programa
+			finalizarProceso(siguientePcb);
+			break;
+
+		case 100: //Fin quantum
+			AgregarAProcesoColaListos(siguientePcb);
+			break;
+
+		}
+	}
 }
 
 void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal) {
@@ -83,25 +104,23 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	t_pila pilaInicial;
 	pilaInicial.indice_stack = (t_pila *) 0;
 	nuevoPcb.indice_stack = pilaInicial;
-	nuevoPcb.paginas_codigo = calcularPaginasCodigo (largoPrograma);
+	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
 
 	return nuevoPcb;
 }
 
-
-int calcularPaginasCodigo (int largoPrograma){
+int calcularPaginasCodigo(int largoPrograma) {
 	int paginas = 0;
 	paginas = largoPrograma / tamanioPagina;
-	if (largoPrograma % tamanioPagina){
+	if (largoPrograma % tamanioPagina) {
 		paginas++;
 	}
 	return paginas;
 
-
 }
 
-int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa){
-	enviarInicializacionPrograma(clienteUMC,nuevoPcb.pid, largoPrograma, programa, nuevoPcb.paginas_codigo);
+int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa) {
+	enviarInicializacionPrograma(clienteUMC, nuevoPcb.pid, largoPrograma, programa, nuevoPcb.paginas_codigo);
 	return recibirRespuestaInicialicacion(clienteUMC);
 
 }
