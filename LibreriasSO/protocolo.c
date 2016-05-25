@@ -113,6 +113,12 @@ void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, 
 	send(socketUMC, buffer, cursorMemoria, 0);
 
 	free(buffer);
-
 }
+
+void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size){
+	recibirTodo(socketUMC,nroPagina, sizeof(uint32_t));
+	recibirTodo(socketUMC,offset, sizeof(uint32_t));
+	recibirTodo(socketUMC,size, sizeof(uint32_t));
+}
+
 
