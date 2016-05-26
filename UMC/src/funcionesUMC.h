@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <sockets.h>
 #include <protocolo.h>
-#include "structs.h"
+#include "structsUMC.h"
 
 /*-------OperatoriaUMC-------*/
 
@@ -28,7 +28,8 @@ void cambioProceso(uint32_t idPrograma);
 
 /*----Otras----*/
 
-void procesarSolicitudOperacion(int * socketCPU);
+void procesarSolicitudOperacionCPU(int);
+void procesarSolicitudOperacionNucleo(int * socketUMC);
 
 
 #endif /* FUNCIONESUMC_H_ */
