@@ -9,23 +9,27 @@
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma){
 
+	printf("\n Inicializar Programa \n");
 }
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio){
 
-};
+	printf("Solicitar Bytes \n");
+}
 
-void guardarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer){
+void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer){
 
-};
+	printf("Almacenar Bytes \n");
+}
 
 void finalizarPrograma(uint32_t idPrograma){
 
-};
+	printf("FinalizarPrograma \n");
+}
 
 void cambioProceso(uint32_t idPrograma){
 
-};
+}
 
 
 /*void procesarSolicitudOperacionNucleo(t_datos_hilo datosSockets){
@@ -84,18 +88,32 @@ void procesarSolicitudOperacionCPU(int conexion){
 		uint32_t nroPagina;
 		uint32_t offset;
 		uint32_t size;
+		int lenBufferPedido;
+		char * bufferPedido;
 
 		switch(header){
-			case 8: //solicitarBytes //ver el tema de la constante
+			case 0:
+			//se desconectó cpu
 
+			pthread_exit(NULL);
+
+			case 8: //solicitarBytes //ver el tema de la constante
 			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size);	//deserializacion
 			solicitarBytesDeUnaPag(nroPagina, offset, size); //operacion
 			break;
+
 			case 9: //almacenarBytes
+			recibirPedidoAlmacenarBytes(conexion, &nroPagina, &offset, &size, &lenBufferPedido);
+
+			bufferPedido = malloc(lenBufferPedido);
+			recibirBufferPedidoAlmacenarBytes(conexion,lenBufferPedido, bufferPedido);
+
+			free(bufferPedido);
 
 			break;
+
 			default:
-			//se desconectó CPU o hubo problema de conexión
+			// hubo problema de conexión //loggearlo
 			//chau hilo
 			pthread_exit(NULL);
 
