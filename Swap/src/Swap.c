@@ -14,6 +14,15 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <commons/config.h>
+#include <structs.h>
+#include <sockets.h>
+#include <protocolo.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 int main(int argc, char *argv[]) {
 
@@ -22,7 +31,7 @@ int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		//	printf("Número incorrecto de parámetros\n");
 		//	return -1;
-		 config= config_create("/home/utnso/Projects/tp-2016-1c--Dieta/Swap/Configuracion/config");
+		 config= config_create("/home/utnso/tp-2016-1c--Dieta/Swap/Configuracion/config");
 		}else{
 			config = config_create(argv[1]);}
 
@@ -47,45 +56,43 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
+	char pathArchivo[50]="./";
+	strcat(pathArchivo, nombre);
 
-	FILE*archivoSwap=fopen("./nombre","r");
+	int fd = open(pathArchivo, O_RDWR);
 
-	if (archivoSwap == NULL){
+	if (fd == -1){
 		printf("No se pudo abrir el archivo");
 		return -1;
 	};
 
+	char*archivoSwap = mmap((caddr_t)0, sizePagina , PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
 
 //---------------------------------------------------------------------------
-	struct sockaddr_in direccionServidorSwap;
-	direccionServidorSwap.sin_family = AF_INET;
-	direccionServidorSwap.sin_addr.s_addr = INADDR_ANY;
-	direccionServidorSwap.sin_port = htons(puertoServidor);
-
-	int servidorSwap = socket(AF_INET, SOCK_STREAM, 0);
-
-	int activado = 1;
-	setsockopt(servidorSwap, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
-
-	if (bind(servidorSwap, (void*) &direccionServidorSwap, sizeof(direccionServidorSwap)) != 0) {
-		perror("Falló el bind");
+	int servidorSwap;
+	if (crearSocket(&servidorSwap)) {
+		printf("Error creando socket");
 		return 1;
 	}
-
-	printf("Estoy escuchando\n");
-	listen(servidorSwap, 100);
-
-	//------------------------------
-
+	if (escucharEn(servidorSwap, puertoServidor)) {
+		printf("Error al conectar");
+		return 1;
+	}
+//-------------------------------------------------------------------------
 	struct sockaddr_in direccionCliente;
-	unsigned int len;
-	len = sizeof(struct sockaddr_in);
 
-	int cliente = accept(servidorSwap, (void*) &direccionCliente, &len);
+	int cliente = aceptarConexion(servidorSwap,&direccionCliente);
 	printf("Recibí una conexión\n");
+//-------------------------------------------------------------------------
+	int idRecibido = iniciarHandshake(cliente, IDSWAP);
+	if(idRecibido!=IDUMC){
+		printf("ERROR NO SE CONECTO A UMC");
+		return -1;
+	}
+	while(1){
+		int header = recibirHeader(cliente);
 
-	//------------------------------
-
+	}
 	char* buffer = malloc(10);
 
 	int bytesRecibidos = recv(cliente, buffer, 10, 0);
@@ -93,13 +100,11 @@ int main(int argc, char *argv[]) {
 
 	printf("UMC dice: %s\n", buffer);
 
-	//printf("Me llegaron %d bytes con %s", bytesRecibidos, buffer;
-
 	free(buffer);
 //---------------------------------------------------------------------------
 
 	config_destroy(config);
-	fclose(archivoSwap);
+	close(fd);
 	return 0;
 }
 
