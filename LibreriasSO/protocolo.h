@@ -37,17 +37,15 @@ int recibirTamanioPagina(int socketOrigen);
 void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 t_pcb recibirPcb(int socketOrigen);
 void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
-<<<<<<< HEAD
 void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
 void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoPrograma,char * programa, uint32_t *paginas_codigo);
 int recibirRespuestaInicialicacion(int socketUMC);
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size);
 void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size);
 int recibirRespuestaCPU(int socketCpu, int * respuesta);
-=======
 void recibirResultadoDeEjecucionAnsisop(int socketNucleo,char * mensaje, int largoMensaje);
 int recibirLargoResultadoDeEjecucionAnsisop(int socketNucleo);
 void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int largoMensaje);
->>>>>>> 578d0257b0dac30c1edf24bae644b79036a41e53
+
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
