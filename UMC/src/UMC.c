@@ -121,6 +121,7 @@ int main(int argc, char *argv[]) {
 			pthread_attr_init(&attr);
 			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
 			pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) conexionCPU);
+			pthread_attr_destroy(&attr);
 
 			//log_info(logger, "Nuevo CPU conectado", texto);
 		}
