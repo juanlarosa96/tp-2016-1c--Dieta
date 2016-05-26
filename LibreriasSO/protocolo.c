@@ -121,4 +121,7 @@ void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offse
 	recibirTodo(socketUMC,size, sizeof(uint32_t));
 }
 
+int recibirRespuestaCPU(int socketCpu, int * respuesta){
+	return recibirTodo(socketCpu,respuesta,sizeof(int));
+}
 

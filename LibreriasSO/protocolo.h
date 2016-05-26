@@ -25,6 +25,7 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	inicioProgramaError = 7,
 	solicitarBytes = 8,
 	almacenarBytes = 9,
+	respuestaCPU = 10,
 
 };
 
@@ -41,5 +42,6 @@ void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoProgram
 int recibirRespuestaInicialicacion(int socketUMC);
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size);
 void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size);
+int recibirRespuestaCPU(int socketCpu, int * respuesta);
 
 #endif /* PROTOCOLO_H_ */
