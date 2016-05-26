@@ -1,6 +1,7 @@
 #include "funciones.h"
 #include "commons/log.h"
 #include <sockets.h>
+#include <protocolo.h>
 
 int main(int argc, char **argv) {
 
@@ -88,6 +89,17 @@ int main(int argc, char **argv) {
 
 	enviarProgramaAnsisop(socketNucleo,programaAnsisop,largoPrograma);
 	log_info(logger, "Envió un mensaje a núcleo \n", texto);
+
+	while(1){
+		int header = recibirHeader(socketNucleo);
+		if (header == resultadoEjecucion) {
+		char* mensajeDevuelto;
+		int largoMensaje;
+		largoMensaje = recibirLargoResultadoDeEjecucionAnsisop(socketNucleo);
+		recibirResultadoDeEjecucionAnsisop(socketNucleo,mensajeDevuelto,largoMensaje);
+		}
+
+	}
 
 
 	log_destroy(logger);
