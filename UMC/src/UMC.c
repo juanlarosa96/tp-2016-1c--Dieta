@@ -114,9 +114,13 @@ int main(int argc, char *argv[]) {
 		id = iniciarHandshake(conexionCPU, IDUMC);
 		if(id == IDCPU){
 			enviarTamanioPagina(conexionCPU, size_frames);
-			pthread_t nuevoHiloCPU;
-			//pthread_create(&nuevoHiloCPU, NULL,(void *) &procesarSolicitudOperacionCPU, (void *) &i);
-			//el hilo va a servir para las solicitudes de operaciones
+
+			pthread_attr_t attr;
+			pthread_t hiloCPU;
+
+			pthread_attr_init(&attr);
+			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+			pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) conexionCPU);
 
 			//log_info(logger, "Nuevo CPU conectado", texto);
 		}
