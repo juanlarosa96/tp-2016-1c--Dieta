@@ -97,6 +97,7 @@ void procesarSolicitudOperacionCPU(int conexion){
 			default:
 			//se desconectó CPU o hubo problema de conexión
 			//chau hilo
+			pthread_exit(NULL);
 
 			break;
 		}
