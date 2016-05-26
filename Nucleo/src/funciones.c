@@ -121,6 +121,6 @@ int calcularPaginasCodigo(int largoPrograma) {
 
 int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa) {
 	enviarInicializacionPrograma(clienteUMC, nuevoPcb.pid, largoPrograma, programa, nuevoPcb.paginas_codigo);
-	return recibirRespuestaInicialicacion(clienteUMC);
+	return recibirRespuestaInicializacion(clienteUMC);
 
 }
