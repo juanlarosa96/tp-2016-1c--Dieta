@@ -20,7 +20,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codi
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio);
 
-void guardarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer);
+void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer);
 
 void finalizarPrograma(uint32_t idPrograma);
 
