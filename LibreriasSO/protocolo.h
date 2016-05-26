@@ -33,6 +33,7 @@ int recibirHeader(int socketOrigen);
 void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo);
 void recibirProgramaAnsisop(int socketOrigen, char * codigo, int largoCodigo);
 int recibirLargoProgramaAnsisop(int socketOrigen);
+//header: 3
 int recibirTamanioPagina(int socketOrigen);
 void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 t_pcb recibirPcb(int socketOrigen);
@@ -40,12 +41,16 @@ void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
 void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoPrograma,char * programa, uint32_t *paginas_codigo);
 int recibirRespuestaInicializacion(int socketUMC);
+//header: 8
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size);
 void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size);
 int recibirRespuestaCPU(int socketCpu, int * respuesta);
 void recibirResultadoDeEjecucionAnsisop(int socketNucleo,char * mensaje, int largoMensaje);
 int recibirLargoResultadoDeEjecucionAnsisop(int socketNucleo);
 void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int largoMensaje);
-
+//header: 9
+void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size, int largoBuffer, char * buffer);
+void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size, int * largoBuffer);
+void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * buffer);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
