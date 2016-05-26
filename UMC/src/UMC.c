@@ -90,34 +90,43 @@ int main(int argc, char *argv[]) {
 	//log_info(logger, "Se estableció correctamente el socket servidor", texto);
 	printf("Escuchando\n");
 
+	/*-----------CONEXION CON NUCLEO-----------------*/
+
+	//NOTA: PRIMERO SE TIENE QUE CONECTAR NUCLEO, SI NO SE ROMPE TODO
 	int nuevaConexion;
 	struct sockaddr_in direccionCliente;
+	nuevaConexion = aceptarConexion(servidorUMC, &direccionCliente);
+	int idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
 
-	//Aceptar Nuevas Conexiones
+	if (idRecibido == IDNUCLEO) {
+		enviarTamanioPagina(nuevaConexion, size_frames);
+		//crear hilo para nucleo
+	}
+
+	/*-----------CONEXION CON CPUs-----------*/
+
+	int conexionCPU;
+	struct sockaddr_in direccionCPU;
+	int id;
+
 	while (1) {
-		nuevaConexion = aceptarConexion(servidorUMC, &direccionCliente);
-		int idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
+		conexionCPU = aceptarConexion(servidorUMC, &direccionCPU);
+		id = iniciarHandshake(conexionCPU, IDUMC);
+		if(id == IDCPU){
+			enviarTamanioPagina(conexionCPU, size_frames);
 
-		switch (idRecibido) {
+			pthread_attr_t attr;
+			pthread_t hiloCPU;
 
-		//borre a la mierda el case 0, fijarse si es necesario
-
-		case IDCPU:
-			enviarTamanioPagina(nuevaConexion, size_frames);
-			pthread_t nuevoHiloCPU;
-			//pthread_create(&nuevoHiloCPU, NULL,(void *) &procesarSolicitudOperacionCPU, (void *) &i);
-			//el hilo va a servir para las solicitudes de operaciones
+			pthread_attr_init(&attr);
+			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+			pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) conexionCPU);
 
 			//log_info(logger, "Nuevo CPU conectado", texto);
-			break;
-		case IDNUCLEO:
-			enviarTamanioPagina(nuevaConexion, size_frames);
-
-			break;
-		default:
+		}
+		else {
 			close(nuevaConexion);
 			//log_error(logger, "Error en el handshake. Conexion inesperada", texto);
-			break;
 		}
 
 	}

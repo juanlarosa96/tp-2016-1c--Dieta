@@ -6,7 +6,6 @@
  */
 
 #include "funcionesUMC.h"
-#include <stdint.h>
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma){
 
@@ -28,14 +27,15 @@ void cambioProceso(uint32_t idPrograma){
 
 };
 
-void procesarSolicitudOperacionCPU(t_datos_hilo datosSockets){
+
+/*void procesarSolicitudOperacionNucleo(t_datos_hilo datosSockets){
 
 	while(1) {
 
 			int header = recibirHeader(datosSockets -> socketCliente);
 
 
-			/*switch(header){
+			switch(header){
 
 
 				case 8: //solicitarBytes
@@ -64,45 +64,42 @@ void procesarSolicitudOperacionCPU(t_datos_hilo datosSockets){
 				//vete de aqui hilo
 				//eclipse haceme el tp
 
-			}*/
+			}
 
 
 		}
 }
+*/
 
 
 
-void procesarSolicitudOperacionCPU(t_datos_hilo datosSockets){
+void procesarSolicitudOperacionCPU(int conexion){
+
+	//cola de pedidos?
 
 	while(1) {
 
-		int header = recibirHeader(datosSockets -> socketCliente);
+		int header = recibirHeader(conexion);
 
+		uint32_t nroPagina;
+		uint32_t offset;
+		uint32_t size;
 
 		switch(header){
+			case 8: //solicitarBytes //ver el tema de la constante
 
-			case 8: //solicitarBytes
-			//recibir lo demas
-			solicitarBytesDeUnaPag();
+			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size);	//deserializacion
+			solicitarBytesDeUnaPag(nroPagina, offset, size); //operacion
 			break;
 			case 9: //almacenarBytes
-			//blabla procesar bytes
-			//recibir lo demas
-			guardarBytesDeUnaPag();
-			break;
 
+			break;
 			default:
 			//se desconectó CPU o hubo problema de conexión
 			//chau hilo
 
 			break;
-
-
 		}
-		//recibirSolicitudes
-		//procesarlas
-		//send para responderle a CPUs
-
 	}
 
 
