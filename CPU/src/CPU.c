@@ -6,8 +6,6 @@
 #include <sys/socket.h>
 #include "funciones.h"
 #include "commons/log.h"
-#include <sockets.h>
-#include <protocolo.h>
 #include <structs.h>
 #include <parser/metadata_program.h>
 #include "primitivas.h"
