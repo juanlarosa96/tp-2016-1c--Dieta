@@ -52,6 +52,7 @@ int main(int argc, char *argv[]) {
 	int puerto_nucleo = config_get_int_value(config,"PUERTO_NUCLEO");
 	char* ip_umc = config_get_string_value(config,"IP_UMC");
 	char* ip_nucleo = config_get_string_value(config,"IP_NUCLEO");
+	int quantumTotal = config_get_string_value(config,"QUANTUM");
 
 	//creo socket nucleo
 	int socketNucleo;
@@ -107,7 +108,7 @@ int main(int argc, char *argv[]) {
 		perror("No se pudo conectar al nucleo");
 		return 1;
 	}
-
+/*
 	//recibo ruta del nucleo
 	char* ruta = malloc(30);
 	int bytesRecibidosRuta = recv(clienteNucleo, ruta, 30, 0);
@@ -189,6 +190,32 @@ int main(int argc, char *argv[]) {
 
 		caracter = getc(archivo);
 	}*/
+
+	int sigoEjecutando = 1;
+	int signalApagado = 0;
+
+	while(!signalApagado)
+	{
+		t_pcb pcbActual = recibirPcb(socketNucleo);
+
+		int unidadQuantum = 0;
+
+		while(unidadQuantum < quantumTotal && sigoEjecutando){
+
+			char * lineaAnsisop;
+			pedirLineaAUMC(socketUMC,lineaAnsisop,pcbActual);
+			analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
+
+			unidadQuantum++;
+
+		}
+
+
+
+
+
+	}
+
 
 	return 0;
 
