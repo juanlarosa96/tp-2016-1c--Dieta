@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 				t_intructions instruccion = pcbRecibido.indice_codigo[pcbRecibido.pc];
 				char lineaAnsisop[instruccion.offset];
 
-				pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido);
+				pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina);
 
 				analizadorLinea(strdup(lineaAnsisop), &functions,
 						&kernel_functions);
