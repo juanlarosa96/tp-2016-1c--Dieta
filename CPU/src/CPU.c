@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 	//me intento conectar
 	if (conectarA(socketNucleo, ip_nucleo, puerto_nucleo)) {
 		perror("No se pudo conectar");
-		log_error(logger, "No se pudo conectar a la UMC", texto);
+		log_error(logger, "No se pudo conectar al Nucleo", texto);
 		return 1;
 	}
 	//handshake
@@ -89,18 +89,6 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	//socket cliente nucleo
-	struct sockaddr_in direccionServidorNucleo;
-	direccionServidorNucleo.sin_family = AF_INET;
-	direccionServidorNucleo.sin_addr.s_addr = inet_addr(ip_nucleo);
-	direccionServidorNucleo.sin_port = htons(puerto_nucleo);
-
-	int clienteNucleo = socket(AF_INET, SOCK_STREAM, 0);
-	if (connect(clienteNucleo, (void*) &direccionServidorNucleo,
-			sizeof(direccionServidorNucleo)) != 0) {
-		perror("No se pudo conectar al nucleo");
-		return 1;
-	}
 	/*
 	 //recibo ruta del nucleo
 	 char* ruta = malloc(30);
