@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <commons/config.h>
 #include <structs.h>
+#include <sockets.h>
+#include <protocolo.h>
 
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
