@@ -158,7 +158,6 @@ int main(int argc, char **argv) {
 						printf("No se pudo reservar espacio para el programa");
 
 					} else {
-						enviarProgramaAnsisop(clienteUMC, programa, largoPrograma);
 						t_pcbConConsola pcbListo;
 						pcbListo.pcb = nuevoPcb;
 						pcbListo.socketConsola = i;
