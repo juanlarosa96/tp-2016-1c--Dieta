@@ -31,9 +31,10 @@ int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		//	printf("Número incorrecto de parámetros\n");
 		//	return -1;
-		 config= config_create("/home/utnso/tp-2016-1c--Dieta/Swap/Configuracion/config");
+		 config= config_create("/home/utnso/TP/tp-2016-1c--Dieta/Swap/Configuracion/config");
 		}else{
-			config = config_create(argv[1]);}
+			config = config_create(argv[1]);
+		}
 
 	int puertoServidor =   config_get_int_value(config,"PUERTO_ESCUCHA");
 	int cantidadDePaginas =   config_get_int_value(config,"CANTIDAD_PAGINAS");
@@ -56,6 +57,8 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
+	printf("Se creo el archivo \n");
+
 	char pathArchivo[50]="./";
 	strcat(pathArchivo, nombre);
 
@@ -74,21 +77,30 @@ int main(int argc, char *argv[]) {
 		printf("Error creando socket");
 		return 1;
 	}
+
 	if (escucharEn(servidorSwap, puertoServidor)) {
 		printf("Error al conectar");
 		return 1;
 	}
+
+
 //-------------------------------------------------------------------------
 	struct sockaddr_in direccionCliente;
 
 	int cliente = aceptarConexion(servidorSwap,&direccionCliente);
-	printf("Recibí una conexión\n");
+	printf("Recibí una conexión en %d\n", cliente);
+
 //-------------------------------------------------------------------------
-	int idRecibido = iniciarHandshake(cliente, IDSWAP);
+	int idRecibido;
+	idRecibido = iniciarHandshake(cliente, IDSWAP);
+
 	if(idRecibido!=IDUMC){
 		printf("ERROR NO SE CONECTO A UMC");
 		return -1;
 	}
+
+	printf("Se conectó UMC\n");
+
 	while(1){
 		int header = recibirHeader(cliente);
 
