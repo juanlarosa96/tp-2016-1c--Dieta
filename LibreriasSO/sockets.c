@@ -96,10 +96,9 @@ int aceptarConexion(int socketServidor, struct sockaddr_in * direccionCliente) {
 int recibirTodo(int socketOrigen, void * buffer, int largo) {
 	int bytesRecibidos = 0;
 	int bytesRecibidosTotales = 0;
-	bytesRecibidos = recv(socketOrigen, buffer, largo, 0);
+	bytesRecibidosTotales = recv(socketOrigen, buffer, largo, 0);
 	while (bytesRecibidosTotales < largo) {
-
-		bytesRecibidos = recv(socketOrigen, buffer + bytesRecibidos, sizeof(uint8_t) - bytesRecibidos, 0);
+		bytesRecibidos = recv(socketOrigen, buffer + bytesRecibidosTotales, largo - bytesRecibidosTotales, 0);
 		bytesRecibidosTotales = bytesRecibidosTotales + bytesRecibidos;
 		if (bytesRecibidos <= 0) {
 			return 1;
