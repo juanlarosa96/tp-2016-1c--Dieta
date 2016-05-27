@@ -26,9 +26,9 @@
 
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
-char* recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* holis);
+void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* holis); //no se quien fue pero mejor nombre de variable de la historia
 void pedirLineaAUMC(int socketUMC,char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina);
-
+void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer);
 
 
 #endif /* FUNCIONES_H_ */
