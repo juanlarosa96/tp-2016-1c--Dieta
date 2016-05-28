@@ -80,8 +80,13 @@ void cambioProceso(uint32_t idPrograma){
 void procesarSolicitudOperacionCPU(int conexion){
 
 	//cola de pedidos?
+	while(1){
 
-	while(1) {
+	printf("Hola Soy un Hilo \n");
+
+	}
+
+	/*while(1) {
 
 		int header = recibirHeader(conexion);
 
@@ -90,6 +95,7 @@ void procesarSolicitudOperacionCPU(int conexion){
 		uint32_t size;
 		int lenBufferPedido;
 		char * bufferPedido;
+
 
 		switch(header){
 			case 0:
@@ -119,7 +125,7 @@ void procesarSolicitudOperacionCPU(int conexion){
 
 			break;
 		}
-	}
+	}*/
 
 
 }
