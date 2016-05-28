@@ -58,5 +58,4 @@ void AgregarAProcesoColaListos(t_pcbConConsola elemento);
 
 t_pcbConConsola DevolverProcesoColaListos();
 
-
 #endif /* FUNCIONES_H_ */

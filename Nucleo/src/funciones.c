@@ -25,13 +25,13 @@ void manejarCPU(int socketCpu) {
 	while (1) {
 		if (recibirRespuestaCPU(socketCpu, &respuesta)) {
 			//Se desconecto el CPU
-			finalizarProceso(siguientePcb);
+			//finalizarProceso(siguientePcb);
 			return;
 		}
 		switch (respuesta) {
 
 		case 99: //Fin programa
-			finalizarProceso(siguientePcb);
+			//finalizarProceso(siguientePcb);
 			break;
 
 		case 100: //Fin quantum
