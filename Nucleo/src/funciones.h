@@ -39,6 +39,7 @@ t_colaPcb cola_PCBBloqueados;
 
 int pidPcb;
 int tamanioPagina;
+t_list listaConsolas;
 
 void manejarCPU(int socketCpu);
 
