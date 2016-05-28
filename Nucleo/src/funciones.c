@@ -96,15 +96,25 @@ void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento) {
 
 t_pcb crearPcb(char * programa, int largoPrograma) {
 	t_pcb nuevoPcb;
+	t_metadata_program * metadata;
 	nuevoPcb.pid = pidPcb;
 	pidPcb++;
 	nuevoPcb.pc = 0;
-	nuevoPcb.indice_etiquetas = *metadata_desde_literal(programa);
-	nuevoPcb.indice_codigo = nuevoPcb.indice_etiquetas.instrucciones_serializado;
+	metadata = metadata_desde_literal(programa);
+
+	nuevoPcb.indice_etiquetas.etiquetas = metadata->etiquetas;
+	nuevoPcb.indice_etiquetas.largoTotalEtiquetas = metadata->etiquetas_size;
+
+	nuevoPcb.indice_codigo.instrucciones = metadata->instrucciones_serializado;
+	nuevoPcb.indice_codigo.cantidadInstrucciones = metadata->instrucciones_size;
+	nuevoPcb.indice_codigo.numeroInstruccionInicio = metadata->instruccion_inicio;
+
 	t_pila pilaInicial;
 	pilaInicial.indice_stack = (t_pila *) 0;
 	nuevoPcb.indice_stack = pilaInicial;
 	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
+
+	free(metadata);
 
 	return nuevoPcb;
 }
