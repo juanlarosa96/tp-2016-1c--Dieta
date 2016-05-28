@@ -7,6 +7,7 @@
 
 #include "funcionesUMC.h"
 
+
 void destruirProceso(t_nodo_lista_procesos * nodo){
 	free(nodo);
 }
@@ -77,12 +78,19 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
+	//int indiceListaFrames = encontrarPosicionEnListaFrames(idPrograma);
 
 	//mutex?
 	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,(void*) destruirProceso);
+
+	//list_remove(listaFrames,indiceListaFrames);
+	//killFrame
+	//o hacer funcion que deje vacio?
+	//limpiarTLB
+
 	//TERMINAR FUNCION!!!
 
-	//informar al swap
+	//InformarSwap() swap borrame tooodo
 
 }
 
@@ -135,7 +143,7 @@ void cambioProceso(uint32_t idPrograma) {
 
 void procesarSolicitudOperacionCPU(int conexion) {
 
-	//cola de pedidos?
+	int idCambioProceso;
 
 	while (1) {
 		int header = recibirHeader(conexion);
@@ -170,6 +178,8 @@ void procesarSolicitudOperacionCPU(int conexion) {
 			free(bufferPedido);
 
 			break;
+		//case cambio de proceso
+		//modificar variable idCambioProceso
 
 		default:
 			// hubo problema de conexión //loggearlo

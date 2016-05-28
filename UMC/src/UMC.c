@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
 	/*---------SOCKET CLIENTE DE SWAP------------*/
 
-	int clienteSwap;
+	int clienteSwap; //esto tiene que ser variable global?
 	if (crearSocket(&clienteSwap)) {
 		printf("Error creando socket\n");
 		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
@@ -112,10 +112,10 @@ int main(int argc, char *argv[]) {
 		pthread_attr_t attr;
 		pthread_t hiloCPU;
 
-		pthread_attr_init(&attr);
+		/*pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
 		pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) nuevaConexion);
-		pthread_attr_destroy(&attr);
+		pthread_attr_destroy(&attr);*/
 		log_info(logger, "Se estableció la conexión con Núcleo",texto);
 	}
 
