@@ -19,26 +19,21 @@ int main(int argc, char **argv) {
 	int PUERTO_SERVIDOR = config_get_int_value(config, "PUERTO_SERVIDOR");
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
-	//puts(value);
+
 
 	//Creo log para el Núcleo
 	t_log* logger;
-	logger = log_create("Núcelo.log", "NUCLEO", 1, log_level_from_string("INFO"));
+	logger = log_create("Núcelo.log", "NUCLEO", 1,
+			log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
-	/*
-	 struct sockaddr_in direccionServidor;
-	 direccionServidor.sin_family = AF_INET;
-	 direccionServidor.sin_addr.s_addr = INADDR_ANY;
-	 direccionServidor.sin_port = htons(PUERTO_SERVIDOR);
 
-	 int servidorNucleo = socket(AF_INET, SOCK_STREAM, 0);
-	 */
 	int clienteUMC;
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
-		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
+		log_error(logger, "Se produjo un error creando el socket de UMC",
+				texto);
 		return 1;
 	}
 	if (conectarA(clienteUMC, IP_UMC, PUERTO_UMC)) {
@@ -56,7 +51,9 @@ int main(int argc, char **argv) {
 		tamanioPagina = recibirTamanioPagina(clienteUMC);
 	} else {
 		printf("Error recibiendo tamanio pagina");
-		log_error(logger, "Se produjo un error recibiendo el tamanio de pagina de la UMC", texto);
+		log_error(logger,
+				"Se produjo un error recibiendo el tamanio de pagina de la UMC",
+				texto);
 		return 1;
 
 	}
@@ -70,108 +67,96 @@ int main(int argc, char **argv) {
 	}
 	if (escucharEn(servidorNucleo, PUERTO_SERVIDOR)) {
 		printf("Error al conectar");
-		log_error(logger, "Se produjo un error creando el socket servidor", texto);
+		log_error(logger, "Se produjo un error creando el socket servidor",
+				texto);
 		return 1;
 	}
 
 	log_info(logger, "Se estableció correctamente el socket servidor", texto);
 	printf("Escuchando\n");
 
-	pidPcb = 0;
-
-//------------------------------ SELECT
-
-	fd_set bolsaDeSockets;
-	fd_set bolsaAuxiliar;  // temp file descriptor list for select()
-	int listener = servidorNucleo;     // listening socket descriptor
-
-	FD_ZERO(&bolsaDeSockets);    // clear the master and temp sets
-	FD_ZERO(&bolsaAuxiliar);
-
-	FD_SET(listener, &bolsaDeSockets);
-
-	int fdmax;        // maximum file descriptor number
-	fdmax = listener;
+	pidPcb = 1;
 
 	int nuevaConexion;
 	struct sockaddr_in direccionCliente;
 
-	char buf[256];    // buffer for client data
-	int nbytesRecibidos;
-	int i;
+
 
 	t_list listaCPUsConectados;
+	t_list * aux = list_create();
+	listaConsolas = *aux;
+	free(aux);
 
 	while (1) {
-		bolsaAuxiliar = bolsaDeSockets; // copy it
-		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1) {
-			perror("select");
-			return 1;
-		}
 
-		// run through the existing connections looking for data to read
-		for (i = 0; i <= fdmax; i++) {
-			if (FD_ISSET(i, &bolsaAuxiliar)) { // we got one!!
-				if (i == listener) {
-					// handle new connections
-					nuevaConexion = aceptarConexion(i, &direccionCliente);
-					int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
+		// Fuera del select
+		nuevaConexion = aceptarConexion(servidorNucleo, &direccionCliente);
+		int idRecibido = iniciarHandshake(nuevaConexion, IDNUCLEO);
 
-					switch (idRecibido) {
-					//case IDERROR: IDERROR no lo reconoce because reasons
-					case 0:
-						log_info(logger, "Se desconecto el socket", texto);
-						close(nuevaConexion);
-						break;
-					case IDCONSOLA:
-						FD_SET(nuevaConexion, &bolsaDeSockets);
-						log_info(logger, "Nueva consola conectada", texto);
-						break;
-					case IDCPU:
-						;
-						pthread_t nuevoHilo;
-						pthread_create(&nuevoHilo, NULL, (void *) &manejarCPU, (void *) &i); //Creo hilo que maneje el nuevo CPU
-						list_add(&listaCPUsConectados, (void *) &nuevoHilo);
-						log_info(logger, "Nuevo CPU conectado", texto);
-						break;
-					default:
-						close(nuevaConexion);
-						log_error(logger, "Error en el handshake. Conexion inesperada", texto);
-						break;
-					}
-					if (i > fdmax) {
-						fdmax = i;
-					}
-				}
-			} else {
-				// Manejo consolas
-				int header = recibirHeader(i);
-				if (header == largoProgramaAnsisop) {
-					int largoPrograma = recibirLargoProgramaAnsisop(i);
-					char *programa;
-					recibirProgramaAnsisop(i, programa, largoPrograma);
+		switch (idRecibido) {
+		//case IDERROR: IDERROR no lo reconoce because reasons
+		case 0:
+			log_info(logger, "Se desconecto el socket", texto);
+			close(nuevaConexion);
+			break;
 
-					t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
+		case IDCONSOLA:
+			log_info(logger, "Nueva consola conectada", texto);
 
-					if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa) == inicioProgramaError) {
+			int header = recibirHeader(nuevaConexion);
+			if (header == largoProgramaAnsisop) {
+				int largoPrograma = recibirLargoProgramaAnsisop(nuevaConexion);
+				char *programa;
+				recibirProgramaAnsisop(nuevaConexion, programa, largoPrograma);
 
-						printf("No se pudo reservar espacio para el programa");
+				t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-					} else {
-						t_pcbConConsola pcbListo;
-						pcbListo.pcb = nuevoPcb;
-						pcbListo.socketConsola = i;
-						AgregarAProcesoColaListos(pcbListo);
-					}
+				if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma,
+						programa) == inicioProgramaError) {
 
+					printf("No se pudo reservar espacio para el programa");
+
+				} else {
+					t_pcbConConsola pcbListo;
+					pcbListo.pcb = nuevoPcb;
+					pcbListo.socketConsola = nuevaConexion;
+					AgregarAProcesoColaListos(pcbListo);
+					//Sincronizar
+					list_add(&listaConsolas,(void *) &pcbListo);
+					//---
 				}
 
-				if (header <= 0) {
-					FD_CLR(i,&bolsaDeSockets);
-
-				}
 			}
+
+			if (header <= 0) {
+				//Cerrar conexion
+
+			}
+
+			break;
+		case IDCPU:
+			;
+			pthread_t nuevoHilo;
+			//Hacer thread desechable
+			pthread_attr_t attr;
+			pthread_attr_init(&attr);
+			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+
+			pthread_create(&nuevoHilo, &attr, (void *) &manejarCPU, (void *) &nuevaConexion); //Creo hilo que maneje el nuevo CPU
+
+			pthread_attr_destroy(&attr);
+
+
+			list_add(&listaCPUsConectados, (void *) &nuevoHilo);
+			log_info(logger, "Nuevo CPU conectado", texto);
+			break;
+		default:
+			close(nuevaConexion);
+			log_error(logger, "Error en el handshake. Conexion inesperada",
+					texto);
+			break;
 		}
+
 	}
 
 	return EXIT_SUCCESS;
