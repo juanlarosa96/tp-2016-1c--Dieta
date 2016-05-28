@@ -17,11 +17,11 @@
 
 #include <commons/config.h>
 #include <commons/log.h>
-#include <commons/collections/list.h>
 #include <string.h>
 
 #include <pthread.h>
 #include "funcionesUMC.h"
+#include "variablesGlobalesUMC.h"
 
 int main(int argc, char *argv[]) {
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
 		//return -1;
-		config = config_create("/home/utnso/TP/tp-2016-1c--Dieta/UMC/Configuracion/config.cfg");
+		config = config_create("./Configuracion/config.cfg");
 	} else {
 
 		config = config_create(argv[1]);
@@ -42,10 +42,10 @@ int main(int argc, char *argv[]) {
 	int memoriaDisponible = (cant_frames) * (size_frames);
 	void * memoria = malloc(memoriaDisponible);
 	memset(memoria, 0, sizeof(memoriaDisponible));
-	printf("%s", memoria);
 
-	t_list * listaFrames = list_create();
-	t_list * listaProcesos = list_create();
+	//Creo variables globales
+	listaFrames = list_create();
+	listaProcesos = list_create();
 
 	//Log para UMC
 	t_log* logger;
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
 	/*---------SOCKET CLIENTE DE SWAP------------*/
 
-	int clienteSwap;
+	int clienteSwap; //esto tiene que ser variable global?
 	if (crearSocket(&clienteSwap)) {
 		printf("Error creando socket\n");
 		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
@@ -72,13 +72,14 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	log_info(logger, "Se conectó correctamente a SWAP", texto);
-	printf("%d",clienteSwap);
 
 	if (responderHandshake(clienteSwap, IDUMC, IDSWAP)) {
 		log_error(logger, "Error en el handshake con SWAP", texto);
 		return 1;
 	}
+
+	log_info(logger, "Se conectó correctamente a SWAP", texto);
+
 
 
 	/*---------SOCKET SERVIDOR DE NUCLEO Y CPUs------------*/
@@ -108,7 +109,14 @@ int main(int argc, char *argv[]) {
 
 	if (idRecibido == IDNUCLEO) {
 		enviarTamanioPagina(nuevaConexion, size_frames);
-		//crear hilo para nucleo
+		pthread_attr_t attr;
+		pthread_t hiloCPU;
+
+		/*pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+		pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) nuevaConexion);
+		pthread_attr_destroy(&attr);*/
+		log_info(logger, "Se estableció la conexión con Núcleo",texto);
 	}
 
 	/*-----------CONEXION CON CPUs-----------*/
