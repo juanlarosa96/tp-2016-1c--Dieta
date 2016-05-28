@@ -39,6 +39,7 @@ t_colaPcb cola_PCBBloqueados;
 
 int pidPcb;
 int tamanioPagina;
+t_list listaConsolas;
 
 void manejarCPU(int socketCpu);
 
@@ -57,6 +58,5 @@ int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * 
 void AgregarAProcesoColaListos(t_pcbConConsola elemento);
 
 t_pcbConConsola DevolverProcesoColaListos();
-
 
 #endif /* FUNCIONES_H_ */

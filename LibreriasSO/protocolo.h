@@ -55,5 +55,7 @@ void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *o
 void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * buffer);
 void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto);
 void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto);
+void enviarPcb(int socketCPU, t_pcb pcb);
+
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
