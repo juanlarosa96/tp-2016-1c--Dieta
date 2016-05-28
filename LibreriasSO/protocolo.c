@@ -179,5 +179,30 @@ void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * bu
 	recibirTodo(socketUMC, buffer, largoPedido);
 }
 
+void enviarPcb(int socketCPU, t_pcb pcb){
+	int header = headerPcb;
+	send(socketCPU, &header, sizeof(int), 0);
+	int cantidadElementosStack = 0, tamanioIndiceStack = 0, cursorMemoria = 0;
 
+	//Falta calcular tamaño del stack
+	int cantidadDeBytes = 2 * sizeof(int) + 8 * sizeof(uint32_t) + 2 * sizeof(uint32_t) * pcb.indice_etiquetas.instrucciones_size
+			+ pcb.indice_etiquetas.cantidad_de_etiquetas * pcb.indice_etiquetas.etiquetas_size * sizeof(char) + tamanioIndiceStack;
+
+	//etiquetas_size es el tamaño de cada entrada en el vector de etiquetas o es de tamaño variable?
+
+	void * bufferPcb = malloc (cantidadDeBytes);
+
+	memcpy(bufferPcb,&pcb.pid,sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(bufferPcb + cursorMemoria,&pcb.pc,sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(bufferPcb + cursorMemoria,&pcb.paginas_codigo,sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(bufferPcb + cursorMemoria,&pcb.indice_etiquetas.instruccion_inicio,sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(bufferPcb + cursorMemoria,&pcb.indice_etiquetas.instrucciones_size,sizeof(uint32_t));
+	cursorMemoria += sizeof(uint32_t);
+	memcpy(bufferPcb + cursorMemoria,pcb.indice_etiquetas.instrucciones_serializado,pcb.indice_etiquetas.instrucciones_size);
+	cursorMemoria += pcb.indice_etiquetas.instrucciones_size;
+}
 

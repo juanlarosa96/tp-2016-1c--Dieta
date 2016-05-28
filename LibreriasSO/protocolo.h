@@ -52,5 +52,6 @@ void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int la
 void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size, int largoBuffer, char * buffer);
 void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size, int * largoBuffer);
 void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * buffer);
+void enviarPcb(int socketCPU, t_pcb pcb);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
