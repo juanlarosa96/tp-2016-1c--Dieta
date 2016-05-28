@@ -17,11 +17,11 @@
 
 #include <commons/config.h>
 #include <commons/log.h>
-#include <commons/collections/list.h>
 #include <string.h>
 
 #include <pthread.h>
 #include "funcionesUMC.h"
+#include "variablesGlobalesUMC.h"
 
 int main(int argc, char *argv[]) {
 
@@ -42,10 +42,10 @@ int main(int argc, char *argv[]) {
 	int memoriaDisponible = (cant_frames) * (size_frames);
 	void * memoria = malloc(memoriaDisponible);
 	memset(memoria, 0, sizeof(memoriaDisponible));
-	printf("%s", memoria);
 
-	t_list * listaFrames = list_create();
-	t_list * listaProcesos = list_create();
+	//Creo variables globales
+	listaFrames = list_create();
+	listaProcesos = list_create();
 
 	//Log para UMC
 	t_log* logger;
