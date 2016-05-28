@@ -23,7 +23,10 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 	printf("Asignar\n");
 }
 void imprimir(t_valor_variable valor) {
-	printf("Imprimir\n");
+	//falta definir logger
+	char* texto = string_itoa(valor);
+	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
+	free(texto);
 }
 void imprimirTexto(char* texto) {
 	printf("Imprimir texto\n");
