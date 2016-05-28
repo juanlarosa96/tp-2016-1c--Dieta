@@ -13,8 +13,11 @@
 #include <sockets.h>
 #include <protocolo.h>
 #include "structsUMC.h"
+#include "variablesGlobalesUMC.h"
 
 /*-------OperatoriaUMC-------*/
+
+int encontrarPosicionEnListaProcesos(int pid);
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma);
 

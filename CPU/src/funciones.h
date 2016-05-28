@@ -21,11 +21,13 @@
 #include <stdint.h>
 #include <commons/config.h>
 #include <structs.h>
+#include <sockets.h>
+#include <protocolo.h>
 
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
 char* recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* holis);
-
+void pedirLineaAUMC(int socketUMC,char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina);
 
 
 
