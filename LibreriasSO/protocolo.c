@@ -108,7 +108,7 @@ void recibirInicializacionPrograma(int socketUMC, uint32_t *pid,
 	recibirTodo(socketUMC, programa, largoPrograma);
 }
 
-int recibirRespuestaInicializacion(int socketUMC) { //soy sofi y no entiendo el porque de esta funcion
+int recibirRespuestaInicializacion(int socketUMC) {
 	int respuesta;
 	recibirTodo(socketUMC, &respuesta, sizeof(int));
 	return respuesta;
@@ -179,5 +179,40 @@ void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * bu
 	recibirTodo(socketUMC, buffer, largoPedido);
 }
 
+void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto){
 
+	int header = primitivaImprimir;
+
+	void *data = malloc(sizeof(int) + sizeof(uint32_t) + sizeof(int) + strlen(texto) + 1); //header + pid + largoTexto + texto
+	int offset = 0, str_size = 0, largoTexto = strlen(texto) + 1;
+
+	    str_size = sizeof(int);
+		memcpy(data + offset, &header, str_size);
+		offset += str_size;
+
+		str_size = sizeof(uint32_t);
+		memcpy(data + offset, &id_proceso, str_size);
+		offset += str_size;
+
+		str_size = sizeof(int);
+		memcpy(data + offset, &largoTexto, str_size);
+		offset += str_size;
+
+		str_size = strlen(texto) + 1;
+		memcpy(data + offset, texto, str_size);
+		offset += str_size;
+
+		send(socketNucleo,data,offset,0);
+
+		free(data);
+
+
+}
+
+void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto){
+	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
+	recibirTodo(socketOrigen, largoTexto, sizeof(int));
+	recibirTodo(socketOrigen, texto, *largoTexto);
+
+}
 
