@@ -25,10 +25,11 @@ typedef struct {
 	t_posicion_memoria variable_retorno;
 } t_registro_pila;
 
-typedef struct t_pila{
+/*typedef struct t_pila{
 	t_registro_pila registro;
 	struct t_pila * indice_stack;
-} t_pila;
+	int indicePila;
+} t_pila;*/
 
 typedef struct {
 	t_size largoTotalEtiquetas;
@@ -47,7 +48,7 @@ typedef struct {
 	uint32_t paginas_codigo;
 	t_indiceCodigo indice_codigo;
 	t_indiceEtiquetas indice_etiquetas;
-	t_pila indice_stack;
+	t_list indice_stack;
 } t_pcb;
 
 
