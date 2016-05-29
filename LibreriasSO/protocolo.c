@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 #include "protocolo.h"
+#include "sockets.h"
 
 int recibirHeader(int socketOrigen) {
 	int header;
