@@ -9,6 +9,7 @@
 #include <structs.h>
 #include <parser/metadata_program.h>
 #include "primitivas.h"
+#include "variables_globales.h"
 
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
 		.AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
@@ -51,7 +52,7 @@ int main(int argc, char *argv[]) {
 	int quantumTotal = config_get_string_value(config, "QUANTUM");
 
 	//creo socket nucleo
-	int socketNucleo;
+
 	crearSocket(&socketNucleo);
 
 	//me intento conectar
@@ -176,7 +177,7 @@ int main(int argc, char *argv[]) {
 	int signalApagado = 0;
 
 	while (!signalApagado) {
-		t_pcb pcbRecibido;
+
 		if (recibirHeader(socketNucleo) == headerPcb) {
 
 			pcbRecibido = recibirPcb(socketNucleo);

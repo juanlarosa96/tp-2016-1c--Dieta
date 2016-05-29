@@ -15,14 +15,13 @@
 #include <sys/socket.h>
 #include <commons/config.h>
 #include <structs.h>
-#include <sockets.h>
-#include <protocolo.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include "funciones.h"
 
 int main(int argc, char *argv[]) {
 
@@ -37,12 +36,12 @@ int main(int argc, char *argv[]) {
 		}
 
 	int puertoServidor =   config_get_int_value(config,"PUERTO_ESCUCHA");
-	int cantidadDePaginas =   config_get_int_value(config,"CANTIDAD_PAGINAS");
-	int sizePagina =   config_get_int_value(config,"TAMANIO_PAGINA");
-	int retardoCompactacion =   config_get_int_value(config,"RETARDO_COMPACTACION");
+	cantidadDeFrames =   config_get_int_value(config,"CANTIDAD_PAGINAS");
+	sizePagina =   config_get_int_value(config,"TAMANIO_PAGINA");
+	retardoCompactacion =   config_get_int_value(config,"RETARDO_COMPACTACION");
 	char*nombre = config_get_string_value(config,"NOMBRE_SWAP");
 
-	int sizeTotal = sizePagina * cantidadDePaginas;
+	int sizeTotal = sizePagina * cantidadDeFrames;
 	char st[50];
 	sprintf(st, "%d", sizeTotal);
 
@@ -101,18 +100,22 @@ int main(int argc, char *argv[]) {
 
 	printf("Se conectó UMC\n");
 
+	char bitMap [cantidadDeFrames];
+	int i;
+	for(i=0;i<cantidadDeFrames;i++){bitMap[i]=0;}
+
+
 	while(1){
 		int header = recibirHeader(cliente);
 
+		switch(header){
+
+		case 21:
+			iniciarProgramaAnsisop(cliente,archivoSwap,bitMap);
+		}
 	}
-	char* buffer = malloc(10);
 
-	int bytesRecibidos = recv(cliente, buffer, 10, 0);
-	buffer[bytesRecibidos] = '\0';
 
-	printf("UMC dice: %s\n", buffer);
-
-	free(buffer);
 //---------------------------------------------------------------------------
 
 	config_destroy(config);

@@ -28,7 +28,8 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	solicitarBytes = 8,
 	almacenarBytes = 9,
 	respuestaCPU = 10,
-	resultadoEjecucion = 5
+	resultadoEjecucion = 5,
+	primitivaImprimir = 12
 
 };
 int recibirHeader(int socketOrigen);
@@ -54,6 +55,9 @@ void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int la
 void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size, int largoBuffer, char * buffer);
 void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size, int * largoBuffer);
 void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * buffer);
+void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto);
+void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto);
 void enviarPcb(int socketCPU, t_pcb pcb);
+
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
