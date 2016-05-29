@@ -20,8 +20,8 @@ typedef struct {
 
 
 typedef struct {
-	t_list lista_argumentos;
-	t_list lista_variables;
+	t_list * lista_argumentos;
+	t_list * lista_variables;
 	uint32_t direccion_retorno;
 	t_posicion_memoria variable_retorno;
 } t_registro_pila;
