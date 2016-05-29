@@ -26,6 +26,11 @@ typedef struct {
 	t_posicion_memoria variable_retorno;
 } t_registro_pila;
 
+typedef struct {
+	char identificador;
+	t_posicion_memoria posicionDeVariable;
+} t_identificadorConPosicionMemoria; //Es el elemento que contiene la lista de variables del stack
+
 /*typedef struct t_pila{
 	t_registro_pila registro;
 	struct t_pila * indice_stack;
