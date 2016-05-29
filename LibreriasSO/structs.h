@@ -10,6 +10,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
 #include <parser/metadata_program.h>
+#include <stdint.h>
 
 typedef struct {
 	uint32_t pagina;
@@ -48,7 +49,7 @@ typedef struct {
 	uint32_t paginas_codigo;
 	t_indiceCodigo indice_codigo;
 	t_indiceEtiquetas indice_etiquetas;
-	t_list indice_stack;
+	t_list * indice_stack;
 } t_pcb;
 
 
