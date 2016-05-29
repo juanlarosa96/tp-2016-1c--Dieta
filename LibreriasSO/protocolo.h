@@ -12,8 +12,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "structs.h"
-#include "sockets.h"
+
 #include "pila.h"
 
 enum headers { //Constantes que identifican los headers de los mensajes
