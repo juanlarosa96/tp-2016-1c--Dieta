@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include "commons/log.h"
 #include <commons/collections/list.h>
+#include <commons/collections/queue.h>
 #include <sockets.h>
 #include <structs.h>
 #include <unistd.h>
@@ -27,15 +28,16 @@ typedef struct {
 
 
 
-typedef struct t_colaPcb{
+/*typedef struct t_colaPcb{
 	t_pcbConConsola pcb;
 	struct t_colaPcb * siguientePcb;
 }t_colaPcb;
+*/
 
-t_colaPcb cola_PCBListos;
-t_colaPcb cola_PCBNuevos;
-t_colaPcb cola_PCBFinalizados;
-t_colaPcb cola_PCBBloqueados;
+t_queue *cola_PCBListos;
+t_queue *cola_PCBNuevos;
+t_queue *cola_PCBFinalizados;
+t_queue *cola_PCBBloqueados;
 
 int pidPcb;
 int tamanioPagina;
@@ -45,9 +47,9 @@ void manejarCPU(int socketCpu);
 
 t_pcbConConsola DevolverProcesoColaListos();
 
-t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola);
+t_pcbConConsola sacarPrimeroCola(t_queue * inicioCola);
 
-void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal);
+void AgregarACola(t_pcbConConsola elemento, t_queue * colaFinal);
 
 t_pcb crearPcb(char * programa, int largoPrograma);
 

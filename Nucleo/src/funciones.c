@@ -42,56 +42,51 @@ void manejarCPU(int socketCpu) {
 	}
 }
 
-void AgregarACola(t_pcbConConsola elemento, t_colaPcb * colaFinal) {
-	t_colaPcb * nuevoElementoCola = malloc(sizeof(t_colaPcb));
-	nuevoElementoCola->pcb = elemento;
-	colaFinal->siguientePcb = nuevoElementoCola;
-	nuevoElementoCola->siguientePcb = (void *) 0;
-	colaFinal = nuevoElementoCola;
+void AgregarACola(t_pcbConConsola elemento, t_queue * cola) {
+	queue_push(&elemento);
 	return;
 }
 
-t_pcbConConsola sacarPrimeroCola(t_colaPcb * inicioCola) {
+t_pcbConConsola sacarPrimeroCola(t_queue * cola) {
 	t_pcbConConsola elemento;
-	t_colaPcb * auxiliar;
-	elemento = inicioCola->pcb;
-	auxiliar = inicioCola;
-	inicioCola = inicioCola->siguientePcb;
-	free(auxiliar);
+	void * elementoPop = queue_pop(cola);
+	if(elementoPop == NULL){
+		return elementoPop;
+	}
+	memcpy(&elemento,elementoPop,sizeof(t_pcbConConsola));
 	return elemento;
-
 }
 
 t_pcbConConsola DevolverProcesoColaListos() {
-	return (sacarPrimeroCola(&cola_PCBListos));
+	return (sacarPrimeroCola(cola_PCBListos));
 }
 
 t_pcbConConsola DevolverProcesoColaNuevos() {
-	return (sacarPrimeroCola(&cola_PCBNuevos));
+	return (sacarPrimeroCola(cola_PCBNuevos));
 }
 
 t_pcbConConsola DevolverProcesoColaFinalizados() {
-	return (sacarPrimeroCola(&cola_PCBFinalizados));
+	return (sacarPrimeroCola(cola_PCBFinalizados));
 }
 
 t_pcbConConsola DevolverProcesoColaLBloqueados() {
-	return (sacarPrimeroCola(&cola_PCBListos));
+	return (sacarPrimeroCola(cola_PCBListos));
 }
 
 void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
-	AgregarACola(elemento, &cola_PCBListos);
+	AgregarACola(elemento, cola_PCBListos);
 }
 
 void AgregarAProcesoColaNuevos(t_pcbConConsola elemento) {
-	AgregarACola(elemento, &cola_PCBNuevos);
+	AgregarACola(elemento, cola_PCBNuevos);
 }
 
 void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento) {
-	AgregarACola(elemento, &cola_PCBFinalizados);
+	AgregarACola(elemento, cola_PCBFinalizados);
 }
 
 void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento) {
-	AgregarACola(elemento, &cola_PCBBloqueados);
+	AgregarACola(elemento, cola_PCBBloqueados);
 }
 
 t_pcb crearPcb(char * programa, int largoPrograma) {
@@ -102,6 +97,7 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	nuevoPcb.pc = 0;
 	metadata = metadata_desde_literal(programa);
 
+
 	nuevoPcb.indice_etiquetas.etiquetas = metadata->etiquetas;
 	nuevoPcb.indice_etiquetas.largoTotalEtiquetas = metadata->etiquetas_size;
 
@@ -109,11 +105,12 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	nuevoPcb.indice_codigo.cantidadInstrucciones = metadata->instrucciones_size;
 	nuevoPcb.indice_codigo.numeroInstruccionInicio = metadata->instruccion_inicio;
 
-	t_pila pilaInicial;
-	pilaInicial.indice_stack = (t_pila *) 0;
-	nuevoPcb.indice_stack = pilaInicial;
+	t_list * pilaInicial;
+	pilaInicial = list_create();
+	nuevoPcb.indice_stack = *pilaInicial;
 	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
 
+	free(pilaInicial);
 	free(metadata);
 
 	return nuevoPcb;
