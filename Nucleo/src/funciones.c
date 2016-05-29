@@ -43,7 +43,7 @@ void manejarCPU(int socketCpu) {
 }
 
 void AgregarACola(t_pcbConConsola elemento, t_queue * cola) {
-	queue_push(&elemento);
+	queue_push(cola, &elemento);
 	return;
 }
 
@@ -51,7 +51,8 @@ t_pcbConConsola sacarPrimeroCola(t_queue * cola) {
 	t_pcbConConsola elemento;
 	void * elementoPop = queue_pop(cola);
 	if(elementoPop == NULL){
-		return elementoPop;
+		elemento.socketConsola = -1;
+		return elemento;
 	}
 	memcpy(&elemento,elementoPop,sizeof(t_pcbConConsola));
 	return elemento;
@@ -107,10 +108,9 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 
 	t_list * pilaInicial;
 	pilaInicial = list_create();
-	nuevoPcb.indice_stack = *pilaInicial;
+	nuevoPcb.indice_stack = pilaInicial;
 	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
 
-	free(pilaInicial);
 	free(metadata);
 
 	return nuevoPcb;
