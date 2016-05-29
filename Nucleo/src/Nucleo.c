@@ -87,9 +87,9 @@ int main(int argc, char **argv) {
 	listaConsolas = *aux;
 	free(aux);
 
-	cola_PCBListos = list_create();
-	cola_PCBBloqueados= list_create();
-	cola_PCBFinalizados= list_create();
+	cola_PCBListos = queue_create();
+	cola_PCBBloqueados= queue_create();
+	cola_PCBFinalizados= queue_create();
 
 	while (1) {
 
