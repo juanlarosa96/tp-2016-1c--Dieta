@@ -7,6 +7,42 @@
 
 #include "funcionesUMC.h"
 
+#define TAMBUFFER 100
+
+/*char *borrarEspaciosInnecesarios(char *string){
+	char **cadenaSinEspacios = malloc(TAMBUFFER);
+	*cadenaSinEspacios = string;
+	string_trim(cadenaSinEspacios);
+
+	return (*cadenaSinEspacios);
+}*/
+
+/*void consolaUMC(void) {
+	char * buffer;
+    size_t bufferSize = TAMBUFFER;
+    buffer = malloc(bufferSize * sizeof(char));
+
+
+	if(buffer == NULL){
+		log_error(logger, "No se pudo reservar memoria para recibir comandos por consola de UMC");
+		pthread_exit(NULL);
+	}
+
+
+	while(1){
+		printf("Ingresar comando:\n");
+ 	    getline(&buffer,&bufferSize,stdin);
+ 	    //  printf("%zu characters were read.\n",characters);
+
+ 	    //Validaciones ?
+ 	    string_trim(*buffer); //borro espacios innecesarios del buffer //ver funcion definida mas arriba
+
+ 	    //terminar funcion
+
+	}
+
+}*/
+
 void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
 }
@@ -85,14 +121,15 @@ void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 	//int indiceListaFrames = encontrarPosicionEnListaFrames(idPrograma);
 
-	//mutex?
+	pthread_mutex_lock(&mutexProcesos);
 	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
 			(void*) destruirProceso);
+	pthread_mutex_unlock(&mutexProcesos);
 
 	//list_remove(listaFrames,indiceListaFrames);
 	//killFrame
 	//o hacer funcion que deje vacio?
-	//limpiarTLB
+	//limpiarTLB ?
 
 	//TERMINAR FUNCION!!!
 
@@ -100,8 +137,8 @@ void finalizarPrograma(uint32_t idPrograma) {
 
 }
 
-void cambioProceso(uint32_t idPrograma) {
-
+void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
+	(*idProcesoActivo) = idNuevoPrograma;
 }
 
 void procesarOperacionesNucleo(int socketNucleo) {
@@ -128,6 +165,7 @@ void procesarOperacionesNucleo(int socketNucleo) {
 			//recibir lo demas
 
 			break;
+
 		default:
 			log_error(logger, "Hubo un problema de conexión con Núcleo", texto);
 			pthread_exit(NULL);
@@ -140,7 +178,7 @@ void procesarOperacionesNucleo(int socketNucleo) {
 
 void procesarSolicitudOperacionCPU(int conexion) {
 
-	int idCambioProceso;
+	uint32_t idCambioProceso;
 
 	while (1) {
 		int header = recibirHeader(conexion);
@@ -150,7 +188,9 @@ void procesarSolicitudOperacionCPU(int conexion) {
 		uint32_t size;
 		int lenBufferPedido;
 		char * bufferPedido;
-		char * nroCpu = string_itoa(conexion);
+		uint32_t idNuevoProcesoActivo;
+		//char * nroCpu = string_itoa(conexion); para poner nro de cpu
+
 
 		switch (header) {
 		case 0:
@@ -158,7 +198,7 @@ void procesarSolicitudOperacionCPU(int conexion) {
 			log_info(logger, "Se desconectó CPU nro", texto);	//como carajo pongo el nro?
 			pthread_exit(NULL);
 
-		case 8: //solicitarBytes //ver el tema de la constante
+		case 8: //solicitarBytes //ver el tema de la constante, no me las reconoce
 			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size); //deserializacion
 			solicitarBytesDeUnaPag(nroPagina, offset, size); //operacion
 			break;
@@ -174,8 +214,11 @@ void procesarSolicitudOperacionCPU(int conexion) {
 			free(bufferPedido);
 
 			break;
-			//case cambio de proceso
-			//modificar variable idCambioProceso
+		case 14: //cambiarProcesoActivo
+
+			recibirPID(conexion, &idNuevoProcesoActivo);
+			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
+			break;
 
 		default:
 			log_error(logger, "Hubo problema de conexion con CPU", texto); //nro cpu?

@@ -377,3 +377,25 @@ t_pcb recibirPcb(int socketNucleo) {
 	return pcb;
 }
 
+void enviarPID(int socketUMC, uint32_t pid){
+	int header = finalizacionPrograma;
+
+	void * data = malloc(sizeof (int) + sizeof(uint32_t));
+	int offset = 0, size = 0;
+
+	size = sizeof(int);
+	memcpy(data, &header, size);
+	offset += size;
+	size = sizeof(uint32_t);
+	memcpy(data + offset, &pid, size);
+	offset += size;
+
+	send(socketUMC, data, offset, 0);
+
+	free(data);
+}
+
+void recibirPID(int socketUMC, uint32_t * pid){
+	recibirTodo(socketUMC, pid, sizeof(uint32_t));
+}
+
