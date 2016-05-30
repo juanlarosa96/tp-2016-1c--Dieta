@@ -15,6 +15,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include <unistd.h>
+
 #include <commons/config.h>
 #include <string.h>
 
@@ -51,6 +53,9 @@ int main(int argc, char *argv[]) {
 	//Log para UMC
 	logger = log_create("UMC.log", "UMC", 1, log_level_from_string("INFO"));
 
+	//Hilo para Consola de UMC
+
+
 
 	int puerto_servidor = config_get_int_value(config, "PUERTO");
 	int puerto_swap = config_get_int_value(config, "PUERTO_SWAP");
@@ -85,8 +90,7 @@ int main(int argc, char *argv[]) {
 
 	int servidorUMC;
 	if (crearSocket(&servidorUMC)) {
-		printf("Error creando socket");
-		log_error(logger, "Error creando socket", texto);
+		log_error(logger, "Error creando socket servidor para Nucleo y CPUs", texto);
 		return 1;
 	}
 	if (escucharEn(servidorUMC, puerto_servidor)) {
@@ -100,23 +104,34 @@ int main(int argc, char *argv[]) {
 
 	/*-----------CONEXION CON NUCLEO-----------------*/
 
-	//NOTA: PRIMERO SE TIENE QUE CONECTAR NUCLEO, SI NO SE ROMPE TODO
+	//PRIMERO SE TIENE QUE CONECTAR NUCLEO ANTES QUE LAS CPUS
 	int nuevaConexion;
 	struct sockaddr_in direccionCliente;
+
 	nuevaConexion = aceptarConexion(servidorUMC, &direccionCliente);
 	int idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
 
-	if (idRecibido == IDNUCLEO) {
-		enviarTamanioPagina(nuevaConexion, size_frames);
-		pthread_attr_t attr;
-		pthread_t hiloCPU;
+	while(idRecibido != IDNUCLEO){
+		log_error(logger, "Se esperaba que se conectara Nucleo. Conexion desconocida", texto);
+		close(nuevaConexion);
 
-		pthread_attr_init(&attr);
-		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-		pthread_create(&hiloCPU,&attr,(void *) &procesarOperacionesNucleo, (void *) nuevaConexion);
-		pthread_attr_destroy(&attr);
-		log_info(logger, "Se estableció la conexión con Núcleo",texto);
+		nuevaConexion = aceptarConexion(servidorUMC, &direccionCliente);
+		idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
 	}
+
+	log_info(logger, "Se estableció la conexión con Núcleo",texto);
+
+	enviarTamanioPagina(nuevaConexion, size_frames);
+	//Hilo para manejar las solicitudes de Nucleo
+	pthread_attr_t attr;
+	pthread_t hiloCPU;
+
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+	pthread_create(&hiloCPU,&attr,(void *) &procesarOperacionesNucleo, (void *) nuevaConexion);
+	pthread_attr_destroy(&attr);
+
+
 
 	/*-----------CONEXION CON CPUs-----------*/
 
@@ -141,13 +156,13 @@ int main(int argc, char *argv[]) {
 			log_info(logger, "Nuevo CPU conectado", texto);
 		}
 		else {
+			log_error(logger, "Se esperaba un CPU. Conexion inesperada", texto);
 			close(nuevaConexion);
-			log_error(logger, "Error en el handshake. Conexion inesperada", texto);
 		}
 
 	}
 
-	free(ip_swap);
+	//pthread_join() del hilo de consola
 
 	config_destroy(config);
 
