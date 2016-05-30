@@ -29,5 +29,6 @@ void imprimir(t_valor_variable valor) {
 	free(texto);
 }
 void imprimirTexto(char* texto) {
-	printf("Imprimir texto\n");
+	//falta definir logger
+	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
 }
