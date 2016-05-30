@@ -401,6 +401,6 @@ void recibirPID(int socketUMC, uint32_t * pid){
 
 void enviarFinalizacionProgramaConsola(int socketConsola){
 	int header = finalizacionPrograma;
-	send(socketConsola,&header,sizeof(int));
+	send(socketConsola,&header,sizeof(int),0);
 
 }
