@@ -19,27 +19,42 @@ void manejarCPU(int socketCpu) {
 	 * Se pone pcb en cola de listo/bloqueado segun corresponda
 	 * repetir
 	 */
-	t_pcbConConsola siguientePcb = DevolverProcesoColaListos();
-	enviarPcb(socketCpu, siguientePcb.pcb);
-	int respuesta;
-	while (1) {
-		if (recibirRespuestaCPU(socketCpu, &respuesta)) {
-			//Se desconecto el CPU
-			//finalizarProceso(siguientePcb);
-			return;
-		}
-		switch (respuesta) {
 
-		case 99: //Fin programa
-			//finalizarProceso(siguientePcb);
-			break;
+	int desconectado = 0, cambioProceso;
 
-		case 100: //Fin quantum
-			AgregarAProcesoColaListos(siguientePcb);
-			break;
+	while (!desconectado) {
 
+		cambioProceso = 0;
+
+		t_pcbConConsola siguientePcb = DevolverProcesoColaListos();
+		if (siguientePcb.socketConsola != -1) {
+			enviarPcb(socketCpu, siguientePcb.pcb);
+
+			int respuesta;
+
+			while (!cambioProceso) {
+				if (recibirRespuestaCPU(socketCpu, &respuesta)) {
+					//Se desconecto el CPU
+					//finalizarProceso(siguientePcb);
+					desconectado = 1;
+					return;
+				}
+				switch (respuesta) {
+
+				case 99: //Fin programa
+					//finalizarProceso(siguientePcb);
+					break;
+
+				case 100: //Fin quantum
+					AgregarAProcesoColaListos(siguientePcb);
+					cambioProceso = 1;
+					break;
+
+				}
+			}
 		}
 	}
+	pthread_exit(NULL);
 }
 
 void AgregarACola(t_pcbConConsola elemento, t_queue * cola) {
@@ -50,11 +65,11 @@ void AgregarACola(t_pcbConConsola elemento, t_queue * cola) {
 t_pcbConConsola sacarPrimeroCola(t_queue * cola) {
 	t_pcbConConsola elemento;
 	void * elementoPop = queue_pop(cola);
-	if(elementoPop == NULL){
+	if (elementoPop == NULL) {
 		elemento.socketConsola = -1;
 		return elemento;
 	}
-	memcpy(&elemento,elementoPop,sizeof(t_pcbConConsola));
+	memcpy(&elemento, elementoPop, sizeof(t_pcbConConsola));
 	return elemento;
 }
 
@@ -97,7 +112,6 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	pidPcb++;
 	nuevoPcb.pc = 0;
 	metadata = metadata_desde_literal(programa);
-
 
 	nuevoPcb.indice_etiquetas.etiquetas = metadata->etiquetas;
 	nuevoPcb.indice_etiquetas.largoTotalEtiquetas = metadata->etiquetas_size;
