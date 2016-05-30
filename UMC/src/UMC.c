@@ -10,18 +10,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
 #include <commons/config.h>
-#include <commons/log.h>
 #include <string.h>
 
-#include <pthread.h>
 #include "funcionesUMC.h"
-#include "variablesGlobalesUMC.h"
+
 
 int main(int argc, char *argv[]) {
 
@@ -43,15 +41,16 @@ int main(int argc, char *argv[]) {
 	void * memoria = malloc(memoriaDisponible);
 	memset(memoria, 0, sizeof(memoriaDisponible));
 
-	//Creo variables globales
+	//Inicializo variables globales
 	listaFrames = list_create();
 	listaProcesos = list_create();
+	texto = "info";
+	pthread_mutex_init(&mutexFrames, NULL);
+	pthread_mutex_init(&mutexProcesos, NULL);
 
 	//Log para UMC
-	t_log* logger;
 	logger = log_create("UMC.log", "UMC", 1, log_level_from_string("INFO"));
-	char *texto;
-	texto = "info";
+
 
 	int puerto_servidor = config_get_int_value(config, "PUERTO");
 	int puerto_swap = config_get_int_value(config, "PUERTO_SWAP");
@@ -112,10 +111,10 @@ int main(int argc, char *argv[]) {
 		pthread_attr_t attr;
 		pthread_t hiloCPU;
 
-		/*pthread_attr_init(&attr);
+		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-		pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) nuevaConexion);
-		pthread_attr_destroy(&attr);*/
+		pthread_create(&hiloCPU,&attr,(void *) &procesarOperacionesNucleo, (void *) nuevaConexion);
+		pthread_attr_destroy(&attr);
 		log_info(logger, "Se estableció la conexión con Núcleo",texto);
 	}
 
