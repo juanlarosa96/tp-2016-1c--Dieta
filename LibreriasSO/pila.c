@@ -18,6 +18,7 @@ t_registro_pila * popPila(t_list *pila){
 	}
 	elementoPila = malloc(sizeof(t_registro_pila));
 	memcpy(elementoPila,elementoPop,sizeof(t_registro_pila));
+	free(elementoPop);
 	return elementoPila;
 }
 
