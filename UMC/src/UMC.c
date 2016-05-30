@@ -111,10 +111,10 @@ int main(int argc, char *argv[]) {
 		pthread_attr_t attr;
 		pthread_t hiloCPU;
 
-		/*pthread_attr_init(&attr);
+		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-		pthread_create(&hiloCPU,&attr,(void *) &procesarSolicitudOperacionCPU, (void *) nuevaConexion);
-		pthread_attr_destroy(&attr);*/
+		pthread_create(&hiloCPU,&attr,(void *) &procesarOperacionesNucleo, (void *) nuevaConexion);
+		pthread_attr_destroy(&attr);
 		log_info(logger, "Se estableció la conexión con Núcleo",texto);
 	}
 
