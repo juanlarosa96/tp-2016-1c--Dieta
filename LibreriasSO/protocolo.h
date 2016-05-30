@@ -12,7 +12,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include "structs.h"
+
+#include "pila.h"
 
 enum headers { //Constantes que identifican los headers de los mensajes
 
@@ -37,7 +38,6 @@ int recibirLargoProgramaAnsisop(int socketOrigen);
 //header: 3
 int recibirTamanioPagina(int socketOrigen);
 void enviarTamanioPagina(int socketDestino, int tamanioPagina);
-t_pcb recibirPcb(int socketOrigen);
 void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
 void recibirInicializacionPrograma(int socketUMC,uint32_t *pid,int* largoPrograma,char * programa, uint32_t *paginas_codigo);
@@ -56,6 +56,6 @@ void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * bu
 void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto);
 void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto);
 void enviarPcb(int socketCPU, t_pcb pcb);
-
+t_pcb recibirPcb (int socketNucleo);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */

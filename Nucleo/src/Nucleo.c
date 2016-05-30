@@ -87,6 +87,10 @@ int main(int argc, char **argv) {
 	listaConsolas = *aux;
 	free(aux);
 
+	cola_PCBListos = queue_create();
+	cola_PCBBloqueados= queue_create();
+	cola_PCBFinalizados= queue_create();
+
 	while (1) {
 
 		// Fuera del select

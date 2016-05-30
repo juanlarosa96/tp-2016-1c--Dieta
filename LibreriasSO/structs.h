@@ -10,6 +10,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
 #include <parser/metadata_program.h>
+#include <stdint.h>
 
 typedef struct {
 	uint32_t pagina;
@@ -19,16 +20,22 @@ typedef struct {
 
 
 typedef struct {
-	t_list lista_argumentos;
-	t_list lista_variables;
+	t_list * lista_argumentos;
+	t_list * lista_variables;
 	uint32_t direccion_retorno;
 	t_posicion_memoria variable_retorno;
 } t_registro_pila;
 
-typedef struct t_pila{
+typedef struct {
+	char identificador;
+	t_posicion_memoria posicionDeVariable;
+} t_identificadorConPosicionMemoria; //Es el elemento que contiene la lista de variables del stack
+
+/*typedef struct t_pila{
 	t_registro_pila registro;
 	struct t_pila * indice_stack;
-} t_pila;
+	int indicePila;
+} t_pila;*/
 
 typedef struct {
 	t_size largoTotalEtiquetas;
@@ -47,7 +54,7 @@ typedef struct {
 	uint32_t paginas_codigo;
 	t_indiceCodigo indice_codigo;
 	t_indiceEtiquetas indice_etiquetas;
-	t_pila indice_stack;
+	t_list * indice_stack;
 } t_pcb;
 
 
