@@ -61,8 +61,9 @@ void enviarPcb(int socketCPU, t_pcb pcb);
 t_pcb recibirPcb (int socketNucleo);
 
 //header: 13 //header: 14 (las operaciones dentro de UMC son diferentes, pero se manejan los mismos datos)
-void enviarPID(int socketUMC, uint32_t pid);
+void enviarFinalizacionProgramaUMC(int socketUMC, uint32_t pid);
 void recibirPID(int socketUMC, uint32_t * pid);
+void enviarFinalizacionProgramaConsola(int socketConsola);
 
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
