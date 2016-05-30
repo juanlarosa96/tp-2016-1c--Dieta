@@ -52,12 +52,6 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina) {
 
 }
 
-t_pcb recibirPcb(int socketOrigen) {
-	t_pcb pcbNuevo;
-	recibirTodo(socketOrigen, &pcbNuevo, sizeof(t_pcb));
-	return pcbNuevo;
-}
-
 void recibirResultadoDeEjecucionAnsisop(int socketNucleo, char * mensaje, int largoMensaje) {
 	recibirTodo(socketNucleo, mensaje, largoMensaje);
 }
@@ -170,44 +164,43 @@ void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * bu
 	recibirTodo(socketUMC, buffer, largoPedido);
 }
 
-void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto){
+void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto) {
 
 	int header = primitivaImprimir;
 
 	void *data = malloc(sizeof(int) + sizeof(uint32_t) + sizeof(int) + strlen(texto) + 1); //header + pid + largoTexto + texto
 	int offset = 0, str_size = 0, largoTexto = strlen(texto) + 1;
 
-	    str_size = sizeof(int);
-		memcpy(data + offset, &header, str_size);
-		offset += str_size;
+	str_size = sizeof(int);
+	memcpy(data + offset, &header, str_size);
+	offset += str_size;
 
-		str_size = sizeof(uint32_t);
-		memcpy(data + offset, &id_proceso, str_size);
-		offset += str_size;
+	str_size = sizeof(uint32_t);
+	memcpy(data + offset, &id_proceso, str_size);
+	offset += str_size;
 
-		str_size = sizeof(int);
-		memcpy(data + offset, &largoTexto, str_size);
-		offset += str_size;
+	str_size = sizeof(int);
+	memcpy(data + offset, &largoTexto, str_size);
+	offset += str_size;
 
-		str_size = strlen(texto) + 1;
-		memcpy(data + offset, texto, str_size);
-		offset += str_size;
+	str_size = strlen(texto) + 1;
+	memcpy(data + offset, texto, str_size);
+	offset += str_size;
 
-		send(socketNucleo,data,offset,0);
+	send(socketNucleo, data, offset, 0);
 
-		free(data);
-
+	free(data);
 
 }
 
-void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto){
+void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoTexto, sizeof(int));
 	recibirTodo(socketOrigen, texto, *largoTexto);
 
 }
 
-void enviarPcb(int socketCPU, t_pcb pcb){
+void enviarPcb(int socketCPU, t_pcb pcb) {
 
 	int header = headerPcb;
 	send(socketCPU, &header, sizeof(int), 0);
@@ -243,7 +236,6 @@ void enviarPcb(int socketCPU, t_pcb pcb){
 	memcpy(buffer + cursorMemoria, &(pcb.indice_etiquetas.largoTotalEtiquetas), sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
 
-
 	memcpy(buffer + cursorMemoria, &(pcb.indice_etiquetas.etiquetas), pcb.indice_etiquetas.largoTotalEtiquetas);
 	cursorMemoria += pcb.indice_etiquetas.largoTotalEtiquetas;
 
@@ -259,6 +251,9 @@ void enviarPcb(int socketCPU, t_pcb pcb){
 
 		int j, cantidadeElementosLista;
 		cantidadeElementosLista = list_size(registro->lista_argumentos);
+		memcpy(buffer + cursorMemoria, &cantidadeElementosLista, sizeof(int));
+		cursorMemoria += sizeof(int);
+
 		for (j = 0; j < cantidadeElementosLista; j++) {
 
 			t_posicion_memoria * elementoLista = (t_posicion_memoria *) list_remove(registro->lista_argumentos, 0);
@@ -272,6 +267,9 @@ void enviarPcb(int socketCPU, t_pcb pcb){
 		}
 
 		cantidadeElementosLista = list_size(registro->lista_variables);
+		memcpy(buffer + cursorMemoria, &cantidadeElementosLista, sizeof(int));
+		cursorMemoria += sizeof(int);
+
 		for (j = 0; j < cantidadeElementosLista; j++) {
 
 			t_identificadorConPosicionMemoria* elementoLista = (t_identificadorConPosicionMemoria *) list_remove(registro->lista_variables, 0);
@@ -298,5 +296,84 @@ void enviarPcb(int socketCPU, t_pcb pcb){
 	free(buffer);
 }
 
+t_pcb recibirPcb(int socketNucleo) {
+	t_pcb pcb;
+	int largo32 = sizeof(uint32_t), i, j, cantidadElementosStack;
+	recibirTodo(socketNucleo, &(pcb.pid), largo32);
+	recibirTodo(socketNucleo, &(pcb.pc), largo32);
+	recibirTodo(socketNucleo, &(pcb.paginas_codigo), largo32);
+	recibirTodo(socketNucleo, &(pcb.indice_codigo.cantidadInstrucciones), largo32);
 
+	pcb.indice_codigo.instrucciones = malloc(sizeof(t_intructions) * pcb.indice_codigo.cantidadInstrucciones);
+
+	for (i = 0; i < pcb.indice_codigo.cantidadInstrucciones; i++) {
+
+		t_intructions instruccion;
+		recibirTodo(socketNucleo, &(instruccion.start), largo32);
+		recibirTodo(socketNucleo, &(instruccion.offset), largo32);
+		pcb.indice_codigo.instrucciones[i] = instruccion;
+
+	}
+	recibirTodo(socketNucleo, &(pcb.indice_codigo.numeroInstruccionInicio), largo32);
+
+	recibirTodo(socketNucleo, &(pcb.indice_etiquetas.largoTotalEtiquetas), largo32);
+	recibirTodo(socketNucleo, &(pcb.indice_etiquetas.etiquetas), pcb.indice_etiquetas.largoTotalEtiquetas);
+
+	recibirTodo(socketNucleo, &cantidadElementosStack, sizeof(int));
+
+	t_list *pilaAuxiliar = list_create();
+	for (i = 0; i < cantidadElementosStack; i++) {
+
+		t_registro_pila elementoPila;
+		int cantidadElementosLista;
+
+		recibirTodo(socketNucleo, &(elementoPila.direccion_retorno), largo32);
+
+		recibirTodo(socketNucleo, &cantidadElementosLista, sizeof(int));
+
+		for (j = 0; j < cantidadElementosLista; j++) {
+
+			t_posicion_memoria elementoLista;
+
+			recibirTodo(socketNucleo, &(elementoLista.pagina), largo32);
+			recibirTodo(socketNucleo, &(elementoLista.offset), largo32);
+			recibirTodo(socketNucleo, &(elementoLista.size), largo32);
+
+			list_add(elementoPila.lista_argumentos, &elementoLista);
+
+		}
+
+		recibirTodo(socketNucleo, &cantidadElementosLista, sizeof(int));
+
+		for (j = 0; j < cantidadElementosLista; j++) {
+
+			t_identificadorConPosicionMemoria elementoLista;
+
+			recibirTodo(socketNucleo, &(elementoLista.identificador), sizeof(char));
+			recibirTodo(socketNucleo, &(elementoLista.posicionDeVariable.pagina), largo32);
+			recibirTodo(socketNucleo, &(elementoLista.posicionDeVariable.offset), largo32);
+			recibirTodo(socketNucleo, &(elementoLista.posicionDeVariable.size), largo32);
+
+			list_add(elementoPila.lista_variables, &elementoLista);
+
+		}
+
+		recibirTodo(socketNucleo, &(elementoPila.variable_retorno.pagina), largo32);
+		recibirTodo(socketNucleo, &(elementoPila.variable_retorno.offset), largo32);
+		recibirTodo(socketNucleo, &(elementoPila.variable_retorno.size), largo32);
+
+		pushPila(pilaAuxiliar, &elementoPila);
+
+	}
+
+	//Elementos de pila auxiliar estan en orden inverso
+	for (i = 0; i < cantidadElementosStack; i++) {
+
+		t_registro_pila *registro = popPila(pilaAuxiliar);
+		pushPila(pcb.indice_stack, registro);
+		free(registro);
+	}
+
+	return pcb;
+}
 
