@@ -99,6 +99,13 @@ int main(int argc, char **argv) {
 		recibirResultadoDeEjecucionAnsisop(socketNucleo,mensajeDevuelto,largoMensaje);
 		}
 
+		if(header == finalizacionPrograma){
+			close(socketNucleo);
+			log_info(logger, "Programa finalizado", texto);
+			return EXIT_SUCCESS;
+
+		}
+
 	}
 
 
