@@ -31,6 +31,10 @@ int encontrarPosicionEnListaProcesos(int pid) {
 	return i;
 }
 
+void enviarCodigoASwap(char * codigo){
+
+}
+
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
 	//aca tengo que crear un puntero o una estructura?
@@ -46,10 +50,12 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		list_add(unNodo.lista_paginas, &unaPagina); //por referencia?
 	}
 
-	//fijarse si hay que poner un mutex aca
+	pthread_mutex_lock(&mutexProcesos);
 	list_add(listaProcesos, &unNodo);
+	pthread_mutex_unlock(&mutexProcesos);
 
-	//enviarCodigoASwap()
+	enviarCodigoASwap(codigoPrograma);
+	log_info(logger, "Se inicializó nuevo programa", texto);
 	//loggear envio de codigo a swap
 	//loggear que se pudo crear
 
