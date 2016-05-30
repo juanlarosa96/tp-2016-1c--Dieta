@@ -22,12 +22,17 @@ t_valor_variable dereferenciar(t_puntero puntero) {
 void asignar(t_puntero puntero, t_valor_variable variable) {
 	printf("Asignar\n");
 }
-void imprimir(t_valor_variable valor) {
+int imprimir(t_valor_variable valor) {
 	//falta definir logger
 	char* texto = string_itoa(valor);
+	int largoTexto = strlen(texto);
 	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
 	free(texto);
+	return largoTexto;
 }
-void imprimirTexto(char* texto) {
-	printf("Imprimir texto\n");
+int imprimirTexto(char* texto) {
+	//falta definir logger
+	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
+	int largoTexto = strlen(texto);
+	return largoTexto;
 }
