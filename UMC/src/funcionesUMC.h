@@ -32,7 +32,7 @@ void cambioProceso(uint32_t idPrograma);
 /*----Otras----*/
 
 void procesarSolicitudOperacionCPU(int);
-void procesarSolicitudOperacionNucleo(int * socketUMC);
+void procesarOperacionesNucleo(int);
 
 
 #endif /* FUNCIONESUMC_H_ */

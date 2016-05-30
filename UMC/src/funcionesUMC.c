@@ -7,8 +7,7 @@
 
 #include "funcionesUMC.h"
 
-
-void destruirProceso(t_nodo_lista_procesos * nodo){
+void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
 }
 
@@ -31,7 +30,7 @@ int encontrarPosicionEnListaProcesos(int pid) {
 	return i;
 }
 
-void enviarCodigoASwap(char * codigo){
+void enviarCodigoASwap(char * codigo) {
 
 }
 
@@ -87,7 +86,8 @@ void finalizarPrograma(uint32_t idPrograma) {
 	//int indiceListaFrames = encontrarPosicionEnListaFrames(idPrograma);
 
 	//mutex?
-	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,(void*) destruirProceso);
+	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
+			(void*) destruirProceso);
 
 	//list_remove(listaFrames,indiceListaFrames);
 	//killFrame
@@ -104,48 +104,39 @@ void cambioProceso(uint32_t idPrograma) {
 
 }
 
-/*void procesarSolicitudOperacionNucleo(t_datos_hilo datosSockets){
+void procesarOperacionesNucleo(int socketNucleo) {
 
- while(1) {
+	while (1) {
 
- int header = recibirHeader(datosSockets -> socketCliente);
+		int header = recibirHeader(socketNucleo);
+		uint32_t pid;
+		int largoPrograma;
+		uint32_t paginas_codigo;
+		char * programa;
 
+		switch (header) {
 
- switch(header){
+		case 0:
+			log_info(logger, "Se desconectó Núcleo", texto);
+			pthread_exit(NULL);
 
+		case 11: //Inicializacion Programa
 
- case 8: //solicitarBytes
- uint32_t pid;
- int * largoPrograma;
- uint32_t paginas_codigo;
- char * programa;
- recibirInicializacionPrograma(datosSockets -> listener, &pid, &largoPrograma, programa, &paginas_codigo);
+			recibirInicializacionPrograma(socketNucleo, &pid,
+					&largoPrograma, programa, &paginas_codigo);
+			//blabla bla recibir programa
+			//recibir lo demas
 
- //blabla bla recibir programa
- //recibir lo demas
- solicitarBytesDeUnaPag();
- break;
- case 9: //almacenarBytes
- //blabla procesar bytes
- //recibir lo demas
- guardarBytesDeUnaPag();
- break;
-
- default:
-
+			break;
+		default:
+			log_error(logger, "Hubo un problema de conexión con Núcleo", texto);
+			pthread_exit(NULL);
 
 
+		}
 
- break;
- //vete de aqui hilo
- //eclipse haceme el tp
-
- }
-
-
- }
- }
- */
+	}
+}
 
 void procesarSolicitudOperacionCPU(int conexion) {
 
@@ -159,17 +150,16 @@ void procesarSolicitudOperacionCPU(int conexion) {
 		uint32_t size;
 		int lenBufferPedido;
 		char * bufferPedido;
-
+		char * nroCpu = string_itoa(conexion);
 
 		switch (header) {
 		case 0:
 
-			//se desconectó cpu
-
+			log_info(logger, "Se desconectó CPU nro", texto);	//como carajo pongo el nro?
 			pthread_exit(NULL);
 
 		case 8: //solicitarBytes //ver el tema de la constante
-			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size);//deserializacion
+			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size); //deserializacion
 			solicitarBytesDeUnaPag(nroPagina, offset, size); //operacion
 			break;
 
@@ -184,12 +174,11 @@ void procesarSolicitudOperacionCPU(int conexion) {
 			free(bufferPedido);
 
 			break;
-		//case cambio de proceso
-		//modificar variable idCambioProceso
+			//case cambio de proceso
+			//modificar variable idCambioProceso
 
 		default:
-			// hubo problema de conexión //loggearlo
-			//chau hilo
+			log_error(logger, "Hubo problema de conexion con CPU", texto); //nro cpu?
 			pthread_exit(NULL);
 
 			break;
@@ -197,6 +186,4 @@ void procesarSolicitudOperacionCPU(int conexion) {
 	}
 
 }
-
-
 
