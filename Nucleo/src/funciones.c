@@ -27,6 +27,7 @@ void manejarCPU(int socketCpu) {
 		cambioProceso = 0;
 
 		t_pcbConConsola siguientePcb = DevolverProcesoColaListos();
+		t_pcbConConsola pcbRespuesta;
 		if (siguientePcb.socketConsola != -1) {
 			enviarPcb(socketCpu, siguientePcb.pcb);
 
@@ -42,6 +43,7 @@ void manejarCPU(int socketCpu) {
 				switch (respuesta) {
 
 				case 99: //Fin programa
+					siguientePcb.pcb = recibirPcb(socketCpu);
 					finalizarProceso(siguientePcb);
 					int largoLista = list_size(&listaConsolas), i;
 					for (i = 0; i < largoLista; i++) {
@@ -55,6 +57,8 @@ void manejarCPU(int socketCpu) {
 					break;
 
 				case 100: //Fin quantum
+
+					siguientePcb.pcb = recibirPcb(socketCpu);
 					AgregarAProcesoColaListos(siguientePcb);
 					cambioProceso = 1;
 					break;
@@ -119,9 +123,10 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	t_metadata_program * metadata;
 	nuevoPcb.pid = pidPcb;
 	pidPcb++;
-	nuevoPcb.pc = 0;
+
 	metadata = metadata_desde_literal(programa);
 
+	nuevoPcb.pc = metadata->instruccion_inicio;
 	nuevoPcb.indice_etiquetas.etiquetas = metadata->etiquetas;
 	nuevoPcb.indice_etiquetas.largoTotalEtiquetas = metadata->etiquetas_size;
 
