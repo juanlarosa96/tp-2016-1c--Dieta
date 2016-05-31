@@ -437,7 +437,7 @@ void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso, int *largoNomb
 	recibirTodo(socketOrigen, largoNombreDispositivo, sizeof(int));
 	recibirTodo(socketOrigen, nombreDispositivo, *largoNombreDispositivo);
 	recibirTodo(socketOrigen, tiempo, sizeof(int));
-
+}
 void enviarFinalizacionProgramaConsola(int socketConsola){
 	int header = finalizacionPrograma;
 	send(socketConsola,&header,sizeof(int),0);
