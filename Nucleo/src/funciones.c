@@ -43,11 +43,11 @@ void manejarCPU(int socketCpu) {
 
 				case 99: //Fin programa
 					finalizarProceso(siguientePcb);
-					int largoLista = list_size(listaConsolas), i;
+					int largoLista = list_size(&listaConsolas), i;
 					for (i = 0; i < largoLista; i++) {
-						t_pcbConConsola * pcbBusqueda = (t_pcbConConsola) list_get(&listaConsolas, i);
+						t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(&listaConsolas, i);
 						if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-							t_pcbConConsola * pcbFinalizado = (t_pcbConConsola) list_remove(listaConsolas, i);
+							t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(&listaConsolas, i);
 							AgregarAProcesoColaFinalizados(*pcbFinalizado);
 							free(pcbFinalizado);
 						}
