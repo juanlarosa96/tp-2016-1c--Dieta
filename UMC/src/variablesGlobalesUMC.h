@@ -12,9 +12,25 @@
 
 t_list * listaFrames;
 t_list * listaProcesos;
-char* texto;
+t_list * TLB;
+char* texto; //?
+
 pthread_mutex_t mutexFrames;
 pthread_mutex_t mutexProcesos;
+pthread_mutex_t mutexTLB;
+pthread_mutex_t mutexSwap;
+pthread_mutex_t mutexAccesoMem;
+
+
+uint16_t entradasTLB;
+uint32_t accesoMemoria;
+
 t_log* logger;
+
+void * memoriaPrincipal;
+
+int size_frames;
+int retardo;
+
 
 #endif /* VARIABLESGLOBALESUMC_H_ */
