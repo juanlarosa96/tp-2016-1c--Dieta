@@ -73,7 +73,7 @@ void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso, int *largoNomb
 void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,t_nombre_dispositivo dispositivo,int tiempo);
 
 //header: 21
-void enviarCodigoASwap(int socketSwap, uint32_t cantPaginas, uint32_t pid, uint32_t tamanioCodigo);
+void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo);
 
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */

@@ -517,23 +517,24 @@ void enviarFinalizacionProgramaConsola(int socketConsola) {
 
 }
 
-void enviarCodigoASwap(int socketSwap, uint32_t cantPaginas, uint32_t pid, uint32_t tamanioCodigo){
+void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo){ //check esta funcion
 	int header = inicializarProgramaSwap;
 
-	void * data = malloc(sizeof(int) + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint32_t));
+	void * data = malloc(sizeof(int) + sizeof(int) + sizeof(uint32_t) + sizeof(int));
 	int offset = 0, size = 0;
 
 	size = sizeof(int);
 	memcpy(data, &header, size);
 
 	offset += size;
-	size = sizeof(uint32_t);
 	memcpy(data + offset, &cantPaginas, size);
 
 	offset += size;
+	size = sizeof(uint32_t);
 	memcpy(data + offset, &pid, size);
 
 	offset += size;
+	size = sizeof(int);
 	memcpy(data + offset, &tamanioCodigo, size);
 
 	offset += size;
