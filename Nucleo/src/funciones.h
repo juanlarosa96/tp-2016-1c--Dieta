@@ -39,6 +39,7 @@ t_queue *cola_PCBNuevos;
 t_queue *cola_PCBFinalizados;
 t_queue *cola_PCBBloqueados;
 
+int clienteUMC;
 int pidPcb;
 int tamanioPagina;
 t_list listaConsolas;
@@ -61,4 +62,6 @@ void AgregarAProcesoColaListos(t_pcbConConsola elemento);
 
 t_pcbConConsola DevolverProcesoColaListos();
 
+void finalizarProceso(t_pcbConConsola siguientePcb);
+void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento);
 #endif /* FUNCIONES_H_ */

@@ -155,8 +155,8 @@ int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * 
 
 }
 
-void finalizarProceso(t_pcbConConsola siguientePcb, int socketUMC) {
-	enviarFinalizacionProgramaUMC(socketUMC, siguientePcb.pcb.pid);
+void finalizarProceso(t_pcbConConsola siguientePcb) {
+	enviarFinalizacionProgramaUMC(clienteUMC, siguientePcb.pcb.pid);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
 
 }

@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	texto = "info";
 
 
-	int clienteUMC;
+
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
 		log_error(logger, "Se produjo un error creando el socket de UMC",
