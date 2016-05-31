@@ -81,12 +81,19 @@ void liberarFrames(uint32_t pid) {
 	pthread_mutex_unlock(&mutexFrames);
 }
 
-void enviarCodigoASwap(char * codigo) {
-
-}
-
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
+
+	int largoPrograma = strlen(codigoPrograma) + 1;
+	int paginasCodigo = largoPrograma/size_frames + largoPrograma%size_frames; //not sure
+
+	pthread_mutex_lock(&mutexSwap);
+	enviarCodigoASwap(socketSwap, paginasRequeridas, idPrograma, paginasCodigo);
+	pthread_mutex_unlock(&mutexSwap);
+	log_info(logger, "Se envió nuevo programa a Swap", texto);
+
+	//enviarPaginas(enviar pagina x pagina)
+
 	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos unNodo;
 	unNodo.pid = idPrograma;
@@ -104,11 +111,6 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
-	//mutex para swap
-	enviarCodigoASwap(codigoPrograma);
-	//enviarASwap(cant paginas total, pid, tamanio codigo
-	//enviarPaginas(enviar pagina x pagina)
-	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
 }
 
@@ -152,7 +154,6 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		data = lecturaMemoria(nroFrame, offset, tamanio);
 	}
-
 
 	/*si est an memoria, principal, voy a buscar en lista de frames
 	 *sino esta, hay que fijarme si puedo asignarle un frame mas al proceso
