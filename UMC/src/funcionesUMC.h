@@ -21,7 +21,7 @@ int encontrarPosicionEnListaProcesos(int pid);
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma);
 
-void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio);
+void* solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio, uint32_t pid);
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer);
 
