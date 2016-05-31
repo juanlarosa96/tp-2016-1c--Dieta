@@ -31,6 +31,8 @@ void * memoriaPrincipal;
 
 int size_frames;
 int retardo;
+int socketSwap;
+
 
 
 #endif /* VARIABLESGLOBALESUMC_H_ */
