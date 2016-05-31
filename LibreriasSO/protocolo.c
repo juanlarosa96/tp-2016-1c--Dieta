@@ -516,3 +516,29 @@ void enviarFinalizacionProgramaConsola(int socketConsola) {
 	send(socketConsola, &header, sizeof(int), 0);
 
 }
+
+void enviarCodigoASwap(int socketSwap, uint32_t cantPaginas, uint32_t pid, uint32_t tamanioCodigo){
+	int header = inicializarProgramaSwap;
+
+	void * data = malloc(sizeof(int) + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint32_t));
+	int offset = 0, size = 0;
+
+	size = sizeof(int);
+	memcpy(data, &header, size);
+
+	offset += size;
+	size = sizeof(uint32_t);
+	memcpy(data + offset, &cantPaginas, size);
+
+	offset += size;
+	memcpy(data + offset, &pid, size);
+
+	offset += size;
+	memcpy(data + offset, &tamanioCodigo, size);
+
+	offset += size;
+
+	send(socketSwap,data, offset, 0);
+
+	free(data);
+}
