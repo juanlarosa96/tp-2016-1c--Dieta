@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 	int puerto_nucleo = config_get_int_value(config, "PUERTO_NUCLEO");
 	char* ip_umc = config_get_string_value(config, "IP_UMC");
 	char* ip_nucleo = config_get_string_value(config, "IP_NUCLEO");
-	int quantumTotal = config_get_string_value(config, "QUANTUM");
+	int quantumTotal = config_get_int_value(config, "QUANTUM");
 
 	//creo socket nucleo
 
@@ -197,6 +197,7 @@ int main(int argc, char *argv[]) {
 				unidadQuantum++;
 
 			}
+			enviarPcb(socketNucleo,pcbRecibido);
 		}
 
 	}
