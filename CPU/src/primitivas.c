@@ -36,3 +36,9 @@ int imprimirTexto(char* texto) {
 	int largoTexto = strlen(texto);
 	return largoTexto;
 }
+
+void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
+	//implementar logger
+	enviarEntradaSalida(socketNucleo, pcbRecibido.pid, dispositivo, tiempo);
+}
+

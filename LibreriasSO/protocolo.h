@@ -31,6 +31,7 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	primitivaImprimir = 12,
 	finalizacionPrograma = 13,
 	cambiarProcesoActivo = 14,
+	entradaSalida = 15
 
 };
 int recibirHeader(int socketOrigen);
@@ -63,6 +64,8 @@ t_pcb recibirPcb (int socketNucleo);
 //header: 13 //header: 14 (las operaciones dentro de UMC son diferentes, pero se manejan los mismos datos)
 void enviarPID(int socketUMC, uint32_t pid);
 void recibirPID(int socketUMC, uint32_t * pid);
+
+void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,t_nombre_dispositivo dispositivo,int tiempo);
 
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
