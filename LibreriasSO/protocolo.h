@@ -65,7 +65,7 @@ t_pcb recibirPcb (int socketNucleo);
 void enviarFinalizacionProgramaUMC(int socketUMC, uint32_t pid);
 void recibirPID(int socketUMC, uint32_t * pid);
 void enviarFinalizacionProgramaConsola(int socketConsola);
-
+void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso, int *largoNombreDispositivo, char * nombreDispositivo, int tiempo);
 void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,t_nombre_dispositivo dispositivo,int tiempo);
 
 
