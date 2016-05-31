@@ -186,9 +186,10 @@ int main(int argc, char *argv[]) {
 
 			while (unidadQuantum < quantumTotal && sigoEjecutando) {
 				t_intructions instruccion = pcbRecibido.indice_codigo[pcbRecibido.pc];
-				char lineaAnsisop[instruccion.offset];
+				char lineaAnsisop[instruccion.offset + 1];
 
 				pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina);
+				lineaAnsisop[instruccion.offset + 1] = '\0';
 
 				analizadorLinea(strdup(lineaAnsisop), &functions,
 						&kernel_functions);

@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 			int header = recibirHeader(nuevaConexion);
 			if (header == largoProgramaAnsisop) {
 				int largoPrograma = recibirLargoProgramaAnsisop(nuevaConexion);
-				char *programa;
+				char programa[largoPrograma];
 				recibirProgramaAnsisop(nuevaConexion, programa, largoPrograma);
 
 				t_pcb nuevoPcb = crearPcb(programa, largoPrograma);

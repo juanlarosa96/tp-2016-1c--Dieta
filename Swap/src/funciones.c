@@ -26,7 +26,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo,char bitMap[]) {
 
 	int i;
 	for (i = 0; i < cantPaginasCodigo; i++) {
-		char* pagina;
+		char pagina[sizePagina];
 		recibirTodo(cliente, pagina, sizePagina);
 		archivo[i] = *pagina;
 		bitMap[i] = 1;
