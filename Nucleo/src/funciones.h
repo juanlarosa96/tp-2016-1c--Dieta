@@ -55,7 +55,7 @@ t_pcb crearPcb(char * programa, int largoPrograma);
 
 int calcularPaginasCodigo (int largoPrograma);
 
-int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa);
+int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa, uint32_t paginasStack);
 
 void AgregarAProcesoColaListos(t_pcbConConsola elemento);
 
