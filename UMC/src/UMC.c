@@ -36,19 +36,25 @@ int main(int argc, char *argv[]) {
 	}
 
 	int cant_frames = config_get_int_value(config, "MARCOS");
-	int size_frames = config_get_int_value(config, "MARCO_SIZE");
+	size_frames = config_get_int_value(config, "MARCO_SIZE");
+	entradasTLB = config_get_int_value(config, "ENTRADAS_TLB");
+	retardo = config_get_int_value(config, "RETARDO");
 
 	//Reservo Memoria
 	int memoriaDisponible = (cant_frames) * (size_frames);
-	void * memoria = malloc(memoriaDisponible);
-	memset(memoria, 0, sizeof(memoriaDisponible));
+	memoriaPrincipal = malloc(memoriaDisponible);
+	memset(memoriaPrincipal, 0, sizeof(memoriaDisponible));
 
 	//Inicializo variables globales
 	listaFrames = list_create();
 	listaProcesos = list_create();
+	TLB = list_create();
 	texto = "info";
 	pthread_mutex_init(&mutexFrames, NULL);
 	pthread_mutex_init(&mutexProcesos, NULL);
+	pthread_mutex_init(&mutexSwap, NULL);
+	pthread_mutex_init(&mutexTLB, NULL);
+	pthread_mutex_init(&mutexAccesoMem, NULL);
 
 	//Log para UMC
 	logger = log_create("UMC.log", "UMC", 1, log_level_from_string("INFO"));
