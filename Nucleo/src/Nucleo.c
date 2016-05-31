@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 	int PUERTO_SERVIDOR = config_get_int_value(config, "PUERTO_SERVIDOR");
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
+	uint32_t PAGINAS_STACK = config_get_int_value(config, "PAGINAS_STACK");
 
 
 	//Creo log para el Núcleo
@@ -116,7 +117,7 @@ int main(int argc, char **argv) {
 				t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
 				if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma,
-						programa) == inicioProgramaError) {
+						programa, PAGINAS_STACK) == inicioProgramaError) {
 
 					printf("No se pudo reservar espacio para el programa");
 
