@@ -27,6 +27,7 @@ t_valor_variable dereferenciar(t_puntero puntero);
 void asignar(t_puntero puntero, t_valor_variable variable);
 int imprimir(t_valor_variable valor);
 int imprimirTexto(char* texto);
-void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
+void entradaSalidaPrimitiva(t_nombre_dispositivo dispositivo, int tiempo);
+
 
 #endif /* PRIMITIVAS_H_ */

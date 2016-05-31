@@ -37,8 +37,7 @@ int imprimirTexto(char* texto) {
 	return largoTexto;
 }
 
-void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
-	//implementar logger
-	enviarEntradaSalida(socketNucleo, pcbRecibido.pid, dispositivo, tiempo);
-}
+void entradaSalidaPrimitiva(t_nombre_dispositivo dispositivo, int tiempo){
+	enviarEntradaSalida(socketNucleo,pcbRecibido.pid, dispositivo, tiempo);
 
+}
