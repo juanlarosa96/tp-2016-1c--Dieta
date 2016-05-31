@@ -8,15 +8,21 @@
 
 int iniciarProgramaAnsisop(int cliente, char*archivo,char bitMap[]) {
 
-	int cantPaginasCodigo;
+	/*int cantPaginasCodigo;
 	recibirTodo(cliente, &cantPaginasCodigo, sizeof(int));
 
 	int cantPaginasStack;
-	recibirTodo(cliente, &cantPaginasStack, sizeof(int));
+	recibirTodo(cliente, &cantPaginasStack, sizeof(int));*/
 
-	int cantPaginasTotal = cantPaginasCodigo + cantPaginasStack;
+	//SWAP AHORA VA A RECIBIR CANT PAGINAS TOTAL, PID, TAMANIO CODIGO, Y DSPS EL CODIGO EN PAGINAS!!
+	//TERMINAR DE CORREGIR LA FUNCION
+
+	int cantPaginasTotal;
+	recibirTodo(cliente, &cantPaginasTotal, sizeof(int));
+
 	if (chequearMemoriaDisponible(cantPaginasTotal, bitMap) == 0) {
 		avisarUMCFallo(cliente);
+		return 1;
 	} else {
 		avisarUMCExito(cliente);
 	}
@@ -24,12 +30,16 @@ int iniciarProgramaAnsisop(int cliente, char*archivo,char bitMap[]) {
 	int pid;
 	recibirTodo(cliente, &pid, sizeof(int));
 
+	int tamanioCodigo; //tamaño en paginas del codigo
+	recibirTodo(cliente, &tamanioCodigo, sizeof(int));
+
 	int i;
-	for (i = 0; i < cantPaginasCodigo; i++) {
-		char pagina[sizePagina];
+	for (i = 0; i < tamanioCodigo; i++) {
+		char *pagina = malloc(sizePagina);
 		recibirTodo(cliente, pagina, sizePagina);
-		archivo[i] = *pagina;
+		archivo[i] = pagina;
 		bitMap[i] = 1;
+		free(pagina); // no estoy segura de que este bien!
 	}// coregir el tema de que siempre sobreescribe las primeras n paginas del swap
 
 	return 1;// este return es fruta

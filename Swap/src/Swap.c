@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 
 		switch(header){
 
-		case 21:
+		case 21: //en el enum del protocolo esta como "InicializarProgramaASwap"
 			iniciarProgramaAnsisop(cliente,archivoSwap,bitMap);
 		}
 	}
