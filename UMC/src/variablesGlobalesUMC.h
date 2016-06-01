@@ -19,11 +19,12 @@ pthread_mutex_t mutexFrames;
 pthread_mutex_t mutexProcesos;
 pthread_mutex_t mutexTLB;
 pthread_mutex_t mutexSwap;
-pthread_mutex_t mutexAccesoMem;
+pthread_mutex_t mutexMemoriaPrincipal;
+pthread_mutex_t mutexAccesoMem;  //EVALUAR SI ES NECESARIO
 
 
-uint16_t entradasTLB;
-uint32_t accesoMemoria;
+uint16_t entradasTLB; //lo saco del archivo de config
+uint32_t accesoMemoria; //contador de accesos a memoria para LRU
 
 t_log* logger;
 
