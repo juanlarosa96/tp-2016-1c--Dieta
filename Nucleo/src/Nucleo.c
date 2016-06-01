@@ -218,9 +218,9 @@ int main(int argc, char **argv) {
 						if (!encontrado) {
 							int socketProcesoFinalizado = i;
 
-							pthread_mutex_lock(mutexListaFinalizacionesPendientes);
+							pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
 							list_add(listaFinalizacionesPendientes,&socketProcesoFinalizado);
-							pthread_mutex_unlock(mutexListaFinalizacionesPendientes);
+							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
 
 						break;

@@ -69,7 +69,7 @@ void manejarCPU(void * socket) {
 					int j, sizeLista = list_size(listaFinalizacionesPendientes);
 					int * socketEnLista;
 
-					pthread_mutex_lock(mutexListaFinalizacionesPendientes);
+					pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
 
 					for (j = 0; j < sizeLista; j++) {
 						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
@@ -77,7 +77,7 @@ void manejarCPU(void * socket) {
 							finalizarProceso(siguientePcb);
 							list_remove(listaFinalizacionesPendientes, j);
 
-							pthread_mutex_unlock(mutexListaFinalizacionesPendientes);
+							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 
 							AgregarAProcesoColaFinalizados(siguientePcb);
 							cambioProceso = 1;
