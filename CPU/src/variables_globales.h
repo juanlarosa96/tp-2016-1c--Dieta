@@ -14,4 +14,7 @@ int socketNucleo;
 
 t_pcb pcbRecibido;
 
+int sigoEjecutando;
+int signalApagado;
+
 #endif /* VARIABLES_GLOBALES_H_ */
