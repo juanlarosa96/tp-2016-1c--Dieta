@@ -93,9 +93,9 @@ int main(int argc, char **argv) {
 	while(1){
 		int header = recibirHeader(socketNucleo);
 		if (header == resultadoEjecucion) {
-		char* mensajeDevuelto;
 		int largoMensaje;
 		largoMensaje = recibirLargoResultadoDeEjecucionAnsisop(socketNucleo);
+		char mensajeDevuelto[largoMensaje];
 		recibirResultadoDeEjecucionAnsisop(socketNucleo,mensajeDevuelto,largoMensaje);
 		}
 
