@@ -34,7 +34,7 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	entradaSalida = 15,
 	inicializarProgramaSwap = 21,
 	wait = 22,
-	signal = 23.
+	signal = 23
 
 };
 int recibirHeader(int socketOrigen);
@@ -79,6 +79,8 @@ void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamani
 
 //header: 22 // header 23
 void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo);
-
+void recibirWait(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo);
+void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo);
+void recibirSignal(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
