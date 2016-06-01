@@ -85,7 +85,8 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
 
 	int largoPrograma = strlen(codigoPrograma) + 1;
-	int paginasCodigo = largoPrograma/size_frames + largoPrograma%size_frames; //not sure
+	int paginasCodigo = largoPrograma / size_frames
+			+ largoPrograma % size_frames; //not sure
 
 	pthread_mutex_lock(&mutexSwap);
 	enviarCodigoASwap(socketSwap, paginasRequeridas, idPrograma, paginasCodigo);
@@ -111,7 +112,6 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
-
 }
 
 uint32_t buscarEnTLB(uint32_t pid, int nroPagina) {
@@ -136,11 +136,53 @@ uint32_t buscarEnTLB(uint32_t pid, int nroPagina) {
 	return frame;
 }
 
+int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
+
+	uint32_t frame;
+
+	t_nodo_lista_procesos* nodoAux;
+	t_nodo_lista_paginas* nodoPagAux;
+	int i = 0;
+	int j = 0;
+	int pidEncontrado = 0;
+	int aciertoPagina = 0;
+
+	pthread_mutex_lock(&mutexProcesos);
+
+	while (i < list_size(listaProcesos) && pidEncontrado == 0) {
+		nodoAux = list_get(listaProcesos, i); //list_get empieza en 1 o 0?
+		if (nodoAux->pid == pid) {
+
+			while (j < list_size(listaProcesos) && aciertoPagina == 0) {
+				nodoPagAux = list_get(nodoAux->lista_paginas, j);
+
+				if (nodoPagAux->nro_pagina == nroPagina) {
+					if (nodoPagAux->status == 'M') { //estaEnMemoria
+						frame = nodoPagAux->nroFrame;  //aplicarLRU para TLB
+						aciertoPagina = 1;
+					} else {
+						return -1;
+						//buscarEnSwap
+					}
+
+				}
+				j++;
+			} //fin While de lista de paginas
+		} //fin if nodoAux == pid
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
+
+	return (int) frame;
+}
+
 void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
 	void * bytes = malloc(tamanio);
 	int posicion = (int) frame * size_frames + offset;
+	pthread_mutex_lock(&mutexAccesoMem);
 	void * posicionAux = memoriaPrincipal + posicion;
 	memcpy(bytes, posicionAux, tamanio);
+	pthread_mutex_unlock(&mutexAccesoMem);
 	return bytes;
 }
 
@@ -153,7 +195,22 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		data = lecturaMemoria(nroFrame, offset, tamanio);
+		return data;
 	}
+
+	nroFrame = buscarEnListaProcesos(pid, nroPagina);
+
+	if(nroFrame = -1){
+		//buscarEnSwap
+
+	}
+
+	data = lecturaMemoria(nroFrame, offset, tamanio);
+
+
+	printf("Solicitar Bytes \n");
+
+	return data;
 
 	/*si est an memoria, principal, voy a buscar en lista de frames
 	 *sino esta, hay que fijarme si puedo asignarle un frame mas al proceso
@@ -162,14 +219,37 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	 *sino le puedo asignar un framr porque ya supero su cantidad de frames que puede tener en memoria
 	 voy a aplicar un algoritmo de reemplazo local*/
 
-	printf("Solicitar Bytes \n");
+}
 
-	return data;
-
+void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio, void * buffer) {
+	void * bytes = malloc(tamanio);
+	int posicion = (int) frame * size_frames + offset;
+	pthread_mutex_lock(&mutexAccesoMem);
+	void * posicionAux = memoriaPrincipal + posicion;
+	memcpy(posicionAux, buffer, tamanio);
+	pthread_mutex_unlock(&mutexAccesoMem);
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
-		void * buffer) {
+		void * buffer, uint32_t pid) {
+
+	uint32_t nroFrame;
+	//chequear si hay stack overflow
+
+	if(entradasTLB > 0){
+		nroFrame = buscarEnTLB(pid, nroPagina);
+		escrituraMemoria(nroFrame, offset, tamanio, buffer);
+		return;
+	}
+
+	nroFrame = buscarEnListaProcesos(pid, nroPagina);
+	if(nroFrame = -1)
+	{
+		//buscarEnSwap
+	}
+
+	escrituraMemoria(nroFrame, offset, tamanio, buffer);
+
 
 	printf("Almacenar Bytes \n");
 }
