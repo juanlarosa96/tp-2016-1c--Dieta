@@ -27,6 +27,10 @@
 t_log* logger;
 char *texto;
 
+pthread_mutex_t mutexColaListos;
+pthread_mutex_t mutexColaFinalizados;
+pthread_mutex_t mutexListaConsolas;
+
 
 
 typedef struct {

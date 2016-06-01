@@ -45,6 +45,7 @@ void manejarCPU(int socketCpu) {
 				case 99: //Fin programa
 					siguientePcb.pcb = recibirPcb(socketCpu);
 					finalizarProceso(siguientePcb);
+					pthread_mutex_lock(&mutexListaConsolas);
 					int largoLista = list_size(&listaConsolas), i;
 					for (i = 0; i < largoLista; i++) {
 						t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(&listaConsolas, i);
@@ -54,6 +55,7 @@ void manejarCPU(int socketCpu) {
 							free(pcbFinalizado);
 						}
 					}
+					pthread_mutex_unlock(&mutexListaConsolas);
 					break;
 
 				case 100: //Fin quantum
@@ -87,7 +89,9 @@ t_pcbConConsola sacarPrimeroCola(t_queue * cola) {
 }
 
 t_pcbConConsola DevolverProcesoColaListos() {
+	pthread_mutex_lock(&mutexColaListos);
 	return (sacarPrimeroCola(cola_PCBListos));
+	pthread_mutex_unlock(&mutexColaListos);
 }
 
 t_pcbConConsola DevolverProcesoColaNuevos() {
@@ -95,7 +99,9 @@ t_pcbConConsola DevolverProcesoColaNuevos() {
 }
 
 t_pcbConConsola DevolverProcesoColaFinalizados() {
+	pthread_mutex_lock(&mutexColaFinalizados);
 	return (sacarPrimeroCola(cola_PCBFinalizados));
+	pthread_mutex_unlock(&mutexColaFinalizados);
 }
 
 t_pcbConConsola DevolverProcesoColaLBloqueados() {
@@ -103,7 +109,9 @@ t_pcbConConsola DevolverProcesoColaLBloqueados() {
 }
 
 void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
+	pthread_mutex_lock(&mutexColaListos);
 	AgregarACola(elemento, cola_PCBListos);
+	pthread_mutex_unlock(&mutexColaListos);
 }
 
 void AgregarAProcesoColaNuevos(t_pcbConConsola elemento) {
@@ -111,7 +119,9 @@ void AgregarAProcesoColaNuevos(t_pcbConConsola elemento) {
 }
 
 void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento) {
+	pthread_mutex_lock(&mutexColaFinalizados);
 	AgregarACola(elemento, cola_PCBFinalizados);
+	pthread_mutex_unlock(&mutexColaFinalizados);
 }
 
 void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento) {
