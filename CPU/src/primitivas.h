@@ -29,6 +29,7 @@ void asignar(t_puntero puntero, t_valor_variable variable);
 int imprimir(t_valor_variable valor);
 int imprimirTexto(char* texto);
 void entradaSalidaPrimitiva(t_nombre_dispositivo dispositivo, int tiempo);
+void wait(t_nombre_semaforo identificador_semaforo);
 
 
 #endif /* PRIMITIVAS_H_ */
