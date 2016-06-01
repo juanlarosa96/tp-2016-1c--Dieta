@@ -42,13 +42,9 @@ int recibirTamanioPagina(int socketOrigen) {
 }
 
 void enviarTamanioPagina(int socketDestino, int tamanioPagina) {
-	char temporal[5];
-	sprintf(temporal, "%d", tamanioPagina);
-	char buffer[2 + 5]; //header + payload
-	strcpy(buffer, "3"); //header, protocolo
-	strcat(buffer, temporal);
-	int len = strlen(buffer);
-	send(socketDestino, buffer, len, 0); //implementado de forma horrenda
+	int header = tamanioDePagina;
+	send(socketDestino, &header, sizeof(int), 0);
+	send(socketDestino, &tamanioPagina, sizeof(int), 0);
 
 }
 
