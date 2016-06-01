@@ -464,11 +464,12 @@ void recibirPID(int socketUMC, uint32_t * pid) {
 
 void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 		t_nombre_dispositivo dispositivo, int tiempo) {
-	int header = entradaSalida;
+	int header = headerEntradaSalida;
+
 
 	void *data = malloc(
-			sizeof(int) + sizeof(uint32_t) + strlen(dispositivo) + 1
-					+ sizeof(t_nombre_dispositivo) + sizeof(int)); //header + pid + largoNombreDispositivo + nombreDispositivo + tiempo
+			sizeof(int) + sizeof(uint32_t) + sizeof(int)+ strlen(dispositivo) + 1
+					 + sizeof(int)); //header + pid + largoNombreDispositivo + nombreDispositivo + tiempo
 	int offset = 0, str_size = 0, largoNombreDispositivo = strlen(dispositivo)
 			+ 1;
 
@@ -538,4 +539,76 @@ void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamani
 	send(socketSwap,data, offset, 0);
 
 	free(data);
+}
+
+void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo){
+	int header = headerWait;
+
+	void *data = malloc(
+			sizeof(int) + sizeof(uint32_t) + sizeof(int) + strlen(nombreSemaforo) + 1); //header + pid + largoNombreSemaforo + nombreSemaforo
+	int offset = 0, str_size = 0, largoNombreSemaforo= strlen(nombreSemaforo)+ 1;
+
+	str_size = sizeof(int);
+	memcpy(data + offset, &header, str_size);
+	offset += str_size;
+
+	str_size = sizeof(uint32_t);
+	memcpy(data + offset, &id_proceso, str_size);
+	offset += str_size;
+
+	str_size = sizeof(int);
+	memcpy(data + offset, &largoNombreSemaforo, str_size);
+	offset += str_size;
+
+	str_size = strlen(nombreSemaforo) + 1;
+	memcpy(data + offset, &nombreSemaforo, str_size);
+	offset += str_size;
+
+	send(socketNucleo, data, offset, 0);
+
+	free(data);
+
+}
+
+void recibirWait(int socketOrigen, uint32_t *id_proceso,
+		int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo) {
+	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
+	recibirTodo(socketOrigen, largoNombreSemaforo, sizeof(int));
+	recibirTodo(socketOrigen, nombreSemaforo, *largoNombreSemaforo);
+}
+
+void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo){
+	int header = headerSignal;
+
+	void *data = malloc(
+			sizeof(int) + sizeof(uint32_t) + sizeof(int) + strlen(nombreSemaforo) + 1); //header + pid + largoNombreSemaforo + nombreSemaforo
+	int offset = 0, str_size = 0, largoNombreSemaforo= strlen(nombreSemaforo)+ 1;
+
+	str_size = sizeof(int);
+	memcpy(data + offset, &header, str_size);
+	offset += str_size;
+
+	str_size = sizeof(uint32_t);
+	memcpy(data + offset, &id_proceso, str_size);
+	offset += str_size;
+
+	str_size = sizeof(int);
+	memcpy(data + offset, &largoNombreSemaforo, str_size);
+	offset += str_size;
+
+	str_size = strlen(nombreSemaforo) + 1;
+	memcpy(data + offset, &nombreSemaforo, str_size);
+	offset += str_size;
+
+	send(socketNucleo, data, offset, 0);
+
+	free(data);
+
+}
+
+void recibirSignal(int socketOrigen, uint32_t *id_proceso,
+		int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo) {
+	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
+	recibirTodo(socketOrigen, largoNombreSemaforo, sizeof(int));
+	recibirTodo(socketOrigen, nombreSemaforo, *largoNombreSemaforo);
 }
