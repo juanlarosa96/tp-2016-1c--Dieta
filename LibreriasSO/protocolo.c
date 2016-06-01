@@ -466,10 +466,10 @@ void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 		t_nombre_dispositivo dispositivo, int tiempo) {
 	int header = headerEntradaSalida;
 
-   //revisar malloc y comparar con wait
+
 	void *data = malloc(
-			sizeof(int) + sizeof(uint32_t) + strlen(dispositivo) + 1
-					+ sizeof(t_nombre_dispositivo) + sizeof(int)); //header + pid + largoNombreDispositivo + nombreDispositivo + tiempo
+			sizeof(int) + sizeof(uint32_t) + sizeof(int)+ strlen(dispositivo) + 1
+					 + sizeof(int)); //header + pid + largoNombreDispositivo + nombreDispositivo + tiempo
 	int offset = 0, str_size = 0, largoNombreDispositivo = strlen(dispositivo)
 			+ 1;
 
