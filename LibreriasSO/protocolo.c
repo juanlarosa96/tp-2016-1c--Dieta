@@ -542,7 +542,7 @@ void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamani
 }
 
 void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo){
-	int header = wait;
+	int header = headerWait;
 
 	void *data = malloc(
 			sizeof(int) + sizeof(uint32_t) + sizeof(int) + strlen(nombreSemaforo) + 1); //header + pid + largoNombreSemaforo + nombreSemaforo
@@ -578,7 +578,7 @@ void recibirWait(int socketOrigen, uint32_t *id_proceso,
 }
 
 void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo){
-	int header = signal;
+	int header = headerSignal;
 
 	void *data = malloc(
 			sizeof(int) + sizeof(uint32_t) + sizeof(int) + strlen(nombreSemaforo) + 1); //header + pid + largoNombreSemaforo + nombreSemaforo
