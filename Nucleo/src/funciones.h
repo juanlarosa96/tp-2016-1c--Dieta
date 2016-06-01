@@ -37,6 +37,7 @@ pthread_mutex_t mutexVariableNuevaConexion;
 typedef struct {
 	t_pcb pcb;
 	int socketConsola;
+	int finalizarPrograma;
 }t_pcbConConsola;
 
 
@@ -55,7 +56,9 @@ t_queue *cola_PCBBloqueados;
 int clienteUMC;
 int pidPcb;
 int tamanioPagina;
-t_list listaConsolas;
+
+t_list *listaConsolas;
+t_list *listaFinalizacionesPendientes;
 
 void manejarCPU(void * socket);
 
