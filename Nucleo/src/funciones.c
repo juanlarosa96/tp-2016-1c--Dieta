@@ -46,7 +46,7 @@ void manejarCPU(void * socket) {
 				}
 				switch (respuesta) {
 
-				case 99: //Fin programa
+				case finalizacionPrograma: //Fin programa
 					siguientePcb.pcb = recibirPcb(socketCpu);
 					finalizarProceso(siguientePcb);
 					pthread_mutex_lock(&mutexListaConsolas);
@@ -62,7 +62,7 @@ void manejarCPU(void * socket) {
 					pthread_mutex_unlock(&mutexListaConsolas);
 					break;
 
-				case 100: //Fin quantum
+				case finDeQuantum: //Fin quantum
 
 					siguientePcb.pcb = recibirPcb(socketCpu);
 

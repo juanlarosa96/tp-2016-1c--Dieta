@@ -34,7 +34,8 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	headerEntradaSalida = 15,
 	inicializarProgramaSwap = 21,
 	headerWait = 22,
-	headerSignal = 23
+	headerSignal = 23,
+	finDeQuantum = 24
 
 };
 int recibirHeader(int socketOrigen);
