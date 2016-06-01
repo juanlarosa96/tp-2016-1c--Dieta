@@ -20,6 +20,7 @@
 #include <commons/string.h>
 #include <stdint.h>
 #include <commons/config.h>
+#include <unistd.h>
 
 
 t_puntero definirVariable(t_nombre_variable variable);
