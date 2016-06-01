@@ -503,7 +503,7 @@ void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 }
 
 void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso,
-		int *largoNombreDispositivo, char * nombreDispositivo, int tiempo) {
+		int *largoNombreDispositivo, char * nombreDispositivo, int *tiempo) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoNombreDispositivo, sizeof(int));
 	recibirTodo(socketOrigen, nombreDispositivo, *largoNombreDispositivo);
