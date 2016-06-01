@@ -153,7 +153,7 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	nuevoPcb.indice_stack = pilaInicial;
 	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
 
-	free(metadata);
+	metadata_destruir(metadata);
 
 	return nuevoPcb;
 }
