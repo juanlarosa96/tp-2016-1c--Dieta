@@ -75,9 +75,9 @@ int main(int argc, char **argv) {
 	    fseek(archivo, 0, SEEK_SET);
 
 	    char programaAnsisop[largoPrograma+1];
-	    int i = 0;
+	    int i;
 
-	    for(i; i <largoPrograma;i++){
+	    for(i = 0; i <largoPrograma;i++){
 	    	programaAnsisop[i] = fgetc(archivo);
 	    }
 	    fclose(archivo);
