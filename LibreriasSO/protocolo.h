@@ -31,7 +31,7 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	primitivaImprimir = 12,
 	finalizacionPrograma = 13,
 	cambiarProcesoActivo = 14,
-	entradaSalida = 15,
+	headerEntradaSalida = 15,
 	inicializarProgramaSwap = 21,
 	headerWait = 22,
 	headerSignal = 23

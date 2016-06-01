@@ -464,7 +464,7 @@ void recibirPID(int socketUMC, uint32_t * pid) {
 
 void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 		t_nombre_dispositivo dispositivo, int tiempo) {
-	int header = entradaSalida;
+	int header = headerEntradaSalida;
 
    //revisar malloc y comparar con wait
 	void *data = malloc(

@@ -37,7 +37,7 @@ int imprimirTexto(char* texto) {
 	return largoTexto;
 }
 
-void entradaSalidaPrimitiva(t_nombre_dispositivo dispositivo, int tiempo){
+void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 	enviarEntradaSalida(socketNucleo,pcbRecibido.pid, dispositivo, tiempo);
 
 }
