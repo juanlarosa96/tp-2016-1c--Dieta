@@ -20,7 +20,7 @@ typedef struct {
 struct nodo_lista_frames {
 	uint32_t nroFrame;
 	uint32_t pid;
-	uint32_t nroPagina;
+	//uint32_t nroPagina;
 	uint8_t bitReferencia;
 	uint8_t bitModificado;
 
@@ -30,7 +30,8 @@ typedef struct nodo_lista_frames t_nodo_lista_frames;
 
 struct nodo_lista_paginas {
 	uint32_t nro_pagina;
-	char status; // M = memoria, S = SWAP
+	char status;
+	uint32_t nroFrame;// M = memoria, S = SWAP
 };
 
 typedef struct nodo_lista_paginas t_nodo_lista_paginas;

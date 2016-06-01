@@ -41,3 +41,13 @@ void entradaSalidaPrimitiva(t_nombre_dispositivo dispositivo, int tiempo){
 	enviarEntradaSalida(socketNucleo,pcbRecibido.pid, dispositivo, tiempo);
 
 }
+
+void wait(t_nombre_semaforo identificador_semaforo){
+	enviarWait(socketNucleo,pcbRecibido.pid, identificador_semaforo);
+
+}
+
+void signal(t_nombre_semaforo identificador_semaforo){
+	enviarSignal(socketNucleo,pcbRecibido.pid, identificador_semaforo);
+
+}
