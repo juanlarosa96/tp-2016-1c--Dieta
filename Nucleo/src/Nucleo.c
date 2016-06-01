@@ -69,10 +69,8 @@ int main(int argc, char **argv) {
 	int nuevaConexion;
 	struct sockaddr_in direccionCliente;
 
-	t_list listaCPUsConectados;
-	t_list * aux = list_create();
-	listaConsolas = *aux;
-	free(aux);
+	listaConsolas = list_create();
+	listaFinalizacionesPendientes = list_create();
 
 	cola_PCBListos = queue_create();
 	cola_PCBBloqueados = queue_create();
@@ -114,7 +112,7 @@ int main(int argc, char **argv) {
 					//antes de sobreEscribir la variable nuevaConexion
 					nuevaConexion = aceptarConexion(servidorNucleo, &direccionCliente);
 
-					if(nuevaConexion > fdmax){
+					if (nuevaConexion > fdmax) {
 						fdmax = nuevaConexion;
 					}
 
@@ -144,7 +142,7 @@ int main(int argc, char **argv) {
 
 						pthread_attr_destroy(&attr);
 
-						list_add(&listaCPUsConectados, (void *) &nuevoHilo);
+						//list_add(&listaCPUsConectados, (void *) &nuevoHilo);
 						log_info(logger, "Nuevo CPU conectado", texto);
 						break;
 					default:
@@ -182,10 +180,11 @@ int main(int argc, char **argv) {
 								t_pcbConConsola pcbListo;
 								pcbListo.pcb = nuevoPcb;
 								pcbListo.socketConsola = i;
+								pcbListo.finalizarPrograma = 0;
 								AgregarAProcesoColaListos(pcbListo);
 
 								pthread_mutex_lock(&mutexListaConsolas);
-								list_add(&listaConsolas, (void *) &pcbListo);
+								list_add(listaConsolas, (void *) &pcbListo);
 								pthread_mutex_unlock(&mutexListaConsolas);
 
 								free(programa);
@@ -195,6 +194,29 @@ int main(int argc, char **argv) {
 							close(i);
 							FD_CLR(i, &bolsaDeSockets);
 							log_error(logger, "La consola no envio un programa", texto);
+						}
+
+						break;
+
+					case finalizacionPrograma:
+						;
+						int j, sizeCola = queue_size(cola_PCBListos), encontrado = 0;
+
+						for (j = 0; j < sizeCola; j++) {
+
+							t_pcbConConsola * elementoAux = (t_pcbConConsola *) queue_pop(cola_PCBListos);
+
+							if (elementoAux->socketConsola == i) {
+								finalizarProceso(*elementoAux);
+								encontrado = 1;
+							} else {
+								queue_push(cola_PCBListos, (void *) elementoAux);
+							}
+						}
+
+						if (!encontrado) {
+							int socketProcesoFinalizado = i;
+							list_add(listaFinalizacionesPendientes,&socketProcesoFinalizado);
 						}
 
 						break;
