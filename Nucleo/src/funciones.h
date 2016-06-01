@@ -31,6 +31,7 @@ pthread_mutex_t mutexColaListos;
 pthread_mutex_t mutexColaFinalizados;
 pthread_mutex_t mutexListaConsolas;
 pthread_mutex_t mutexVariableNuevaConexion;
+pthread_mutex_t mutexListaFinalizacionesPendientes;
 
 
 

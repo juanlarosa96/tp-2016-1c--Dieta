@@ -21,7 +21,7 @@ void manejarCPU(void * socket) {
 	 */
 
 	int socketCpu;
-	memcpy(&socketCpu,socket,sizeof(int));
+	memcpy(&socketCpu, socket, sizeof(int));
 	pthread_mutex_unlock(&mutexVariableNuevaConexion);
 
 	int desconectado = 0, cambioProceso;
@@ -65,8 +65,31 @@ void manejarCPU(void * socket) {
 				case 100: //Fin quantum
 
 					siguientePcb.pcb = recibirPcb(socketCpu);
-					AgregarAProcesoColaListos(siguientePcb);
-					cambioProceso = 1;
+
+					int j, sizeLista = list_size(listaFinalizacionesPendientes);
+					int * socketEnLista;
+
+					pthread_mutex_lock(mutexListaFinalizacionesPendientes);
+
+					for (j = 0; j < sizeLista; j++) {
+						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
+						if (siguientePcb.socketConsola == *socketEnLista) {
+							finalizarProceso(siguientePcb);
+							list_remove(listaFinalizacionesPendientes, j);
+
+							pthread_mutex_unlock(mutexListaFinalizacionesPendientes);
+
+							AgregarAProcesoColaFinalizados(siguientePcb);
+							cambioProceso = 1;
+							j=sizeLista;
+						}
+					}
+
+
+					if (!cambioProceso) {
+						AgregarAProcesoColaListos(siguientePcb);
+						cambioProceso = 1;
+					}
 					break;
 
 				}

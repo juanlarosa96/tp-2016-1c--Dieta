@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexColaFinalizados, NULL);
 	pthread_mutex_init(&mutexListaConsolas, NULL);
 	pthread_mutex_init(&mutexVariableNuevaConexion, NULL);
+	pthread_mutex_init(&mutexListaFinalizacionesPendientes, NULL);
 
 	fd_set bolsaDeSockets;
 	fd_set bolsaAuxiliar;  // temp file descriptor list for select()
@@ -216,7 +217,10 @@ int main(int argc, char **argv) {
 
 						if (!encontrado) {
 							int socketProcesoFinalizado = i;
+
+							pthread_mutex_lock(mutexListaFinalizacionesPendientes);
 							list_add(listaFinalizacionesPendientes,&socketProcesoFinalizado);
+							pthread_mutex_unlock(mutexListaFinalizacionesPendientes);
 						}
 
 						break;
