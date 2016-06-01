@@ -88,6 +88,10 @@ t_config * config;
 	cola_PCBBloqueados= queue_create();
 	cola_PCBFinalizados= queue_create();
 
+	pthread_mutex_init(&mutexColaListos, NULL);
+	pthread_mutex_init(&mutexColaFinalizados, NULL);
+	pthread_mutex_init(&mutexListaConsolas, NULL);
+
 	while (1) {
 
 		// Fuera del select
@@ -123,7 +127,9 @@ t_config * config;
 					pcbListo.socketConsola = nuevaConexion;
 					AgregarAProcesoColaListos(pcbListo);
 					//Sincronizar
+					pthread_mutex_lock(mutexListaConsolas);
 					list_add(&listaConsolas,(void *) &pcbListo);
+					pthread_mutex_unlock(mutexListaConsolas);
 					//---
 				}
 
