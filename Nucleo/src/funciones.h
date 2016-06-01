@@ -30,6 +30,7 @@ char *texto;
 pthread_mutex_t mutexColaListos;
 pthread_mutex_t mutexColaFinalizados;
 pthread_mutex_t mutexListaConsolas;
+pthread_mutex_t mutexVariableNuevaConexion;
 
 
 
@@ -56,7 +57,7 @@ int pidPcb;
 int tamanioPagina;
 t_list listaConsolas;
 
-void manejarCPU(int socketCpu);
+void manejarCPU(void * socket);
 
 t_pcbConConsola DevolverProcesoColaListos();
 

@@ -7,7 +7,7 @@
 
 #include "funciones.h"
 
-void manejarCPU(int socketCpu) {
+void manejarCPU(void * socket) {
 
 	/*
 	 * chequeo que el CPU no haya hecho un hot plug
@@ -19,6 +19,10 @@ void manejarCPU(int socketCpu) {
 	 * Se pone pcb en cola de listo/bloqueado segun corresponda
 	 * repetir
 	 */
+
+	int socketCpu;
+	memcpy(&socketCpu,socket,sizeof(int));
+	pthread_mutex_unlock(&mutexVariableNuevaConexion);
 
 	int desconectado = 0, cambioProceso;
 
