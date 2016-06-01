@@ -173,14 +173,16 @@ int main(int argc, char *argv[]) {
 	 caracter = getc(archivo);
 	 }*/
 
-	int sigoEjecutando = 1;
-	int signalApagado = 0;
+	sigoEjecutando = 1;
+	signalApagado = 0;
 
 	while (!signalApagado) {
 
 		if (recibirHeader(socketNucleo) == headerPcb) {
 
 			pcbRecibido = recibirPcb(socketNucleo);
+
+			enviarCambioProcesoActivo(socketUMC,pcbRecibido.pid);
 
 			int unidadQuantum = 0;
 
