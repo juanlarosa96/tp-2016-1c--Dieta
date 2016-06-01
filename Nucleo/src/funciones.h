@@ -19,6 +19,14 @@
 #include <pthread.h>
 #include <protocolo.h>
 #include <parser/metadata_program.h>
+#include <commons/config.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+t_log* logger;
+char *texto;
+
 
 
 typedef struct {

@@ -1,12 +1,9 @@
-#include <commons/config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+
 #include "funciones.h"
 
 int main(int argc, char **argv) {
 
-	t_config* config;
+t_config * config;
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
 		//return -1;
@@ -23,12 +20,11 @@ int main(int argc, char **argv) {
 
 
 	//Creo log para el Núcleo
-	t_log* logger;
+
 	logger = log_create("Núcelo.log", "NUCLEO", 1,
 			log_level_from_string("INFO"));
-	char *texto;
-	texto = "info";
 
+	texto = "info";
 
 
 	if (crearSocket(&clienteUMC)) {

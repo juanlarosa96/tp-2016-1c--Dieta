@@ -27,7 +27,6 @@ void manejarCPU(int socketCpu) {
 		cambioProceso = 0;
 
 		t_pcbConConsola siguientePcb = DevolverProcesoColaListos();
-		t_pcbConConsola pcbRespuesta;
 		if (siguientePcb.socketConsola != -1) {
 			enviarPcb(socketCpu, siguientePcb.pcb);
 
@@ -38,7 +37,8 @@ void manejarCPU(int socketCpu) {
 					//Se desconecto el CPU
 					finalizarProceso(siguientePcb);
 					desconectado = 1;
-					return;
+					log_info(logger, "Se desconecto el CPU", texto);
+					pthread_exit(NULL);
 				}
 				switch (respuesta) {
 
