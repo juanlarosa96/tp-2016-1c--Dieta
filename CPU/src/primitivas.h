@@ -28,7 +28,7 @@ t_valor_variable dereferenciar(t_puntero puntero);
 void asignar(t_puntero puntero, t_valor_variable variable);
 int imprimir(t_valor_variable valor);
 int imprimirTexto(char* texto);
-void entradaSalidaPrimitiva(t_nombre_dispositivo dispositivo, int tiempo);
+void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
 void wait(t_nombre_semaforo identificador_semaforo);
 void signal(t_nombre_semaforo identificador_semaforo);
 
