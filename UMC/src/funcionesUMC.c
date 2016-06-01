@@ -136,6 +136,47 @@ uint32_t buscarEnTLB(uint32_t pid, int nroPagina) {
 	return frame;
 }
 
+int buscarEntradaMenosUsadaRecientemente() {
+
+	int ultAccesoAuxiliar;
+	int indice = 0;
+	int i = 0;
+	t_entrada_tlb* entradaAux;
+
+	ultAccesoAuxiliar = (int) accesoMemoria;
+	while (i < list_size(TLB)) {
+		entradaAux = list_get(TLB, i);
+		if ((entradaAux->ultAcceso) < ultAccesoAuxiliar) {
+			ultAccesoAuxiliar = entradaAux->ultAcceso;
+			indice = i;
+		}
+		i++;
+
+	}
+
+	return indice;
+
+}
+void entradaTLBdestroy(t_entrada_tlb* self){
+	free(self);
+}
+
+void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lru mutex TLB
+
+	int indiceVictima = buscarEntradaMenosUsadaRecientemente();
+
+	t_entrada_tlb* entradaAuxiliar;
+
+	entradaAuxiliar = list_get(TLB, indiceVictima);
+	entradaAuxiliar->nroPagina = paginaNueva;
+	entradaAuxiliar->pid = pid;
+	entradaAuxiliar->nroFrame = frame;
+	entradaAuxiliar->ultAcceso = accesoMemoria; //OJO VARIABLE GLOBAL
+
+	list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar, (void *) entradaTLBdestroy);
+
+}
+
 int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 
 	uint32_t frame;
@@ -179,10 +220,10 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
 	void * bytes = malloc(tamanio);
 	int posicion = (int) frame * size_frames + offset;
-	pthread_mutex_lock(&mutexAccesoMem);
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
 	void * posicionAux = memoriaPrincipal + posicion;
 	memcpy(bytes, posicionAux, tamanio);
-	pthread_mutex_unlock(&mutexAccesoMem);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	return bytes;
 }
 
@@ -200,13 +241,12 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
-	if(nroFrame = -1){
+	if (nroFrame = -1) {
 		//buscarEnSwap
 
 	}
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
-
 
 	printf("Solicitar Bytes \n");
 
@@ -221,13 +261,14 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 }
 
-void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio, void * buffer) {
+void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
+		void * buffer) {
 	void * bytes = malloc(tamanio);
 	int posicion = (int) frame * size_frames + offset;
-	pthread_mutex_lock(&mutexAccesoMem);
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
 	void * posicionAux = memoriaPrincipal + posicion;
 	memcpy(posicionAux, buffer, tamanio);
-	pthread_mutex_unlock(&mutexAccesoMem);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
@@ -236,20 +277,18 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	uint32_t nroFrame;
 	//chequear si hay stack overflow
 
-	if(entradasTLB > 0){
+	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		escrituraMemoria(nroFrame, offset, tamanio, buffer);
 		return;
 	}
 
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
-	if(nroFrame = -1)
-	{
+	if (nroFrame = -1) {
 		//buscarEnSwap
 	}
 
 	escrituraMemoria(nroFrame, offset, tamanio, buffer);
-
 
 	printf("Almacenar Bytes \n");
 }
