@@ -30,30 +30,63 @@ void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char*
 }
 void pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina) {
 	t_posicion_memoria posicion = obtenerPosicionPagina(tamanioPagina, pcbActual);
-	int bytesTotales = posicion.offset + posicion.size;
-	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
-
-	if (posicion.size + offset > tamanioPagina) {
-		tamanio = tamanioPagina - offset;
-	}
-
-	while (bytesTotales >= tamanioPagina) {
-		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-		recibirBytesDePagina(socketUMC, tamanio, (void *) lineaAnsisop + bytesRecibidos);
-		bytesTotales -= tamanio;
-		bytesRecibidos += tamanio;
-		tamanio = tamanioPagina;
-		offset = 0;
-		pagina++;
-	}
-	tamanio = bytesTotales;
-
-	if (tamanio != 0) {
-		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-		recibirBytesDePagina(socketUMC, tamanio, (void *) lineaAnsisop + bytesRecibidos);
-	}
+	enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *)lineaAnsisop, tamanioPagina);
 }
 
 void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
 	recibirTodo(socketUMC, buffer, largoPedido);
+}
+
+void enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
+	int bytesTotales = posicion.offset + posicion.size;
+		int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
+
+		if (posicion.size + offset > tamanioPagina) {
+			tamanio = tamanioPagina - offset;
+		}
+
+		while (bytesTotales >= tamanioPagina) {
+			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
+			//RecibirConfirmacion UMC si es pagina valida?
+			recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
+			bytesTotales -= tamanio;
+			bytesRecibidos += tamanio;
+			tamanio = tamanioPagina;
+			offset = 0;
+			pagina++;
+		}
+		tamanio = bytesTotales;
+
+		if (tamanio != 0) {
+			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
+			//RecibirConfirmacion UMC si es pagina valida?
+			recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
+		}
+
+}
+
+void enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
+	int bytesTotales = posicion.offset + posicion.size;
+		int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
+
+		if (posicion.size + offset > tamanioPagina) {
+			tamanio = tamanioPagina - offset;
+		}
+
+		while (bytesTotales >= tamanioPagina) {
+			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, tamanio, (char *)buffer);
+			//RecibirConfirmacion UMC si se almaceno bien?
+			bytesTotales -= tamanio;
+			bytesEnviados += tamanio;
+			tamanio = tamanioPagina;
+			offset = 0;
+			pagina++;
+		}
+		tamanio = bytesTotales;
+
+		if (tamanio != 0) {
+			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, tamanio, (char *)buffer);
+			//RecibirConfirmacion UMC si se almaceno bien?
+		}
+
 }
