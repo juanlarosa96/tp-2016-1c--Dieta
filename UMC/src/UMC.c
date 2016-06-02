@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 	size_frames = config_get_int_value(config, "MARCO_SIZE");
 	entradasTLB = config_get_int_value(config, "ENTRADAS_TLB");
 	retardo = config_get_int_value(config, "RETARDO");
+	maximoFrame = config_get_int_value(config, "MARCO_X_PROC");
 
 	//Reservo Memoria
 	int memoriaDisponible = (cant_frames) * (size_frames);
@@ -69,21 +70,21 @@ int main(int argc, char *argv[]) {
 
 	/*---------SOCKET CLIENTE DE SWAP------------*/
 
-	int clienteSwap; //esto tiene que ser variable global?
-	if (crearSocket(&clienteSwap)) {
+
+	if (crearSocket(&socketSwap)) {
 		printf("Error creando socket\n");
 		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
 		return 1;
 	}
 
-	if (conectarA(clienteSwap, ip_swap, puerto_swap)) {
+	if (conectarA(socketSwap, ip_swap, puerto_swap)) {
 		printf("Error al conectar\n");
 		log_error(logger, "Se produjo un error conectandose a Swap", texto);
 		return 1;
 	}
 
 
-	if (responderHandshake(clienteSwap, IDUMC, IDSWAP)) {
+	if (responderHandshake(socketSwap, IDUMC, IDSWAP)) {
 		log_error(logger, "Error en el handshake con SWAP", texto);
 		return 1;
 	}
