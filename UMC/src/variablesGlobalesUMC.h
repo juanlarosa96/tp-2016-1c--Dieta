@@ -21,7 +21,7 @@ pthread_mutex_t mutexTLB;
 pthread_mutex_t mutexSwap;
 pthread_mutex_t mutexMemoriaPrincipal;
 pthread_mutex_t mutexAccesoMem;  //EVALUAR SI ES NECESARIO
-
+pthread_mutex_t mutexRetardo;
 
 uint16_t entradasTLB; //lo saco del archivo de config
 uint32_t accesoMemoria; //contador de accesos a memoria para LRU
