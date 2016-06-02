@@ -43,6 +43,13 @@
 
  }*/
 
+void cambiarRetardo(int nuevoRetardo){
+	pthread_mutex_lock(&mutexRetardo);
+	retardo = nuevoRetardo;
+	pthread_mutex_unlock(&mutexRetardo);
+
+}
+
 void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
 }
@@ -363,6 +370,8 @@ void limpiarEntradasTLB(uint32_t pid) {
 	pthread_mutex_unlock(&mutexTLB);
 
 }
+
+
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
