@@ -39,7 +39,7 @@ typedef struct nodo_lista_paginas t_nodo_lista_paginas;
 struct nodo_lista_procesos {
 	uint32_t pid;
 	uint32_t cantPaginas;
-	//uint8_t paginasAsignadas;
+	uint8_t framesAsignados;
 	t_list * lista_paginas;
 };
 
