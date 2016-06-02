@@ -50,6 +50,7 @@ void cambiarRetardo(int nuevoRetardo){
 
 }
 
+
 void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
 }
@@ -230,6 +231,12 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	return (int) frame;
 }
 
+void flushTLB(){
+	pthread_mutex_lock(&mutexTLB);
+	list_clean_and_destroy_elements(TLB, (void *) entradaTLBdestroy);
+	pthread_mutex_unlock(&mutexTLB);
+}
+
 void actualizarBitReferencia(uint32_t frame) {
 	int i = 0;
 	int acierto = 0;
@@ -364,7 +371,7 @@ void limpiarEntradasTLB(uint32_t pid) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace(TLB, i, &nodoAux);
+			list_replace_and_destroy_element(TLB, i, nodoAux, (void*) entradaTLBdestroy);
 		}
 	}
 	pthread_mutex_unlock(&mutexTLB);
