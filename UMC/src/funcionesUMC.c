@@ -94,16 +94,46 @@ void liberarFrames(uint32_t pid) {
 int cantidadFramesDisponibles() {
 	int i = 0;
 	int contador = 0;
-	t_nodo_lista_frames nodoAux;
+	t_nodo_lista_frames* nodoAux;
 	pthread_mutex_lock(&mutexFrames);
 	while (i < list_size(listaFrames)) {
 		nodoAux = list_get(listaFrames, i);
-		if (nodoAux.pid == 0) {
+		if (nodoAux->pid == 0) {
 			contador++;
 		}
 	}
 	pthread_mutex_unlock(&mutexFrames);
 	return contador;
+}
+void reservarFrames(uint32_t pid, int cantPaginas) {
+	int i = 0;
+	int contador = 0;
+	int contadorFrames;
+	t_nodo_lista_frames* nodoAux;
+	if (cantPaginas < framesPorProceso) {
+		contadorFrames = cantPaginas;
+		pthread_mutex_lock(&mutexFrames);
+		while (i < list_size(listaFrames) && contadorFrames > 0) {
+			nodoAux = list_get(listaFrames, i);
+			if (nodoAux->pid == 0) {
+				contador++;
+				contadorFrames--;
+			}
+		}
+		pthread_mutex_unlock(&mutexFrames);
+	} else {
+		contadorFrames = framesPorProceso;
+		pthread_mutex_lock(&mutexFrames);
+		while (i < list_size(listaFrames) && contadorFrames > 0) {
+			nodoAux = list_get(listaFrames, i);
+			if (nodoAux->pid == 0) {
+				contador++;
+				contadorFrames--;
+			}
+		}
+		pthread_mutex_unlock(&mutexFrames);
+	}
+
 }
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
@@ -119,8 +149,11 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
 	//enviarPaginas(enviar pagina x pagina)
-	if (cantidadFramesDisponibles >= framesPorProceso) {
+	int framesDisponibles = cantidadFramesDisponibles();
 
+	if (framesDisponibles < framesPorProceso && framesDisponibles < paginasRequeridas) {
+		//avisar que no se pudo inicializarPrograma a nucleo
+		return;
 	}
 
 	//aca tengo que crear un puntero o una estructura?
