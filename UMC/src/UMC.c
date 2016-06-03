@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	size_frames = config_get_int_value(config, "MARCO_SIZE");
 	entradasTLB = config_get_int_value(config, "ENTRADAS_TLB");
 	retardo = config_get_int_value(config, "RETARDO");
-	maximoFrame = config_get_int_value(config, "MARCO_X_PROC");
+	framesPorProceso = config_get_int_value(config, "MARCO_X_PROC");
 
 	//Reservo Memoria
 	int memoriaDisponible = (cant_frames) * (size_frames);

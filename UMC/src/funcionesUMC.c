@@ -43,13 +43,12 @@
 
  }*/
 
-void cambiarRetardo(int nuevoRetardo){
+void cambiarRetardo(int nuevoRetardo) {
 	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
 	pthread_mutex_unlock(&mutexRetardo);
 
 }
-
 
 void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
@@ -65,7 +64,7 @@ int encontrarPosicionEnListaProcesos(int pid) {
 	int i = 0;
 	int encontrado = 1;
 
-	//fijarse si hay que poner mutex
+	pthread_mutex_lock(&mutexProcesos);
 	while ((i < list_size(listaProcesos)) && encontrado != 0) {
 		aux = list_get(listaProcesos, i);
 
@@ -75,6 +74,8 @@ int encontrarPosicionEnListaProcesos(int pid) {
 			i++;
 		}
 	}
+	pthread_mutex_unlock(&mutexProcesos);
+
 	return i;
 }
 
@@ -92,6 +93,69 @@ void liberarFrames(uint32_t pid) {
 	}
 	pthread_mutex_unlock(&mutexFrames);
 }
+int cantidadFramesDisponibles() {
+	int i = 0;
+	int contador = 0;
+	t_nodo_lista_frames* nodoAux;
+	pthread_mutex_lock(&mutexFrames);
+	while (i < list_size(listaFrames)) {
+		nodoAux = list_get(listaFrames, i);
+		if (nodoAux->pid == 0) {
+			contador++;
+		}
+	}
+	pthread_mutex_unlock(&mutexFrames);
+	return contador;
+}
+
+void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
+	int indice = 0;
+	t_nodo_lista_procesos* nodoAux;
+	indice = encontrarPosicionEnListaProcesos(pid);
+	pthread_mutex_lock(&mutexProcesos);
+	nodoAux = list_get(listaProcesos, indice);
+	nodoAux->punteroClock = posicionFrameLista;
+	list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
+	pthread_mutex_unlock(&mutexProcesos);
+
+}
+
+void reservarFrames(uint32_t pid, int cantPaginas) {
+	int i = 0;
+	int contador = 0;
+	int contadorFrames;
+	t_nodo_lista_frames* nodoAux;
+	if (cantPaginas < framesPorProceso) {
+		contadorFrames = cantPaginas;
+		pthread_mutex_lock(&mutexFrames);
+		while (i < list_size(listaFrames) && contadorFrames > 0) {
+			nodoAux = list_get(listaFrames, i);
+			if (nodoAux->pid == 0) {
+				contador++;
+				contadorFrames--;
+				if(contador == 1){
+					inicializarPuntero(pid, i);
+				}
+			}
+		}
+		pthread_mutex_unlock(&mutexFrames);
+	} else {
+		contadorFrames = framesPorProceso;
+		pthread_mutex_lock(&mutexFrames);
+		while (i < list_size(listaFrames) && contadorFrames > 0) {
+			nodoAux = list_get(listaFrames, i);
+			if (nodoAux->pid == 0) {
+				contador++;
+				contadorFrames--;
+				if(contador == 1){
+					inicializarPuntero(pid,i);
+				}
+			}
+		}
+		pthread_mutex_unlock(&mutexFrames);
+	}
+
+}
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
@@ -106,13 +170,22 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
 	//enviarPaginas(enviar pagina x pagina)
+	int framesDisponibles = cantidadFramesDisponibles();
+
+	if (framesDisponibles < framesPorProceso && framesDisponibles < paginasRequeridas) {
+		//avisar que no se pudo inicializarPrograma a nucleo
+		return;
+	}
+
+	reservarFrames(idPrograma, paginasRequeridas);
 
 	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos unNodo;
 	unNodo.pid = idPrograma;
 	unNodo.cantPaginas = paginasRequeridas;
-	unNodo.framesAsignados = 0;
+	//unNodo.framesAsignados = 0;
 	unNodo.lista_paginas = list_create();
+	//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
 		t_nodo_lista_paginas unaPagina;
@@ -231,10 +304,23 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	return (int) frame;
 }
 
-void flushTLB(){
+void flushTLB() {
 	pthread_mutex_lock(&mutexTLB);
 	list_clean_and_destroy_elements(TLB, (void *) entradaTLBdestroy);
 	pthread_mutex_unlock(&mutexTLB);
+}
+
+void flushMemory() {
+	int i;
+	t_nodo_lista_frames * nodo;
+	pthread_mutex_lock(&mutexFrames);
+	for (i = 0; i < list_size(listaFrames); i++) {
+		nodo = list_get(listaFrames, i);
+		nodo->bitModificado = 1;
+		list_replace_and_destroy_element(listaFrames, i, nodo,
+				(void*) destruirFrame);
+	}
+	pthread_mutex_unlock(&mutexFrames);
 }
 
 void actualizarBitReferencia(uint32_t frame) {
@@ -371,14 +457,53 @@ void limpiarEntradasTLB(uint32_t pid) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace_and_destroy_element(TLB, i, nodoAux, (void*) entradaTLBdestroy);
+			list_replace_and_destroy_element(TLB, i, nodoAux,
+					(void*) entradaTLBdestroy);
 		}
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
 }
 
+int buscarPuntero(uint32_t pid){
+	int indice;
+	int puntero;
+	int victima;
+	t_nodo_lista_procesos* nodoAux;
+	t_nodo_lista_frames* nodoFrame;
+	int i;
+	indice = encontrarPosicionEnListaProcesos(pid);
 
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoAux = list_get(listaProcesos, indice);
+	pthread_mutex_unlock(&mutexProcesos);
+	puntero = nodoAux->punteroClock;
+
+	//Primero busco bit de referencia en 0
+
+	while(puntero < list_size(listaFrames)){
+		nodoFrame = list_get(listaFrames, puntero);
+		if(nodoFrame->pid == pid){
+			if(nodoFrame->bitReferencia == 0){
+				victima = puntero;
+				//corro el puntero
+				return victima; //encontre la victima
+			}
+
+		}
+	}
+
+
+
+
+}
+
+/*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
+	//Busco bit de referencia en 0
+	buscarPuntero(pid);
+
+}*/
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
