@@ -37,7 +37,7 @@ void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
 	recibirTodo(socketUMC, buffer, largoPedido);
 }
 
-void enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
+int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
 	int bytesTotales = posicion.offset + posicion.size;
 		int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
 
@@ -47,7 +47,7 @@ void enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, 
 
 		while (bytesTotales >= tamanioPagina) {
 			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-			//RecibirConfirmacion UMC si es pagina valida?
+			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
 			recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
 			bytesTotales -= tamanio;
 			bytesRecibidos += tamanio;
@@ -59,13 +59,13 @@ void enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, 
 
 		if (tamanio != 0) {
 			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-			//RecibirConfirmacion UMC si es pagina valida?
+			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
 			recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
 		}
-
+		return 0;
 }
 
-void enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
+int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
 	int bytesTotales = posicion.offset + posicion.size;
 		int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
 
@@ -75,7 +75,7 @@ void enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria po
 
 		while (bytesTotales >= tamanioPagina) {
 			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, tamanio, (char *)buffer);
-			//RecibirConfirmacion UMC si se almaceno bien?
+			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
 			bytesTotales -= tamanio;
 			bytesEnviados += tamanio;
 			tamanio = tamanioPagina;
@@ -86,7 +86,7 @@ void enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria po
 
 		if (tamanio != 0) {
 			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, tamanio, (char *)buffer);
-			//RecibirConfirmacion UMC si se almaceno bien?
+			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
 		}
-
+		return 0;
 }
