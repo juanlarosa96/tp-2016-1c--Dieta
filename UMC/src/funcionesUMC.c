@@ -465,8 +465,43 @@ void limpiarEntradasTLB(uint32_t pid) {
 
 }
 
-/*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
+int buscarPuntero(uint32_t pid){
+	int indice;
+	int puntero;
+	int victima;
+	t_nodo_lista_procesos* nodoAux;
+	t_nodo_lista_frames* nodoFrame;
+	int i;
+	indice = encontrarPosicionEnListaProcesos(pid);
 
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoAux = list_get(listaProcesos, indice);
+	pthread_mutex_unlock(&mutexProcesos);
+	puntero = nodoAux->punteroClock;
+
+	//Primero busco bit de referencia en 0
+
+	while(puntero < list_size(listaFrames)){
+		nodoFrame = list_get(listaFrames, puntero);
+		if(nodoFrame->pid == pid){
+			if(nodoFrame->bitReferencia == 0){
+				victima = puntero;
+				//corro el puntero
+				return victima; //encontre la victima
+			}
+
+		}
+	}
+
+
+
+
+}
+
+/*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
+	//Busco bit de referencia en 0
+	buscarPuntero(pid);
 
 }*/
 
