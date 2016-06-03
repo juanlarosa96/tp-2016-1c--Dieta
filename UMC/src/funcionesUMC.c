@@ -64,7 +64,7 @@ int encontrarPosicionEnListaProcesos(int pid) {
 	int i = 0;
 	int encontrado = 1;
 
-	//fijarse si hay que poner mutex
+	pthread_mutex_lock(&mutexProcesos);
 	while ((i < list_size(listaProcesos)) && encontrado != 0) {
 		aux = list_get(listaProcesos, i);
 
@@ -74,6 +74,8 @@ int encontrarPosicionEnListaProcesos(int pid) {
 			i++;
 		}
 	}
+	pthread_mutex_unlock(&mutexProcesos);
+
 	return i;
 }
 
@@ -105,6 +107,19 @@ int cantidadFramesDisponibles() {
 	pthread_mutex_unlock(&mutexFrames);
 	return contador;
 }
+
+void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
+	int indice = 0;
+	t_nodo_lista_procesos* nodoAux;
+	indice = encontrarPosicionEnListaProcesos(pid);
+	pthread_mutex_lock(&mutexProcesos);
+	nodoAux = list_get(listaProcesos, indice);
+	nodoAux->punteroClock = posicionFrameLista;
+	list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
+	pthread_mutex_unlock(&mutexProcesos);
+
+}
+
 void reservarFrames(uint32_t pid, int cantPaginas) {
 	int i = 0;
 	int contador = 0;
@@ -118,6 +133,9 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 			if (nodoAux->pid == 0) {
 				contador++;
 				contadorFrames--;
+				if(contador == 1){
+					inicializarPuntero(pid, i);
+				}
 			}
 		}
 		pthread_mutex_unlock(&mutexFrames);
@@ -129,6 +147,9 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 			if (nodoAux->pid == 0) {
 				contador++;
 				contadorFrames--;
+				if(contador == 1){
+					inicializarPuntero(pid,i);
+				}
 			}
 		}
 		pthread_mutex_unlock(&mutexFrames);
@@ -156,12 +177,15 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		return;
 	}
 
+	reservarFrames(idPrograma, paginasRequeridas);
+
 	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos unNodo;
 	unNodo.pid = idPrograma;
 	unNodo.cantPaginas = paginasRequeridas;
 	//unNodo.framesAsignados = 0;
 	unNodo.lista_paginas = list_create();
+	//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
 		t_nodo_lista_paginas unaPagina;
@@ -440,6 +464,11 @@ void limpiarEntradasTLB(uint32_t pid) {
 	pthread_mutex_unlock(&mutexTLB);
 
 }
+
+/*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
+
+
+}*/
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
