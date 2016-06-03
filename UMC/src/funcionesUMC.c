@@ -43,13 +43,12 @@
 
  }*/
 
-void cambiarRetardo(int nuevoRetardo){
+void cambiarRetardo(int nuevoRetardo) {
 	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
 	pthread_mutex_unlock(&mutexRetardo);
 
 }
-
 
 void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
@@ -92,6 +91,20 @@ void liberarFrames(uint32_t pid) {
 	}
 	pthread_mutex_unlock(&mutexFrames);
 }
+int cantidadFramesDisponibles() {
+	int i = 0;
+	int contador = 0;
+	t_nodo_lista_frames nodoAux;
+	pthread_mutex_lock(&mutexFrames);
+	while (i < list_size(listaFrames)) {
+		nodoAux = list_get(listaFrames, i);
+		if (nodoAux.pid == 0) {
+			contador++;
+		}
+	}
+	pthread_mutex_unlock(&mutexFrames);
+	return contador;
+}
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
@@ -106,12 +119,15 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
 	//enviarPaginas(enviar pagina x pagina)
+	if (cantidadFramesDisponibles >= framesPorProceso) {
+
+	}
 
 	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos unNodo;
 	unNodo.pid = idPrograma;
 	unNodo.cantPaginas = paginasRequeridas;
-	unNodo.framesAsignados = 0;
+	//unNodo.framesAsignados = 0;
 	unNodo.lista_paginas = list_create();
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
@@ -231,10 +247,23 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	return (int) frame;
 }
 
-void flushTLB(){
+void flushTLB() {
 	pthread_mutex_lock(&mutexTLB);
 	list_clean_and_destroy_elements(TLB, (void *) entradaTLBdestroy);
 	pthread_mutex_unlock(&mutexTLB);
+}
+
+void flushMemory() {
+	int i;
+	t_nodo_lista_frames * nodo;
+	pthread_mutex_lock(&mutexFrames);
+	for (i = 0; i < list_size(listaFrames); i++) {
+		nodo = list_get(listaFrames, i);
+		nodo->bitModificado = 1;
+		list_replace_and_destroy_element(listaFrames, i, nodo,
+				(void*) destruirFrame);
+	}
+	pthread_mutex_unlock(&mutexFrames);
 }
 
 void actualizarBitReferencia(uint32_t frame) {
@@ -371,14 +400,13 @@ void limpiarEntradasTLB(uint32_t pid) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace_and_destroy_element(TLB, i, nodoAux, (void*) entradaTLBdestroy);
+			list_replace_and_destroy_element(TLB, i, nodoAux,
+					(void*) entradaTLBdestroy);
 		}
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
 }
-
-
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
