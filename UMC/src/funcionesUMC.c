@@ -421,7 +421,7 @@ void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	actualizarBitReferencia(frame);
 	actualizarBitModificado(frame);
-	//free buffer?
+	free(buffer);
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
@@ -457,8 +457,8 @@ void limpiarEntradasTLB(uint32_t pid) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace_and_destroy_element(TLB, i, nodoAux,
-					(void*) entradaTLBdestroy);
+			//list_replace_and_destroy_element(TLB, i, nodoAux,
+					//(void*) entradaTLBdestroy);
 		}
 	}
 	pthread_mutex_unlock(&mutexTLB);
@@ -579,8 +579,7 @@ void procesarSolicitudOperacionCPU(int conexion) {
 		uint32_t nroPagina;
 		uint32_t offset;
 		uint32_t size;
-		int lenBufferPedido;
-		char * bufferPedido;
+		void * bufferPedido;
 		uint32_t idNuevoProcesoActivo;
 		//char * nroCpu = string_itoa(conexion); para poner nro de cpu
 
@@ -590,24 +589,23 @@ void procesarSolicitudOperacionCPU(int conexion) {
 			log_info(logger, "Se desconectó CPU nro", texto);//como carajo pongo el nro?
 			pthread_exit(NULL);
 
-		case 8: //solicitarBytes //ver el tema de la constante, no me las reconoce
+		case solicitarBytes:
 			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size); //deserializacion
 			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso); //operacion
 			break;
 
-		case 9: //almacenarBytes
-			recibirPedidoAlmacenarBytes(conexion, &nroPagina, &offset, &size,
-					&lenBufferPedido);
+		case almacenarBytes:
+			recibirPedidoAlmacenarBytes(conexion, &nroPagina, &offset, &size);
 
-			bufferPedido = malloc(lenBufferPedido);
-			recibirBufferPedidoAlmacenarBytes(conexion, lenBufferPedido,
+			bufferPedido = malloc(size); //donde hago el free de esto?
+			recibirBufferPedidoAlmacenarBytes(conexion, size,
 					bufferPedido);
+			almacenarBytesEnUnaPag(nroPagina, offset, size, bufferPedido, idNuevoProcesoActivo);
 
-			free(bufferPedido);
+			//free(bufferPedido);
 
 			break;
-		case 14: //cambiarProcesoActivo
-
+		case cambiarProcesoActivo:
 			recibirPID(conexion, &idNuevoProcesoActivo);
 			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
 			break;
