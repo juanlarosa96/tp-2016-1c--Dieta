@@ -59,8 +59,8 @@ void recibirResultadoDeEjecucionAnsisop(int socketNucleo,char * mensaje, int lar
 int recibirLargoResultadoDeEjecucionAnsisop(int socketNucleo);
 void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int largoMensaje);
 //header: 9
-void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size, int largoBuffer, char * buffer);
-void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size, int * largoBuffer);
+void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size, void* buffer);
+void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size);
 void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * buffer);
 void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto);
 void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto);
