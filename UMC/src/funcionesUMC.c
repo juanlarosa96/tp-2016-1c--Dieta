@@ -87,7 +87,7 @@ void liberarFrames(uint32_t pid) {
 		nodoAux = list_get(listaFrames, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace(listaFrames, i, &nodoAux);
+			//list_replace(listaFrames, i, &nodoAux);
 		}
 		i++;
 	}
@@ -115,7 +115,7 @@ void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
 	pthread_mutex_lock(&mutexProcesos);
 	nodoAux = list_get(listaProcesos, indice);
 	nodoAux->punteroClock = posicionFrameLista;
-	list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
+	//list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
 
 }
@@ -160,7 +160,7 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
 
-	int largoPrograma = strlen(codigoPrograma) + 1;
+	int largoPrograma = strlen(codigoPrograma) + 1; //?
 	int paginasCodigo = largoPrograma / size_frames
 			+ largoPrograma % size_frames; //not sure
 
@@ -180,18 +180,18 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	reservarFrames(idPrograma, paginasRequeridas);
 
 	//aca tengo que crear un puntero o una estructura?
-	t_nodo_lista_procesos unNodo;
-	unNodo.pid = idPrograma;
-	unNodo.cantPaginas = paginasRequeridas;
+	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
+	unNodo->pid = idPrograma;
+	unNodo->cantPaginas = paginasRequeridas;
 	//unNodo.framesAsignados = 0;
-	unNodo.lista_paginas = list_create();
+	unNodo->lista_paginas = list_create();
 	//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
-		t_nodo_lista_paginas unaPagina;
-		unaPagina.nro_pagina = i;
-		unaPagina.status = 'S';
-		list_add(unNodo.lista_paginas, &unaPagina); //por referencia?
+		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
+		unaPagina->nro_pagina = i;
+		unaPagina->status = 'S';
+		list_add(unNodo->lista_paginas, unaPagina);
 	}
 
 	pthread_mutex_lock(&mutexProcesos);
@@ -541,7 +541,8 @@ void procesarOperacionesNucleo(int socketNucleo) {
 
 		int header = recibirHeader(socketNucleo);
 		uint32_t pid;
-		int largoPrograma;
+		int largo_codigo;
+		uint32_t paginas_requeridas;
 		uint32_t paginas_codigo;
 		char * programa;
 
@@ -551,15 +552,21 @@ void procesarOperacionesNucleo(int socketNucleo) {
 			log_info(logger, "Se desconectó Núcleo", texto);
 			pthread_exit(NULL);
 
-		case 11: //Inicializacion Programa
+		case iniciarPrograma:
 
-			recibirInicializacionPrograma(socketNucleo, &pid, &largoPrograma,
-					programa, &paginas_codigo);
-			//blabla bla recibir programa
+			recibirInicializacionPrograma(socketNucleo,&pid,&paginas_requeridas,&largo_codigo);
+			programa = malloc(largo_codigo);
+			recibirCodigoInicializarPrograma(socketNucleo,largo_codigo,programa);
+			inicializarPrograma(pid,paginas_requeridas,programa);
+
+
+			//inicializarPrograma(pid, pagi)
 			//recibir lo demas
 
 			break;
+		case finalizacionPrograma:
 
+			break;
 		default:
 			log_error(logger, "Hubo un problema de conexión con Núcleo", texto);
 			pthread_exit(NULL);
