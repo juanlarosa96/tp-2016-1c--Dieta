@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <sockets.h>
 #include <protocolo.h>
+#include <unistd.h>
 #include "structsUMC.h"
 #include "variablesGlobalesUMC.h"
 
