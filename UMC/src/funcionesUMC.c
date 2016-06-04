@@ -43,6 +43,7 @@
 
  }*/
 
+
 void cambiarRetardo(int nuevoRetardo) {
 	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
@@ -115,7 +116,7 @@ void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
 	pthread_mutex_lock(&mutexProcesos);
 	nodoAux = list_get(listaProcesos, indice);
 	nodoAux->punteroClock = posicionFrameLista;
-	//list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
+//list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
 
 }
@@ -169,7 +170,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	pthread_mutex_unlock(&mutexSwap);
 	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
-	//enviarPaginas(enviar pagina x pagina)
+//enviarPaginas(enviar pagina x pagina)
 	int framesDisponibles = cantidadFramesDisponibles();
 
 	if (framesDisponibles < framesPorProceso
@@ -180,13 +181,13 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 	reservarFrames(idPrograma, paginasRequeridas);
 
-	//aca tengo que crear un puntero o una estructura?
+//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
 	unNodo->pid = idPrograma;
 	unNodo->cantPaginas = paginasRequeridas;
-	//unNodo.framesAsignados = 0;
+//unNodo.framesAsignados = 0;
 	unNodo->lista_paginas = list_create();
-	//unNodo.punteroClock = -1;
+//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
 		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
@@ -199,7 +200,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
-	//enviar rta a nucleo si se pudo inicializar o no
+//enviar rta a nucleo si se pudo inicializar o no
 
 }
 
@@ -376,7 +377,7 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
-	if (nroFrame = -1) {
+	if (nroFrame == -1) {
 		//buscarEnSwap
 		//poner el puntero donde la tengo en memprincipal
 	}
@@ -432,7 +433,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		void * buffer, uint32_t pid) {
 
 	int nroFrame;
-	//chequear si hay stack overflow
+//chequear si hay stack overflow
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
@@ -483,7 +484,7 @@ int buscarPuntero(uint32_t pid) {
 	pthread_mutex_unlock(&mutexProcesos);
 	puntero = nodoAux->punteroClock;
 
-	//Primero busco bit de referencia en 0
+//Primero busco bit de referencia en 0
 
 	while (puntero < list_size(listaFrames)) {
 		nodoFrame = list_get(listaFrames, puntero);
@@ -519,10 +520,10 @@ void finalizarPrograma(uint32_t idPrograma) {
 		limpiarEntradasTLB(idPrograma);
 	}
 
-	//TERMINAR FUNCION!!!
+//TERMINAR FUNCION!!!
 
-	//mutex para swap
-	//InformarSwap() swap borrame tooodo
+//mutex para swap
+//InformarSwap() swap borrame tooodo
 	log_info(logger, "Se finalizó programa", texto);
 
 }
@@ -534,6 +535,50 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 	}
 
 	(*idProcesoActivo) = idNuevoPrograma;
+}
+
+int clean_stdin() {
+	while (getchar() != '\n')
+		;
+	return 1;
+}
+
+void consolaUMC(void) {
+	char * comando = malloc(30);
+	char c;
+	int retardo;
+
+	while (1) {
+		printf("Ingrese comando:\n");
+		scanf("%s", comando);
+		if (strncmp(comando, "flush", 5) == 0) {
+			printf("Sobre que quiere hacer flush?\n-tlb\n-memory");
+			scanf("%s", comando);
+
+			if (strncmp(comando, "tlb", 3) == 0) {
+				printf("Se ejecutará: flush TLB\n");
+				flushTLB();
+			} else if (strncmp(comando, "memory", 6) == 0) {
+				printf("Se ejecutará: Flush Memoria Principal\n");
+				flushMemory();
+			}
+		} else if (strncmp(comando, "dump", 4) == 0) {
+			printf("Se ejecutará: Dump\n");
+			//dump()
+		} else if (strncmp(comando, "retardo", 7) == 0) {
+			do {
+				printf("\n Ingrese nuevo retardo: ");
+
+			} while ((scanf("%d%c", &retardo, &c) != 2 || c != '\n')
+					&& clean_stdin());
+
+			printf("se ejecutará: Cambio de retardo\n");
+			cambiarRetardo(retardo);
+		} else {
+			printf("Comando no válido.\n");
+		}
+	}
+
 }
 
 void procesarOperacionesNucleo(int socketNucleo) {
@@ -591,7 +636,7 @@ void procesarSolicitudOperacionCPU(int conexion) {
 		switch (header) {
 		case 0:
 
-			log_info(logger, "Se desconectó CPU nro", texto);//como carajo pongo el nro?
+			log_info(logger, "Se desconectó CPU nro", texto); //como carajo pongo el nro?
 			pthread_exit(NULL);
 
 		case solicitarBytes:
