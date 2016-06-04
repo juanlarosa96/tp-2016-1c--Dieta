@@ -1,7 +1,6 @@
 #include "funciones.h"
 #include "commons/log.h"
-#include <sockets.h>
-#include <protocolo.h>
+
 
 int main(int argc, char **argv) {
 
@@ -36,18 +35,6 @@ int main(int argc, char **argv) {
 			log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
-
-	/*
-	 struct sockaddr_in direccionNucleo;
-
-	 direccionNucleo.sin_family = AF_INET;
-	 direccionNucleo.sin_addr.s_addr = inet_addr(IP_NUCLEO);
-	 direccionNucleo.sin_port = htons(PUERTO_NUCLEO);
-
-	 int socketNucleo = socket(AF_INET, SOCK_STREAM, 0);
-
-	 if (connect(socketNucleo, (void*) &direccionNucleo, sizeof(direccionNucleo)) != 0) {
-	 */
 
 	int socketNucleo;
 	crearSocket(&socketNucleo);
@@ -84,11 +71,15 @@ int main(int argc, char **argv) {
 
 	    programaAnsisop[largoPrograma+1] = '\0';
 
-	//send(socketNucleo, ruta, 30, 0);
-
-
 	enviarProgramaAnsisop(socketNucleo,programaAnsisop,largoPrograma);
 	log_info(logger, "Envió un mensaje a núcleo \n", texto);
+
+	pthread_t nuevoHilo;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&nuevoHilo, &attr, (void *) &interpreteComandos, (void *) &socketNucleo);
+	pthread_attr_destroy(&attr);
 
 	while(1){
 		int header = recibirHeader(socketNucleo);
