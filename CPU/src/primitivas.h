@@ -21,6 +21,7 @@
 #include <commons/config.h>
 #include "variables_globales.h"
 #include <protocolo.h>
+#include <pila.h>
 
 t_puntero definirVariable(t_nombre_variable variable);
 t_puntero obtenerPosicionVariable(t_nombre_variable variable);
