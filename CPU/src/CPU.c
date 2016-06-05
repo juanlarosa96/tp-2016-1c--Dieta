@@ -20,7 +20,7 @@ AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
 
 AnSISOP_kernel kernel_functions = { };
 
-int tamanioPagina;
+
 
 int main(int argc, char *argv[]) {
 	//Recibe el archivo de config por parametro
