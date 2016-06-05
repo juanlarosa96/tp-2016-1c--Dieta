@@ -96,7 +96,7 @@ void recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *pagin
 	recibirTodo(socketUMC, largoCodigo, sizeof(int));
 }
 
-void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, uint32_t *codigo){
+void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo){
 	recibirTodo(socketUMC, codigo, largoCodigo);
 }
 
