@@ -7,43 +7,6 @@
 
 #include "funcionesUMC.h"
 
-#define TAMBUFFER 100
-
-/*char *borrarEspaciosInnecesarios(char *string){
- char **cadenaSinEspacios = malloc(TAMBUFFER);
- *cadenaSinEspacios = string;
- string_trim(cadenaSinEspacios);
-
- return (*cadenaSinEspacios);
- }*/
-
-/*void consolaUMC(void) {
- char * buffer;
- size_t bufferSize = TAMBUFFER;
- buffer = malloc(bufferSize * sizeof(char));
-
-
- if(buffer == NULL){
- log_error(logger, "No se pudo reservar memoria para recibir comandos por consola de UMC");
- pthread_exit(NULL);
- }
-
-
- while(1){
- printf("Ingresar comando:\n");
- getline(&buffer,&bufferSize,stdin);
- //  printf("%zu characters were read.\n",characters);
-
- //Validaciones ?
- string_trim(*buffer); //borro espacios innecesarios del buffer //ver funcion definida mas arriba
-
- //terminar funcion
-
- }
-
- }*/
-
-
 void cambiarRetardo(int nuevoRetardo) {
 	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
@@ -581,7 +544,9 @@ void consolaUMC(void) {
 
 }
 
-void procesarOperacionesNucleo(int socketNucleo) {
+void procesarOperacionesNucleo(int * conexion) {
+	int socketNucleo = *conexion;
+	free(conexion);
 
 	while (1) {
 
@@ -619,9 +584,11 @@ void procesarOperacionesNucleo(int socketNucleo) {
 	}
 }
 
-void procesarSolicitudOperacionCPU(int conexion) {
+void procesarSolicitudOperacionCPU(int * socketCPU) {
 
 	uint32_t idCambioProceso;
+	int conexion = *socketCPU;
+	free(socketCPU);
 
 	while (1) {
 		int header = recibirHeader(conexion);
