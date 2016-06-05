@@ -176,6 +176,9 @@ int main(int argc, char **argv) {
 							if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
 
 								printf("No se pudo reservar espacio para el programa");
+								free(nuevoPcb.indice_etiquetas.etiquetas);
+								free(nuevoPcb.indice_codigo.instrucciones);
+								list_destroy(nuevoPcb.indice_stack);
 
 							} else {
 								t_pcbConConsola pcbListo;
