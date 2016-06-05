@@ -7,42 +7,6 @@
 
 #include "funcionesUMC.h"
 
-#define TAMBUFFER 100
-
-/*char *borrarEspaciosInnecesarios(char *string){
- char **cadenaSinEspacios = malloc(TAMBUFFER);
- *cadenaSinEspacios = string;
- string_trim(cadenaSinEspacios);
-
- return (*cadenaSinEspacios);
- }*/
-
-/*void consolaUMC(void) {
- char * buffer;
- size_t bufferSize = TAMBUFFER;
- buffer = malloc(bufferSize * sizeof(char));
-
-
- if(buffer == NULL){
- log_error(logger, "No se pudo reservar memoria para recibir comandos por consola de UMC");
- pthread_exit(NULL);
- }
-
-
- while(1){
- printf("Ingresar comando:\n");
- getline(&buffer,&bufferSize,stdin);
- //  printf("%zu characters were read.\n",characters);
-
- //Validaciones ?
- string_trim(*buffer); //borro espacios innecesarios del buffer //ver funcion definida mas arriba
-
- //terminar funcion
-
- }
-
- }*/
-
 void cambiarRetardo(int nuevoRetardo) {
 	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
@@ -87,7 +51,7 @@ void liberarFrames(uint32_t pid) {
 		nodoAux = list_get(listaFrames, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace(listaFrames, i, &nodoAux);
+			//list_replace(listaFrames, i, &nodoAux);
 		}
 		i++;
 	}
@@ -115,7 +79,7 @@ void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
 	pthread_mutex_lock(&mutexProcesos);
 	nodoAux = list_get(listaProcesos, indice);
 	nodoAux->punteroClock = posicionFrameLista;
-	list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
+//list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
 
 }
@@ -133,7 +97,7 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 			if (nodoAux->pid == 0) {
 				contador++;
 				contadorFrames--;
-				if(contador == 1){
+				if (contador == 1) {
 					inicializarPuntero(pid, i);
 				}
 			}
@@ -147,8 +111,8 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 			if (nodoAux->pid == 0) {
 				contador++;
 				contadorFrames--;
-				if(contador == 1){
-					inicializarPuntero(pid,i);
+				if (contador == 1) {
+					inicializarPuntero(pid, i);
 				}
 			}
 		}
@@ -160,7 +124,7 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma) {
 
-	int largoPrograma = strlen(codigoPrograma) + 1;
+	int largoPrograma = strlen(codigoPrograma) + 1; //?
 	int paginasCodigo = largoPrograma / size_frames
 			+ largoPrograma % size_frames; //not sure
 
@@ -169,34 +133,37 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	pthread_mutex_unlock(&mutexSwap);
 	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
-	//enviarPaginas(enviar pagina x pagina)
+//enviarPaginas(enviar pagina x pagina)
 	int framesDisponibles = cantidadFramesDisponibles();
 
-	if (framesDisponibles < framesPorProceso && framesDisponibles < paginasRequeridas) {
+	if (framesDisponibles < framesPorProceso
+			&& framesDisponibles < paginasRequeridas) {
 		//avisar que no se pudo inicializarPrograma a nucleo
 		return;
 	}
 
 	reservarFrames(idPrograma, paginasRequeridas);
 
-	//aca tengo que crear un puntero o una estructura?
-	t_nodo_lista_procesos unNodo;
-	unNodo.pid = idPrograma;
-	unNodo.cantPaginas = paginasRequeridas;
-	//unNodo.framesAsignados = 0;
-	unNodo.lista_paginas = list_create();
-	//unNodo.punteroClock = -1;
+//aca tengo que crear un puntero o una estructura?
+	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
+	unNodo->pid = idPrograma;
+	unNodo->cantPaginas = paginasRequeridas;
+//unNodo.framesAsignados = 0;
+	unNodo->lista_paginas = list_create();
+//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
-		t_nodo_lista_paginas unaPagina;
-		unaPagina.nro_pagina = i;
-		unaPagina.status = 'S';
-		list_add(unNodo.lista_paginas, &unaPagina); //por referencia?
+		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
+		unaPagina->nro_pagina = i;
+		unaPagina->status = 'S';
+		list_add(unNodo->lista_paginas, unaPagina);
 	}
 
 	pthread_mutex_lock(&mutexProcesos);
 	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
+
+//enviar rta a nucleo si se pudo inicializar o no
 
 }
 
@@ -257,10 +224,11 @@ void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lr
 	entradaAuxiliar->nroPagina = paginaNueva;
 	entradaAuxiliar->pid = pid;
 	entradaAuxiliar->nroFrame = frame;
+	pthread_mutex_lock(&mutexContadorMemoria);
 	entradaAuxiliar->ultAcceso = accesoMemoria; //OJO VARIABLE GLOBAL
-
-	list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar,
-			(void *) entradaTLBdestroy);
+	pthread_mutex_unlock(&mutexContadorMemoria);
+	/*list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar,
+	 (void *) entradaTLBdestroy);*/
 
 }
 
@@ -317,8 +285,8 @@ void flushMemory() {
 	for (i = 0; i < list_size(listaFrames); i++) {
 		nodo = list_get(listaFrames, i);
 		nodo->bitModificado = 1;
-		list_replace_and_destroy_element(listaFrames, i, nodo,
-				(void*) destruirFrame);
+		/*list_replace_and_destroy_element(listaFrames, i, nodo,
+		 (void*) destruirFrame);*/
 	}
 	pthread_mutex_unlock(&mutexFrames);
 }
@@ -332,8 +300,8 @@ void actualizarBitReferencia(uint32_t frame) {
 		nodoAuxiliar = list_get(listaFrames, i);
 		if (nodoAuxiliar->nroFrame == frame) {
 			nodoAuxiliar->bitReferencia = 1;
-			list_replace_and_destroy_element(listaFrames, i, nodoAuxiliar,
-					(void*) destruirFrame); //no estoy segura del destoy
+			/*list_replace_and_destroy_element(listaFrames, i, nodoAuxiliar,
+			 (void*) destruirFrame);*/
 			acierto = 1;
 		}
 		i++;
@@ -372,7 +340,7 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
-	if (nroFrame = -1) {
+	if (nroFrame == -1) {
 		//buscarEnSwap
 		//poner el puntero donde la tengo en memprincipal
 	}
@@ -421,14 +389,14 @@ void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	actualizarBitReferencia(frame);
 	actualizarBitModificado(frame);
-	//free buffer?
+	free(buffer);
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		void * buffer, uint32_t pid) {
 
 	int nroFrame;
-	//chequear si hay stack overflow
+//chequear si hay stack overflow
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
@@ -439,7 +407,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	} //TLB Miss
 
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
-	if (nroFrame = -1) {
+	if (nroFrame == -1) {
 		//buscarEnSwap
 	}
 
@@ -457,15 +425,15 @@ void limpiarEntradasTLB(uint32_t pid) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
-			list_replace_and_destroy_element(TLB, i, nodoAux,
-					(void*) entradaTLBdestroy);
+			//list_replace_and_destroy_element(TLB, i, nodoAux,
+			//(void*) entradaTLBdestroy);
 		}
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
 }
 
-int buscarPuntero(uint32_t pid){
+int buscarPuntero(uint32_t pid) {
 	int indice;
 	int puntero;
 	int victima;
@@ -474,18 +442,17 @@ int buscarPuntero(uint32_t pid){
 	int i;
 	indice = encontrarPosicionEnListaProcesos(pid);
 
-
 	pthread_mutex_lock(&mutexProcesos);
 	nodoAux = list_get(listaProcesos, indice);
 	pthread_mutex_unlock(&mutexProcesos);
 	puntero = nodoAux->punteroClock;
 
-	//Primero busco bit de referencia en 0
+//Primero busco bit de referencia en 0
 
-	while(puntero < list_size(listaFrames)){
+	while (puntero < list_size(listaFrames)) {
 		nodoFrame = list_get(listaFrames, puntero);
-		if(nodoFrame->pid == pid){
-			if(nodoFrame->bitReferencia == 0){
+		if (nodoFrame->pid == pid) {
+			if (nodoFrame->bitReferencia == 0) {
 				victima = puntero;
 				//corro el puntero
 				return victima; //encontre la victima
@@ -494,16 +461,13 @@ int buscarPuntero(uint32_t pid){
 		}
 	}
 
-
-
-
 }
 
 /*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
-	//Busco bit de referencia en 0
-	buscarPuntero(pid);
+ //Busco bit de referencia en 0
+ buscarPuntero(pid);
 
-}*/
+ }*/
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
@@ -519,10 +483,11 @@ void finalizarPrograma(uint32_t idPrograma) {
 		limpiarEntradasTLB(idPrograma);
 	}
 
-	//TERMINAR FUNCION!!!
+//TERMINAR FUNCION!!!
 
-	//mutex para swap
-	//InformarSwap() swap borrame tooodo
+//mutex para swap
+//InformarSwap() swap borrame tooodo
+	log_info(logger, "Se finalizó programa", texto);
 
 }
 
@@ -535,14 +500,60 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 	(*idProcesoActivo) = idNuevoPrograma;
 }
 
-void procesarOperacionesNucleo(int socketNucleo) {
+int clean_stdin() {
+	while (getchar() != '\n')
+		;
+	return 1;
+}
+
+void consolaUMC(void) {
+	char * comando = malloc(30);
+	char c;
+	int retardo;
+
+	while (1) {
+		printf("Ingrese comando:\n");
+		scanf("%s", comando);
+		if (strncmp(comando, "flush", 5) == 0) {
+			printf("Sobre que quiere hacer flush?\n-tlb\n-memory");
+			scanf("%s", comando);
+
+			if (strncmp(comando, "tlb", 3) == 0) {
+				printf("Se ejecutará: flush TLB\n");
+				flushTLB();
+			} else if (strncmp(comando, "memory", 6) == 0) {
+				printf("Se ejecutará: Flush Memoria Principal\n");
+				flushMemory();
+			}
+		} else if (strncmp(comando, "dump", 4) == 0) {
+			printf("Se ejecutará: Dump\n");
+			//dump()
+		} else if (strncmp(comando, "retardo", 7) == 0) {
+			do {
+				printf("\n Ingrese nuevo retardo: ");
+
+			} while ((scanf("%d%c", &retardo, &c) != 2 || c != '\n')
+					&& clean_stdin());
+
+			printf("se ejecutará: Cambio de retardo\n");
+			cambiarRetardo(retardo);
+		} else {
+			printf("Comando no válido.\n");
+		}
+	}
+
+}
+
+void procesarOperacionesNucleo(int * conexion) {
+	int socketNucleo = *conexion;
+	free(conexion);
 
 	while (1) {
 
 		int header = recibirHeader(socketNucleo);
 		uint32_t pid;
-		int largoPrograma;
-		uint32_t paginas_codigo;
+		int largo_codigo;
+		uint32_t paginas_requeridas;
 		char * programa;
 
 		switch (header) {
@@ -551,15 +562,19 @@ void procesarOperacionesNucleo(int socketNucleo) {
 			log_info(logger, "Se desconectó Núcleo", texto);
 			pthread_exit(NULL);
 
-		case 11: //Inicializacion Programa
+		case iniciarPrograma:
 
-			recibirInicializacionPrograma(socketNucleo, &pid, &largoPrograma,
-					programa, &paginas_codigo);
-			//blabla bla recibir programa
-			//recibir lo demas
-
+			recibirInicializacionPrograma(socketNucleo, &pid,
+					&paginas_requeridas, &largo_codigo);
+			programa = malloc(largo_codigo);
+			recibirCodigoInicializarPrograma(socketNucleo, largo_codigo,
+					programa);
+			inicializarPrograma(pid, paginas_requeridas, programa);
 			break;
-
+		case finalizacionPrograma:
+			recibirPID(socketNucleo, &pid);
+			finalizarPrograma(pid);
+			break;
 		default:
 			log_error(logger, "Hubo un problema de conexión con Núcleo", texto);
 			pthread_exit(NULL);
@@ -569,9 +584,11 @@ void procesarOperacionesNucleo(int socketNucleo) {
 	}
 }
 
-void procesarSolicitudOperacionCPU(int conexion) {
+void procesarSolicitudOperacionCPU(int * socketCPU) {
 
 	uint32_t idCambioProceso;
+	int conexion = *socketCPU;
+	free(socketCPU);
 
 	while (1) {
 		int header = recibirHeader(conexion);
@@ -579,35 +596,30 @@ void procesarSolicitudOperacionCPU(int conexion) {
 		uint32_t nroPagina;
 		uint32_t offset;
 		uint32_t size;
-		int lenBufferPedido;
-		char * bufferPedido;
+		void * bufferPedido;
 		uint32_t idNuevoProcesoActivo;
 		//char * nroCpu = string_itoa(conexion); para poner nro de cpu
 
 		switch (header) {
 		case 0:
 
-			log_info(logger, "Se desconectó CPU nro", texto);//como carajo pongo el nro?
+			log_info(logger, "Se desconectó CPU nro", texto); //como carajo pongo el nro?
 			pthread_exit(NULL);
 
-		case 8: //solicitarBytes //ver el tema de la constante, no me las reconoce
+		case solicitarBytes:
 			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size); //deserializacion
 			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso); //operacion
 			break;
 
-		case 9: //almacenarBytes
-			recibirPedidoAlmacenarBytes(conexion, &nroPagina, &offset, &size,
-					&lenBufferPedido);
+		case almacenarBytes:
+			recibirPedidoAlmacenarBytes(conexion, &nroPagina, &offset, &size);
 
-			bufferPedido = malloc(lenBufferPedido);
-			recibirBufferPedidoAlmacenarBytes(conexion, lenBufferPedido,
-					bufferPedido);
-
-			free(bufferPedido);
-
+			bufferPedido = malloc(size);
+			recibirBufferPedidoAlmacenarBytes(conexion, size, bufferPedido);
+			almacenarBytesEnUnaPag(nroPagina, offset, size, bufferPedido,
+					idNuevoProcesoActivo);
 			break;
-		case 14: //cambiarProcesoActivo
-
+		case cambiarProcesoActivo:
 			recibirPID(conexion, &idNuevoProcesoActivo);
 			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
 			break;

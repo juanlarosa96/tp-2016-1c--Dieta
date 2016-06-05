@@ -72,31 +72,32 @@ int recibirRespuestaCPU(int socketCpu, int * respuesta) {
 }
 
 void enviarInicializacionPrograma(int socketUMC, uint32_t pid,
-		int largoPrograma, char * programa, uint32_t paginas_codigo) {
+		int largoCodigo, char * programa, uint32_t paginasRequeridas) {
 	int header = iniciarPrograma;
 	send(socketUMC, &header, sizeof(int), 0);
-	void * buffer = malloc(sizeof(uint32_t) * 2 + sizeof(int) + largoPrograma);
+	void * buffer = malloc(sizeof(uint32_t) * 2 + sizeof(int) + largoCodigo);
 	int cursorMemoria = 0;
 
 	memcpy(buffer, &pid, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(buffer + cursorMemoria, &paginas_codigo, sizeof(uint32_t));
+	memcpy(buffer + cursorMemoria, &paginasRequeridas, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(buffer + cursorMemoria, &largoPrograma, sizeof(int));
+	memcpy(buffer + cursorMemoria, &largoCodigo, sizeof(int));
 	cursorMemoria += sizeof(int);
-	memcpy(buffer + cursorMemoria, programa, largoPrograma);
-	cursorMemoria += largoPrograma;
+	memcpy(buffer + cursorMemoria, programa, largoCodigo);
+	cursorMemoria += largoCodigo;
 	send(socketUMC, buffer, cursorMemoria, 0);
 	free(buffer);
 }
 
-void recibirInicializacionPrograma(int socketUMC, uint32_t *pid,
-		int* largoPrograma, char * programa, uint32_t *paginas_codigo) {
+void recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *paginasRequeridas, int *largoCodigo) {
 	recibirTodo(socketUMC, pid, sizeof(uint32_t));
-	recibirTodo(socketUMC, paginas_codigo, sizeof(uint32_t));
-	recibirTodo(socketUMC, largoPrograma, sizeof(int));
-	programa = malloc(*largoPrograma);
-	recibirTodo(socketUMC, programa, *largoPrograma);
+	recibirTodo(socketUMC, paginasRequeridas, sizeof(uint32_t));
+	recibirTodo(socketUMC, largoCodigo, sizeof(int));
+}
+
+void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo){
+	recibirTodo(socketUMC, codigo, largoCodigo);
 }
 
 int recibirRespuestaInicializacion(int socketUMC) {
@@ -133,14 +134,14 @@ void recibirSolicitudDeBytes(int socketUMC, uint32_t *nroPagina,
 }
 
 void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina,
-		uint32_t offset, uint32_t size, int largoBuffer, char * bufferA) {
+		uint32_t offset, uint32_t size, void * bufferA) {
 
 	int header = almacenarBytes;
 	send(socketUMC, &header, sizeof(int), 0);
 
 	void * bufferPedido = malloc(
 			sizeof(int) + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint32_t)
-					+ sizeof(int) + largoBuffer); //largoBuffer con el barra cero? YES, que cpu lo ponga
+					+ size); //largoBuffer con el barra cero? YES, que cpu lo ponga
 	int cursorMemoria = 0;
 
 	memcpy(bufferPedido, &nroPagina, sizeof(uint32_t));
@@ -149,21 +150,18 @@ void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina,
 	cursorMemoria += sizeof(uint32_t);
 	memcpy(bufferPedido, &size, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(bufferPedido, &largoBuffer, sizeof(int));
-	cursorMemoria += sizeof(int);
-	memcpy(bufferPedido, bufferA, largoBuffer);
-	cursorMemoria += largoBuffer;
+	memcpy(bufferPedido, bufferA, size);
+	cursorMemoria += size;
 	send(socketUMC, bufferPedido, cursorMemoria, 0);
 
 	free(bufferPedido);
 }
 
 void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina,
-		uint32_t *offset, uint32_t *size, int * largoBuffer) {
+		uint32_t *offset, uint32_t *size) {
 	recibirTodo(socketUMC, nroPagina, sizeof(uint32_t));
 	recibirTodo(socketUMC, offset, sizeof(uint32_t));
 	recibirTodo(socketUMC, size, sizeof(uint32_t));
-	recibirTodo(socketUMC, largoBuffer, sizeof(int));
 }
 
 void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido,

@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <sockets.h>
 #include <protocolo.h>
+#include <unistd.h>
 #include "structsUMC.h"
 #include "variablesGlobalesUMC.h"
 
@@ -31,8 +32,8 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo);
 
 /*----Hilos hijos del main de UMC----*/
 
-void procesarSolicitudOperacionCPU(int);
-void procesarOperacionesNucleo(int);
+void procesarSolicitudOperacionCPU(int*);
+void procesarOperacionesNucleo(int*);
 void consolaUMC(void);
 
 
