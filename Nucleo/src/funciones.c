@@ -21,8 +21,8 @@ void manejarCPU(void * socket) {
 	 */
 
 	int socketCpu;
-	memcpy(&socketCpu, socket, sizeof(int));
-	pthread_mutex_unlock(&mutexVariableNuevaConexion);
+	socketCpu = *socket;
+	free (socket);
 
 	int desconectado = 0, cambioProceso;
 

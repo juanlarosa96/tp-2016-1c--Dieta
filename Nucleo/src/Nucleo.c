@@ -79,7 +79,6 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexColaListos, NULL);
 	pthread_mutex_init(&mutexColaFinalizados, NULL);
 	pthread_mutex_init(&mutexListaConsolas, NULL);
-	pthread_mutex_init(&mutexVariableNuevaConexion, NULL);
 	pthread_mutex_init(&mutexListaFinalizacionesPendientes, NULL);
 
 	fd_set bolsaDeSockets;
@@ -108,7 +107,6 @@ int main(int argc, char **argv) {
 			if (FD_ISSET(i, &bolsaAuxiliar)) { // we got one!!
 				if (i == listener) {
 					// handle new connections
-					pthread_mutex_lock(&mutexVariableNuevaConexion);
 					//Espera hasta que el hilo haya guardado el valor que se le paso como parametro
 					//antes de sobreEscribir la variable nuevaConexion
 					nuevaConexion = aceptarConexion(servidorNucleo, &direccionCliente);
@@ -138,8 +136,9 @@ int main(int argc, char **argv) {
 						pthread_attr_t attr;
 						pthread_attr_init(&attr);
 						pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-						pthread_create(&nuevoHilo, &attr, (void *) &manejarCPU, (void *) &nuevaConexion); //Creo hilo que maneje el nuevo CPU
+						int * socketConexionParaThread = malloc(sizeof (int));
+						*socketConexionParaThread = nuevaConexion;
+						pthread_create(&nuevoHilo, &attr, (void *) &manejarCPU, (void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
 
 						pthread_attr_destroy(&attr);
 
