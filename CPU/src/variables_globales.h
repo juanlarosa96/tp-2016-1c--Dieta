@@ -11,6 +11,7 @@
 #include <structs.h>
 
 int socketNucleo;
+int tamanioPagina;
 
 t_pcb pcbRecibido;
 
