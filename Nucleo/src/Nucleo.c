@@ -16,6 +16,9 @@ int main(int argc, char **argv) {
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
 	uint32_t PAGINAS_STACK = config_get_int_value(config, "PAGINAS_STACK");
+	cantidadQuantum = config_get_int_value(config,"QUANTUM");
+	retardoQuantum = config_get_int_value(config,"QUANTUM_SLEEP");
+
 	t_queue ** listaColasDispositivos;
 	pthread_mutex_t * listaMutexListaDispositivos;
 	vectorDispositivos = config_get_array_value(config,"IO_ID");

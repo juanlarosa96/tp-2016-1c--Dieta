@@ -69,6 +69,8 @@ char ** vectorDispositivos;
 char ** vectorRetardoDispositivos;
 pthread_mutex_t ** vectorMutexDispositivosIO;
 t_queue ** vectorColasBloqueados;
+int cantidadQuantum;
+int retardoQuantum;
 
 
 t_list *listaConsolas;
