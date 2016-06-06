@@ -83,6 +83,24 @@ void manejarCPU(void * socket) {
 					}
 					break;
 
+				case primitivaImprimir:
+
+					int largoTexto;
+					char *texto;
+					uint32_t pid;
+					recibirValorAImprimir(socketCpu,&pid,&largoTexto,&texto);
+					int listSize = list_size(listaConsolas),i;
+
+					pthread_mutex_lock(mutexListaConsolas);
+					for(i=0;i<listSize,i++;){
+						t_pcbConConsola * elemento = (t_pcbConConsola *) list_get(listaConsolas,i);
+						if(elemento->pcb.pid == pid){
+							enviarResultadoDeEjecucionAnsisop(elemento->socketConsola,texto,largoTexto);
+						}
+					}
+					pthread_mutex_unlock(mutexListaConsolas);
+					break;
+
 				}
 			}
 		}
