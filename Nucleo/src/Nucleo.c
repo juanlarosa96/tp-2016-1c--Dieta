@@ -16,6 +16,13 @@ int main(int argc, char **argv) {
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
 	uint32_t PAGINAS_STACK = config_get_int_value(config, "PAGINAS_STACK");
+	t_queue ** listaColasDispositivos;
+	pthread_mutex_t * listaMutexListaDispositivos;
+	vectorDispositivos = config_get_array_value(config,"IO_ID");
+	vectorRetardoDispositivos = config_get_array_value(config,"IO_SLEEP");
+
+	crearHilosEntradaSalida();
+
 
 	//Creo log para el Núcleo
 
@@ -138,7 +145,7 @@ int main(int argc, char **argv) {
 						pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 						int * socketConexionParaThread = malloc(sizeof (int));
 						*socketConexionParaThread = nuevaConexion;
-						pthread_create(&nuevoHilo, &attr, (void *) &manejarCPU, (void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
+						pthread_create(&nuevoHilo, &attr, (void *) manejarCPU, (void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
 
 						pthread_attr_destroy(&attr);
 

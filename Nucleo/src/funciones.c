@@ -21,8 +21,8 @@ void manejarCPU(void * socket) {
 	 */
 
 	int socketCpu;
-	memcpy(&socketCpu,socket,sizeof(int));
-	free (socket);
+	memcpy(&socketCpu, socket, sizeof(int));
+	free(socket);
 
 	int desconectado = 0, cambioProceso;
 
@@ -49,17 +49,6 @@ void manejarCPU(void * socket) {
 				case finalizacionPrograma: //Fin programa
 					siguientePcb.pcb = recibirPcb(socketCpu);
 					finalizarProceso(siguientePcb);
-					pthread_mutex_lock(&mutexListaConsolas);
-					int largoLista = list_size(listaConsolas), i;
-					for (i = 0; i < largoLista; i++) {
-						t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(listaConsolas, i);
-						if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-							t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(listaConsolas, i);
-							AgregarAProcesoColaFinalizados(*pcbFinalizado);
-							free(pcbFinalizado);
-						}
-					}
-					pthread_mutex_unlock(&mutexListaConsolas);
 					break;
 
 				case finDeQuantum: //Fin quantum
@@ -81,10 +70,9 @@ void manejarCPU(void * socket) {
 
 							AgregarAProcesoColaFinalizados(siguientePcb);
 							cambioProceso = 1;
-							j=sizeLista;
+							j = sizeLista;
 						}
 					}
-
 
 					if (!cambioProceso) {
 						AgregarAProcesoColaListos(siguientePcb);
@@ -100,7 +88,7 @@ void manejarCPU(void * socket) {
 }
 
 void AgregarACola(t_pcbConConsola elemento, t_queue * cola) {
-	void * nuevoElemento = malloc (sizeof(t_pcbConConsola));
+	void * nuevoElemento = malloc(sizeof(t_pcbConConsola));
 	memcpy(&nuevoElemento, &elemento, sizeof(t_pcbConConsola));
 	queue_push(cola, &nuevoElemento);
 	return;
@@ -118,24 +106,28 @@ t_pcbConConsola sacarPrimeroCola(t_queue * cola) {
 	return elemento;
 }
 
+t_pcbBloqueado sacarPrimeroColaBloqueados(t_queue * cola) {
+	t_pcbBloqueado elemento;
+	void * elementoPop = queue_pop(cola);
+	if (elementoPop == NULL) {
+		elemento.pcb.socketConsola = -1;
+		return elemento;
+	}
+	memcpy(&elemento, elementoPop, sizeof(t_pcbBloqueado));
+	free(elementoPop);
+	return elemento;
+}
+
 t_pcbConConsola DevolverProcesoColaListos() {
 	pthread_mutex_lock(&mutexColaListos);
 	return (sacarPrimeroCola(cola_PCBListos));
 	pthread_mutex_unlock(&mutexColaListos);
 }
 
-t_pcbConConsola DevolverProcesoColaNuevos() {
-	return (sacarPrimeroCola(cola_PCBNuevos));
-}
-
 t_pcbConConsola DevolverProcesoColaFinalizados() {
 	pthread_mutex_lock(&mutexColaFinalizados);
 	return (sacarPrimeroCola(cola_PCBFinalizados));
 	pthread_mutex_unlock(&mutexColaFinalizados);
-}
-
-t_pcbConConsola DevolverProcesoColaLBloqueados() {
-	return (sacarPrimeroCola(cola_PCBListos));
 }
 
 void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
@@ -154,8 +146,11 @@ void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento) {
 	pthread_mutex_unlock(&mutexColaFinalizados);
 }
 
-void AgregarAProcesoColaBloqueados(t_pcbConConsola elemento) {
-	AgregarACola(elemento, cola_PCBBloqueados);
+void AgregarAProcesoColaBloqueados(t_queue * cola, t_pcbBloqueado elemento) {
+	void * nuevoElemento = malloc(sizeof(t_pcbBloqueado));
+	memcpy(&nuevoElemento, &elemento, sizeof(t_pcbConConsola));
+	queue_push(cola, &nuevoElemento);
+	return;
 }
 
 t_pcb crearPcb(char * programa, int largoPrograma) {
@@ -203,5 +198,73 @@ int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * 
 void finalizarProceso(t_pcbConConsola siguientePcb) {
 	enviarFinalizacionProgramaUMC(clienteUMC, siguientePcb.pcb.pid);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
+
+	pthread_mutex_lock(&mutexListaConsolas);
+	int largoLista = list_size(listaConsolas), i;
+	for (i = 0; i < largoLista; i++) {
+		t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(listaConsolas, i);
+		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
+			t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(listaConsolas, i);
+			AgregarAProcesoColaFinalizados(*pcbFinalizado);
+			free(pcbFinalizado);
+		}
+	}
+	pthread_mutex_unlock(&mutexListaConsolas);
+
+}
+
+void crearHilosEntradaSalida() {
+
+	int contador = 0, i;
+
+	while (vectorDispositivos[contador] != NULL) {
+		contador++;
+	}
+	vectorColasBloqueados = malloc(sizeof(t_queue *) * contador);
+	vectorMutexDispositivosIO = malloc(sizeof(pthread_mutex_t *) * contador);
+
+	for (i = 0; i < contador; i++) {
+		t_parametroThreadDispositivoIO * parametro = malloc(sizeof(t_parametroThreadDispositivoIO));
+		vectorColasBloqueados[i] = (t_queue *) list_create();
+		parametro->colaBloqueados = vectorColasBloqueados[i];
+		vectorMutexDispositivosIO[i] = malloc(sizeof(pthread_mutex_t *));
+		pthread_mutex_init(vectorMutexDispositivosIO[i], NULL);
+		parametro->mutex = vectorMutexDispositivosIO[i];
+		sprintf(vectorDispositivos[i], "%d", parametro->retardoDispositivo);
+
+		pthread_t nuevoHilo;
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		pthread_create(&nuevoHilo, &attr, (void *) manejarIO, (void *) parametro);
+		pthread_attr_destroy(&attr);
+
+	}
+}
+
+void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
+
+	t_pcbBloqueado pedidoDeIO;
+	pthread_mutex_lock(datosHilo->mutex);
+	pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
+	pthread_mutex_unlock(datosHilo->mutex);
+
+	usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
+
+	int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
+
+	for (i = 0; i < sizeLista; i++) {
+
+		int * socket = list_get(listaFinalizacionesPendientes, i);
+		if (*socket == pedidoDeIO.pcb.socketConsola) {
+			encontrado = pedidoDeIO.pcb.socketConsola;
+			free(list_remove(listaFinalizacionesPendientes, i));
+		}
+	}
+	if (encontrado != -1) {
+		AgregarAProcesoColaListos(pedidoDeIO.pcb);
+	} else {
+		finalizarProceso(pedidoDeIO.pcb);
+	}
 
 }

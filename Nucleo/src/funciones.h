@@ -40,7 +40,16 @@ typedef struct {
 	int finalizarPrograma;
 }t_pcbConConsola;
 
+typedef struct {
+	int retardoDispositivo;
+	pthread_mutex_t * mutex;
+	t_queue * colaBloqueados;
+}t_parametroThreadDispositivoIO;
 
+typedef struct {
+	t_pcbConConsola pcb;
+	int unidadesTiempoIO;
+}t_pcbBloqueado;
 
 /*typedef struct t_colaPcb{
 	t_pcbConConsola pcb;
@@ -56,6 +65,11 @@ t_queue *cola_PCBBloqueados;
 int clienteUMC;
 int pidPcb;
 int tamanioPagina;
+char ** vectorDispositivos;
+char ** vectorRetardoDispositivos;
+pthread_mutex_t ** vectorMutexDispositivosIO;
+t_queue ** vectorColasBloqueados;
+
 
 t_list *listaConsolas;
 t_list *listaFinalizacionesPendientes;
@@ -80,4 +94,6 @@ t_pcbConConsola DevolverProcesoColaListos();
 
 void finalizarProceso(t_pcbConConsola siguientePcb);
 void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento);
+void crearHilosEntradaSalida();
+void manejarIO(t_parametroThreadDispositivoIO * datosHilo);
 #endif /* FUNCIONES_H_ */
