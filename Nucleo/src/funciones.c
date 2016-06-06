@@ -21,7 +21,7 @@ void manejarCPU(void * socket) {
 	 */
 
 	int socketCpu;
-	socketCpu = *socket;
+	memcpy(&socketCpu,socket,sizeof(int));
 	free (socket);
 
 	int desconectado = 0, cambioProceso;
