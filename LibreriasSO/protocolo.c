@@ -610,3 +610,33 @@ void recibirSignal(int socketOrigen, uint32_t *id_proceso,
 	recibirTodo(socketOrigen, largoNombreSemaforo, sizeof(int));
 	recibirTodo(socketOrigen, nombreSemaforo, *largoNombreSemaforo);
 }
+
+
+int recibirCantidadQuantum(int socketOrigen) {
+	int cantidad;
+	int bytesRecibidos;
+	if ((bytesRecibidos = recv(socketOrigen, &cantidad, sizeof(int), 0)) <= 0) {
+		return bytesRecibidos;
+	} else {
+		return cantidad;
+	}
+}
+
+void enviarUnidadesQuantum(int socketCPU, int  unidades) {
+	int header = quantumUnidades;
+	void * data = malloc(sizeof(int) + sizeof(int));
+	memcpy(data, &header, sizeof(int));
+	memcpy(data + sizeof(int), &unidades, sizeof(int));
+	send(socketCPU, data, sizeof(int) * 2, 0);
+	free(data);
+}
+
+void enviarSleepQuantum(int socketCPU, int  sleep) {
+	int header = quantumSleep;
+	void * data = malloc(sizeof(int) + sizeof(int));
+	memcpy(data, &header, sizeof(int));
+	memcpy(data + sizeof(int), &sleep, sizeof(int));
+	send(socketCPU, data, sizeof(int) * 2, 0);
+	free(data);
+}
+

@@ -37,7 +37,9 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	inicializarProgramaSwap = 21,
 	headerWait = 22,
 	headerSignal = 23,
-	finDeQuantum = 24
+	finDeQuantum = 24,
+	quantumSleep = 25,
+	quantumUnidades = 26
 
 };
 int recibirHeader(int socketOrigen);
@@ -87,4 +89,7 @@ void recibirWait(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo
 void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo);
 void recibirSignal(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo);
 
+int recibirCantidadQuantum(int socketOrigen);
+void enviarUnidadesQuantum(int socketCPU, int  unidades);
+void enviarSleepQuantum(int socketCPU, int  sleep);
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
