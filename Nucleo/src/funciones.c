@@ -24,6 +24,9 @@ void manejarCPU(void * socket) {
 	memcpy(&socketCpu, socket, sizeof(int));
 	free(socket);
 
+	enviarUnidadesQuantum(socketCpu,cantidadQuantum);
+	enviarSleepQuantum(socketCpu,retardoQuantum);
+
 	int desconectado = 0, cambioProceso;
 
 	while (!desconectado) {
