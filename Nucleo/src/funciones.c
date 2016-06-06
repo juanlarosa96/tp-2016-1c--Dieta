@@ -213,6 +213,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
+	log_info(logger, "Se finalizó programa pid %d", siguientePcb.pcb.pid);
 
 }
 
@@ -254,6 +255,7 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		pthread_mutex_unlock(datosHilo->mutex);
 
 		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
+		log_info(logger, "Programa pid %d termino IO", pedidoDeIO.pcb.pcb.pid);
 
 		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
 

@@ -190,7 +190,6 @@ int main(int argc, char **argv) {
 								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));
 								pcbListo->pcb = nuevoPcb;
 								pcbListo->socketConsola = i;
-								pcbListo->finalizarPrograma = 0;
 								AgregarAProcesoColaListos(*pcbListo);
 
 								pthread_mutex_lock(&mutexListaConsolas);
@@ -198,6 +197,8 @@ int main(int argc, char **argv) {
 								pthread_mutex_unlock(&mutexListaConsolas);
 
 								free(programa);
+
+								log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
 
 							}
 						} else {
