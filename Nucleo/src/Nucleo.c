@@ -16,16 +16,13 @@ int main(int argc, char **argv) {
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
 	uint32_t PAGINAS_STACK = config_get_int_value(config, "PAGINAS_STACK");
-	cantidadQuantum = config_get_int_value(config,"QUANTUM");
-	retardoQuantum = config_get_int_value(config,"QUANTUM_SLEEP");
+	cantidadQuantum = config_get_int_value(config, "QUANTUM");
+	retardoQuantum = config_get_int_value(config, "QUANTUM_SLEEP");
 
-	t_queue ** listaColasDispositivos;
-	pthread_mutex_t * listaMutexListaDispositivos;
-	vectorDispositivos = config_get_array_value(config,"IO_ID");
-	vectorRetardoDispositivos = config_get_array_value(config,"IO_SLEEP");
+	vectorDispositivos = config_get_array_value(config, "IO_ID");
+	vectorRetardoDispositivos = config_get_array_value(config, "IO_SLEEP");
 
 	crearHilosEntradaSalida();
-
 
 	//Creo log para el Núcleo
 
@@ -146,7 +143,7 @@ int main(int argc, char **argv) {
 						pthread_attr_t attr;
 						pthread_attr_init(&attr);
 						pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-						int * socketConexionParaThread = malloc(sizeof (int));
+						int * socketConexionParaThread = malloc(sizeof(int));
 						*socketConexionParaThread = nuevaConexion;
 						pthread_create(&nuevoHilo, &attr, (void *) manejarCPU, (void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
 
@@ -213,8 +210,8 @@ int main(int argc, char **argv) {
 
 					case finalizacionPrograma:
 						;
-						int j, sizeCola = queue_size(cola_PCBListos), encontrado = 0;
-
+						int j, sizeCola = queue_size(cola_PCBListos), sizeColaBloqueados, encontrado = 0;
+						//Busco pcb en cola de procesos listos
 						for (j = 0; j < sizeCola; j++) {
 
 							t_pcbConConsola * elementoAux = (t_pcbConConsola *) queue_pop(cola_PCBListos);
@@ -227,12 +224,36 @@ int main(int argc, char **argv) {
 							}
 						}
 
+						int contador = 0, k;
+						while (vectorDispositivos[contador] != NULL) {
+							contador++;
+						}
+						//Busco pcb en colas de procesos bloqueados
+						for (k = 0; k < contador; k++) {
+
+							sizeColaBloqueados = queue_size(vectorColasBloqueados[k]);
+							pthread_mutex_lock(vectorMutexDispositivosIO[k]);
+
+							for (j = 0; j < sizeColaBloqueados; j++) {
+
+								t_pcbBloqueado * elementoAux = (t_pcbBloqueado*) queue_pop(vectorColasBloqueados[k]);
+
+								if (elementoAux->pcb.socketConsola == i) {
+									finalizarProceso(elementoAux->pcb);
+									encontrado = 1;
+								} else {
+									queue_push(cola_PCBListos, (void *) elementoAux);
+								}
+							}
+							pthread_mutex_unlock(vectorMutexDispositivosIO[k]);
+						}
+
 						if (!encontrado) {
 							int * socketProcesoFinalizado = malloc(sizeof(int));
 							*socketProcesoFinalizado = i;
 
 							pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-							list_add(listaFinalizacionesPendientes,socketProcesoFinalizado);
+							list_add(listaFinalizacionesPendientes, socketProcesoFinalizado);
 							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
 
