@@ -180,14 +180,14 @@ int main(int argc, char **argv) {
 								list_destroy(nuevoPcb.indice_stack);
 
 							} else {
-								t_pcbConConsola pcbListo;
-								pcbListo.pcb = nuevoPcb;
-								pcbListo.socketConsola = i;
-								pcbListo.finalizarPrograma = 0;
-								AgregarAProcesoColaListos(pcbListo);
+								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));
+								pcbListo->pcb = nuevoPcb;
+								pcbListo->socketConsola = i;
+								pcbListo->finalizarPrograma = 0;
+								AgregarAProcesoColaListos(*pcbListo);
 
 								pthread_mutex_lock(&mutexListaConsolas);
-								list_add(listaConsolas, (void *) &pcbListo);
+								list_add(listaConsolas, (void *) pcbListo);
 								pthread_mutex_unlock(&mutexListaConsolas);
 
 								free(programa);
@@ -218,10 +218,11 @@ int main(int argc, char **argv) {
 						}
 
 						if (!encontrado) {
-							int socketProcesoFinalizado = i;
+							int * socketProcesoFinalizado = malloc(sizeof(int));
+							*socketProcesoFinalizado = i;
 
 							pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-							list_add(listaFinalizacionesPendientes,&socketProcesoFinalizado);
+							list_add(listaFinalizacionesPendientes,socketProcesoFinalizado);
 							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
 
