@@ -24,8 +24,8 @@ void manejarCPU(void * socket) {
 	memcpy(&socketCpu, socket, sizeof(int));
 	free(socket);
 
-	enviarUnidadesQuantum(socketCpu,cantidadQuantum);
-	enviarSleepQuantum(socketCpu,retardoQuantum);
+	enviarUnidadesQuantum(socketCpu, cantidadQuantum);
+	enviarSleepQuantum(socketCpu, retardoQuantum);
 
 	int desconectado = 0, cambioProceso;
 
@@ -247,27 +247,29 @@ void crearHilosEntradaSalida() {
 
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 
-	t_pcbBloqueado pedidoDeIO;
-	pthread_mutex_lock(datosHilo->mutex);
-	pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
-	pthread_mutex_unlock(datosHilo->mutex);
+	while (1) {
+		t_pcbBloqueado pedidoDeIO;
+		pthread_mutex_lock(datosHilo->mutex);
+		pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
+		pthread_mutex_unlock(datosHilo->mutex);
 
-	usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
+		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
 
-	int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
+		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
 
-	for (i = 0; i < sizeLista; i++) {
+		for (i = 0; i < sizeLista; i++) {
 
-		int * socket = list_get(listaFinalizacionesPendientes, i);
-		if (*socket == pedidoDeIO.pcb.socketConsola) {
-			encontrado = pedidoDeIO.pcb.socketConsola;
-			free(list_remove(listaFinalizacionesPendientes, i));
+			int * socket = list_get(listaFinalizacionesPendientes, i);
+			if (*socket == pedidoDeIO.pcb.socketConsola) {
+				encontrado = pedidoDeIO.pcb.socketConsola;
+				free(list_remove(listaFinalizacionesPendientes, i));
+			}
 		}
-	}
-	if (encontrado != -1) {
-		AgregarAProcesoColaListos(pedidoDeIO.pcb);
-	} else {
-		finalizarProceso(pedidoDeIO.pcb);
+		if (encontrado != -1) {
+			AgregarAProcesoColaListos(pedidoDeIO.pcb);
+		} else {
+			finalizarProceso(pedidoDeIO.pcb);
+		}
 	}
 
 }
