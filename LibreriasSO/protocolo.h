@@ -52,6 +52,8 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
 void recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *paginasRequeridas, int *largoCodigo);
+void enviarRespuestaInicializacionExito(int socketDestino);
+void enviarRespuestaInicializacionError(int socketDestino);
 void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo);
 int recibirRespuestaInicializacion(int socketUMC);
 //header: 8
