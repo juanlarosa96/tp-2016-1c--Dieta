@@ -121,52 +121,6 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 
 }
 
-void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
-		char * codigoPrograma) {
-
-	int largoPrograma = strlen(codigoPrograma) + 1; //?
-	int paginasCodigo = largoPrograma / size_frames
-			+ largoPrograma % size_frames; //not sure
-
-	pthread_mutex_lock(&mutexSwap);
-	enviarCodigoASwap(socketSwap, paginasRequeridas, idPrograma, paginasCodigo);
-	pthread_mutex_unlock(&mutexSwap);
-	log_info(logger, "Se envió nuevo programa a Swap", texto);
-
-//enviarPaginas(enviar pagina x pagina)
-	int framesDisponibles = cantidadFramesDisponibles();
-
-	if (framesDisponibles < framesPorProceso
-			&& framesDisponibles < paginasRequeridas) {
-		//avisar que no se pudo inicializarPrograma a nucleo
-		return;
-	}
-
-	reservarFrames(idPrograma, paginasRequeridas);
-
-//aca tengo que crear un puntero o una estructura?
-	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
-	unNodo->pid = idPrograma;
-	unNodo->cantPaginas = paginasRequeridas;
-//unNodo.framesAsignados = 0;
-	unNodo->lista_paginas = list_create();
-//unNodo.punteroClock = -1;
-	int i;
-	for (i = 0; i < paginasRequeridas; i++) {
-		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
-		unaPagina->nro_pagina = i;
-		unaPagina->status = 'S';
-		list_add(unNodo->lista_paginas, unaPagina);
-	}
-
-	pthread_mutex_lock(&mutexProcesos);
-	list_add(listaProcesos, &unNodo);
-	pthread_mutex_unlock(&mutexProcesos);
-
-
-//enviar rta a nucleo si se pudo inicializar o no
-
-}
 
 int buscarEnTLB(uint32_t pid, int nroPagina) {
 	int frame = -1;
@@ -285,6 +239,23 @@ void flushTLB() {
 	pthread_mutex_unlock(&mutexTLB);
 }
 
+void limpiarEntradasTLB(uint32_t pid) {
+	t_entrada_tlb* nodoAux;
+	int i = 0;
+
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB)) {
+		nodoAux = list_get(TLB, i);
+		if (nodoAux->pid == pid) {
+			nodoAux->pid = 0;
+			//list_replace_and_destroy_element(TLB, i, nodoAux,
+			//(void*) entradaTLBdestroy);
+		}
+	}
+	pthread_mutex_unlock(&mutexTLB);
+
+}
+
 void flushMemory() {
 	int i;
 	t_nodo_lista_frames * nodo;
@@ -317,56 +288,6 @@ void actualizarBitReferencia(uint32_t frame) {
 
 }
 
-void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
-	void * bytes = malloc(tamanio);
-	int posicion = (int) frame * size_frames + offset;
-
-	usleep(retardo * 1000);
-	pthread_mutex_lock(&mutexMemoriaPrincipal);
-	void * posicionAux = memoriaPrincipal + posicion;
-	memcpy(bytes, posicionAux, tamanio);
-	pthread_mutex_unlock(&mutexMemoriaPrincipal);
-	actualizarBitReferencia(frame);
-	return bytes;
-}
-
-void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
-		uint32_t pid) {
-
-	void * data;
-	int nroFrame;
-
-	if (entradasTLB > 0) {
-		nroFrame = buscarEnTLB(pid, nroPagina);
-		if (nroFrame > -1) { //TLB Hit
-			data = lecturaMemoria(nroFrame, offset, tamanio);
-			return data;
-		}
-		//TLB Miss
-	}
-
-	nroFrame = buscarEnListaProcesos(pid, nroPagina);
-
-	if (nroFrame == -1) {
-		//buscarEnSwap
-		//poner el puntero donde la tengo en memprincipal
-	}
-
-	data = lecturaMemoria(nroFrame, offset, tamanio);
-
-	printf("Solicitar Bytes \n");
-
-	return data;
-
-	/*si est an memoria, principal, voy a buscar en lista de frames
-	 *sino esta, hay que fijarme si puedo asignarle un frame mas al proceso
-	 *si le puedo asignar un frame, tengo 2 caminos 1) si tengo frames libres traigo la pagina desde swap
-	 *2) sino tengo frames libres, voy a tener aplicar un algoritmo de reemplazo
-	 *sino le puedo asignar un framr porque ya supero su cantidad de frames que puede tener en memoria
-	 voy a aplicar un algoritmo de reemplazo local*/
-
-}
-
 void actualizarBitModificado(uint32_t frame) {
 	int i = 0;
 	int acierto = 0;
@@ -376,14 +297,30 @@ void actualizarBitModificado(uint32_t frame) {
 		nodoAuxiliar = list_get(listaFrames, i);
 		if (nodoAuxiliar->nroFrame == frame) {
 			nodoAuxiliar->bitModificado = 1;
-			list_replace_and_destroy_element(listaFrames, i, nodoAuxiliar,
-					(void*) destruirFrame); //no estoy segura del destoy
+			/*list_replace_and_destroy_element(listaFrames, i, nodoAuxiliar,
+					(void*) destruirFrame); *///no estoy segura del destoy
 			acierto = 1;
 		}
 		i++;
 	}
 	pthread_mutex_unlock(&mutexFrames);
 
+}
+
+void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
+	void * bytes = malloc(tamanio);
+	int posicion = (int) frame * size_frames + offset;
+
+	usleep(retardo * 1000);
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
+	void * posicionAux = memoriaPrincipal + posicion;
+	memcpy(bytes, posicionAux, tamanio);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	pthread_mutex_lock(&mutexContadorMemoria);
+	accesoMemoria ++;
+	pthread_mutex_unlock(&mutexContadorMemoria);
+	actualizarBitReferencia(frame);
+	return bytes;
 }
 
 void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
@@ -394,50 +331,12 @@ void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
 	void * posicionAux = memoriaPrincipal + posicion;
 	memcpy(posicionAux, buffer, tamanio);
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	pthread_mutex_lock(&mutexContadorMemoria);
+	accesoMemoria ++;
+	pthread_mutex_unlock(&mutexContadorMemoria);
 	actualizarBitReferencia(frame);
 	actualizarBitModificado(frame);
 	free(buffer);
-}
-
-void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
-		void * buffer, uint32_t pid) {
-
-	int nroFrame;
-//chequear si hay stack overflow
-
-	if (entradasTLB > 0) {
-		nroFrame = buscarEnTLB(pid, nroPagina);
-		if (nroFrame > -1) { //TLB Hit
-			escrituraMemoria(nroFrame, offset, tamanio, buffer);
-			return;
-		}
-	} //TLB Miss
-
-	nroFrame = buscarEnListaProcesos(pid, nroPagina);
-	if (nroFrame == -1) {
-		//buscarEnSwap
-	}
-
-	escrituraMemoria(nroFrame, offset, tamanio, buffer);
-
-	printf("Almacenar Bytes \n");
-}
-
-void limpiarEntradasTLB(uint32_t pid) {
-	t_entrada_tlb* nodoAux;
-	int i = 0;
-
-	pthread_mutex_lock(&mutexTLB);
-	while (i < list_size(TLB)) {
-		nodoAux = list_get(TLB, i);
-		if (nodoAux->pid == pid) {
-			nodoAux->pid = 0;
-			//list_replace_and_destroy_element(TLB, i, nodoAux,
-			//(void*) entradaTLBdestroy);
-		}
-	}
-	pthread_mutex_unlock(&mutexTLB);
-
 }
 
 int buscarPuntero(uint32_t pid) {
@@ -476,6 +375,137 @@ int buscarPuntero(uint32_t pid) {
  buscarPuntero(pid);
 
  }*/
+
+void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame){
+	t_entrada_tlb* nodoAux;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB) && acierto == 0) {
+		nodoAux = list_get(TLB, i);
+		if (nodoAux->pid == pid && nodoAux->nroFrame == (uint32_t) nroFrame) {
+			pthread_mutex_lock(&mutexContadorMemoria);
+			nodoAux->ultAcceso = accesoMemoria;
+			pthread_mutex_unlock(&mutexContadorMemoria);
+			acierto = 1;
+		}
+		i++;
+	}
+	pthread_mutex_unlock(&mutexTLB);
+
+}
+
+void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
+		uint32_t pid) {
+
+	void * data;
+	int nroFrame;
+
+	if (entradasTLB > 0) {
+		nroFrame = buscarEnTLB(pid, nroPagina);
+		if (nroFrame > -1) { //TLB Hit
+			data = lecturaMemoria(nroFrame, offset, tamanio);
+			actualizarBitUltimoAccesoTLB(pid, nroFrame);
+			return data;
+		}
+		//TLB Miss
+	}
+
+	nroFrame = buscarEnListaProcesos(pid, nroPagina);
+
+	if (nroFrame == -1) {
+		//buscarEnSwap
+		//poner el puntero donde la tengo en memprincipal
+	}
+
+	data = lecturaMemoria(nroFrame, offset, tamanio);
+
+	printf("Solicitar Bytes \n");
+
+	return data;
+
+	/*si est an memoria, principal, voy a buscar en lista de frames
+	 *sino esta, hay que fijarme si puedo asignarle un frame mas al proceso
+	 *si le puedo asignar un frame, tengo 2 caminos 1) si tengo frames libres traigo la pagina desde swap
+	 *2) sino tengo frames libres, voy a tener aplicar un algoritmo de reemplazo
+	 *sino le puedo asignar un framr porque ya supero su cantidad de frames que puede tener en memoria
+	 voy a aplicar un algoritmo de reemplazo local*/
+
+}
+
+
+void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
+		void * buffer, uint32_t pid) {
+
+	int nroFrame;
+//chequear si hay stack overflow
+
+	if (entradasTLB > 0) {
+		nroFrame = buscarEnTLB(pid, nroPagina);
+		if (nroFrame > -1) { //TLB Hit
+			escrituraMemoria(nroFrame, offset, tamanio, buffer);
+			actualizarBitUltimoAccesoTLB(pid, nroFrame);
+			return;
+		}
+	} //TLB Miss
+
+	nroFrame = buscarEnListaProcesos(pid, nroPagina);
+	if (nroFrame == -1) {
+		//buscarEnSwap
+	}
+
+	escrituraMemoria(nroFrame, offset, tamanio, buffer);
+
+	printf("Almacenar Bytes \n");
+}
+
+void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
+		char * codigoPrograma) {
+
+	int largoPrograma = strlen(codigoPrograma) + 1; //?
+	int paginasCodigo = largoPrograma / size_frames
+			+ largoPrograma % size_frames; //not sure
+
+	pthread_mutex_lock(&mutexSwap);
+	enviarCodigoASwap(socketSwap, paginasRequeridas, idPrograma, paginasCodigo);
+	pthread_mutex_unlock(&mutexSwap);
+	log_info(logger, "Se envió nuevo programa a Swap", texto);
+
+//enviarPaginas(enviar pagina x pagina)
+	int framesDisponibles = cantidadFramesDisponibles();
+
+	if (framesDisponibles < framesPorProceso
+			&& framesDisponibles < paginasRequeridas) {
+		//avisar que no se pudo inicializarPrograma a nucleo
+		return;
+	}
+
+	reservarFrames(idPrograma, paginasRequeridas);
+
+//aca tengo que crear un puntero o una estructura?
+	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
+	unNodo->pid = idPrograma;
+	unNodo->cantPaginas = paginasRequeridas;
+//unNodo.framesAsignados = 0;
+	unNodo->lista_paginas = list_create();
+//unNodo.punteroClock = -1;
+	int i;
+	for (i = 0; i < paginasRequeridas; i++) {
+		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
+		unaPagina->nro_pagina = i;
+		unaPagina->status = 'S';
+		list_add(unNodo->lista_paginas, unaPagina);
+	}
+
+	pthread_mutex_lock(&mutexProcesos);
+	list_add(listaProcesos, &unNodo);
+	pthread_mutex_unlock(&mutexProcesos);
+
+
+//enviar rta a nucleo si se pudo inicializar o no
+
+}
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
