@@ -8,10 +8,7 @@
 #include "funcionesUMC.h"
 
 void cambiarRetardo(int nuevoRetardo) {
-	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
-	pthread_mutex_unlock(&mutexRetardo);
-
 }
 
 void destruirProceso(t_nodo_lista_procesos * nodo) {
@@ -27,6 +24,8 @@ int encontrarPosicionEnListaProcesos(int pid) {
 
 	int i = 0;
 	int encontrado = 1;
+
+	usleep(retardo * 1000);
 
 	pthread_mutex_lock(&mutexProcesos);
 	while ((i < list_size(listaProcesos)) && encontrado != 0) {
@@ -57,6 +56,7 @@ void liberarFrames(uint32_t pid) {
 	}
 	pthread_mutex_unlock(&mutexFrames);
 }
+
 int cantidadFramesDisponibles() {
 	int i = 0;
 	int contador = 0;
@@ -176,7 +176,6 @@ int buscarEnTLB(uint32_t pid, int nroPagina) {
 	int acierto = 0;
 
 	pthread_mutex_lock(&mutexTLB);
-
 	while (i < list_size(TLB) && acierto == 0) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid && nodoAux->nroPagina == (uint32_t) nroPagina) {
@@ -197,7 +196,11 @@ int buscarEntradaMenosUsadaRecientemente() {
 	int i = 0;
 	t_entrada_tlb* entradaAux;
 
+	pthread_mutex_lock(&mutexContadorMemoria);
 	ultAccesoAuxiliar = (int) accesoMemoria;
+	pthread_mutex_unlock(&mutexContadorMemoria);
+
+	//pthread_mutex_lock(&mutexTLB); OJO, VER SI PONER ANTES DE LRU, NO SE SI ACA ESA BIEN
 	while (i < list_size(TLB)) {
 		entradaAux = list_get(TLB, i);
 		if ((entradaAux->ultAcceso) < ultAccesoAuxiliar) {
@@ -205,8 +208,9 @@ int buscarEntradaMenosUsadaRecientemente() {
 			indice = i;
 		}
 		i++;
-
 	}
+	//pthread_mutex_unlock(&mutexTLB);
+
 
 	return indice;
 
@@ -243,6 +247,8 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	int j = 0;
 	int pidEncontrado = 0;
 	int aciertoPagina = 0;
+
+	usleep(retardo * 1000);
 
 	pthread_mutex_lock(&mutexProcesos);
 
@@ -449,7 +455,7 @@ int buscarPuntero(uint32_t pid) {
 	puntero = nodoAux->punteroClock;
 
 //Primero busco bit de referencia en 0
-
+	pthread_mutex_lock(&mutexFrames);
 	while (puntero < list_size(listaFrames)) {
 		nodoFrame = list_get(listaFrames, puntero);
 		if (nodoFrame->pid == pid) {
@@ -461,6 +467,7 @@ int buscarPuntero(uint32_t pid) {
 
 		}
 	}
+	pthread_mutex_unlock(&mutexFrames);
 
 }
 
@@ -473,7 +480,7 @@ int buscarPuntero(uint32_t pid) {
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
-	pthread_mutex_lock(&mutexProcesos);
+	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
 	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
 			(void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
