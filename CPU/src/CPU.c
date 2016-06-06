@@ -1,6 +1,7 @@
 #include <commons/config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -11,16 +12,12 @@
 #include "primitivas.h"
 #include "variables_globales.h"
 
-AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable,
-		.AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
-		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar,
-		.AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
+AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable, .AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
+		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar, .AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
 
 };
 
 AnSISOP_kernel kernel_functions = { };
-
-
 
 int main(int argc, char *argv[]) {
 	//Recibe el archivo de config por parametro
@@ -40,8 +37,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	t_log* logger;
-	logger = log_create("Consola.log", "CONSOLA", 1,
-			log_level_from_string("INFO"));
+	logger = log_create("Consola.log", "CONSOLA", 1, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
@@ -49,7 +45,6 @@ int main(int argc, char *argv[]) {
 	int puerto_nucleo = config_get_int_value(config, "PUERTO_NUCLEO");
 	char* ip_umc = config_get_string_value(config, "IP_UMC");
 	char* ip_nucleo = config_get_string_value(config, "IP_NUCLEO");
-	int quantumTotal = config_get_int_value(config, "QUANTUM");
 
 	//creo socket nucleo
 
@@ -175,14 +170,31 @@ int main(int argc, char *argv[]) {
 
 	sigoEjecutando = 1;
 	signalApagado = 0;
+	int header;
+	int quantumTotal=0,quantumRetardo=0;
 
 	while (!signalApagado) {
 
-		if (recibirHeader(socketNucleo) == headerPcb) {
+		header = recibirHeader(socketNucleo);
+
+		switch (header) {
+
+		case quantumSleep:
+
+			quantumRetardo = recibirCantidadQuantum(socketNucleo);
+
+			break;
+
+		case quantumUnidades:
+			quantumTotal = recibirCantidadQuantum(socketNucleo);
+
+			break;
+
+		case headerPcb:
 
 			pcbRecibido = recibirPcb(socketNucleo);
 
-			enviarCambioProcesoActivo(socketUMC,pcbRecibido.pid);
+			enviarCambioProcesoActivo(socketUMC, pcbRecibido.pid);
 
 			int unidadQuantum = 0;
 
@@ -193,13 +205,13 @@ int main(int argc, char *argv[]) {
 				pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina);
 				lineaAnsisop[instruccion.offset + 1] = '\0';
 
-				analizadorLinea(strdup(lineaAnsisop), &functions,
-						&kernel_functions);
-
+				analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
+				usleep(quantumRetardo * 1000);
 				unidadQuantum++;
 
 			}
-			enviarPcb(socketNucleo,pcbRecibido);
+			enviarPcb(socketNucleo, pcbRecibido);
+			break;
 		}
 
 	}
