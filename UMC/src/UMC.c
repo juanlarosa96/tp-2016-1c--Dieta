@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
 	//Hilo para Consola de UMC
 	pthread_t hiloConsola;
-	pthread_create(&hiloConsola, NULL, (void *) &consolaUMC, NULL);
+	pthread_create(&hiloConsola, NULL, (void *) consolaUMC, NULL);
 
 	int puerto_servidor = config_get_int_value(config, "PUERTO");
 	int puerto_swap = config_get_int_value(config, "PUERTO_SWAP");

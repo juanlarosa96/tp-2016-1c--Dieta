@@ -163,6 +163,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
+
 //enviar rta a nucleo si se pudo inicializar o no
 
 }
@@ -487,7 +488,7 @@ void finalizarPrograma(uint32_t idPrograma) {
 
 //mutex para swap
 //InformarSwap() swap borrame tooodo
-	log_info(logger, "Se finalizó programa", texto);
+	log_info(logger, "Se finalizó programa pid %d", idPrograma);
 
 }
 
@@ -509,7 +510,7 @@ int clean_stdin() {
 void consolaUMC(void) {
 	char * comando = malloc(30);
 	char c;
-	int retardo;
+	int nuevoRetardo;
 
 	while (1) {
 		printf("Ingrese comando:\n");
@@ -521,22 +522,25 @@ void consolaUMC(void) {
 			if (strncmp(comando, "tlb", 3) == 0) {
 				printf("Se ejecutará: flush TLB\n");
 				flushTLB();
+				log_info(logger, "Se ejecutó flush TLB");
 			} else if (strncmp(comando, "memory", 6) == 0) {
 				printf("Se ejecutará: Flush Memoria Principal\n");
 				flushMemory();
+				log_info(logger, "Se ejecutó flush Memory");
 			}
 		} else if (strncmp(comando, "dump", 4) == 0) {
 			printf("Se ejecutará: Dump\n");
 			//dump()
 		} else if (strncmp(comando, "retardo", 7) == 0) {
 			do {
-				printf("\n Ingrese nuevo retardo: ");
+				printf("Ingrese nuevo retardo: \n");
 
-			} while ((scanf("%d%c", &retardo, &c) != 2 || c != '\n')
+			} while ((scanf("%d%c", &nuevoRetardo, &c) != 2 || c != '\n')
 					&& clean_stdin());
 
-			printf("se ejecutará: Cambio de retardo\n");
-			cambiarRetardo(retardo);
+			printf("Se ejecutará: Cambio de retardo\n");
+			cambiarRetardo(nuevoRetardo);
+			log_info(logger, "Se ejecutó cambio de retardo. El retardo ahora es %d", retardo);
 		} else {
 			printf("Comando no válido.\n");
 		}
