@@ -461,35 +461,37 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 }
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
-		char * codigoPrograma) {
+		char * codigoPrograma, int socketNucleo) {
 
 	int largoPrograma = strlen(codigoPrograma) + 1; //?
 	int paginasCodigo = largoPrograma / size_frames
 			+ largoPrograma % size_frames; //not sure
+	int respuestaInicializacion;
 
 	pthread_mutex_lock(&mutexSwap);
 	enviarCodigoASwap(socketSwap, paginasRequeridas, idPrograma, paginasCodigo);
+	log_info(logger, "Se envió nuevo programa pid %d a Swap", idPrograma);
+	//enviarPaginas(enviar pagina x pagina)
+	respuestaInicializacion = recibirRespuestaInicializacion(socketSwap);
 	pthread_mutex_unlock(&mutexSwap);
-	log_info(logger, "Se envió nuevo programa a Swap", texto);
 
-//enviarPaginas(enviar pagina x pagina)
-	int framesDisponibles = cantidadFramesDisponibles();
-
-	if (framesDisponibles < framesPorProceso
-			&& framesDisponibles < paginasRequeridas) {
-		//avisar que no se pudo inicializarPrograma a nucleo
+	if(respuestaInicializacion == inicioProgramaExito){
+		enviarRespuestaInicializacionExito(socketNucleo);
+		log_info(logger, "Se inicializó nuevo programa pid %d", idPrograma);
+	}
+	else {
+		enviarRespuestaInicializacionError(socketNucleo);
+		log_info(logger, "No se pudo inicializar programa pid %d. No hay espacio en Swap", idPrograma);
 		return;
 	}
 
-	reservarFrames(idPrograma, paginasRequeridas);
-
-//aca tengo que crear un puntero o una estructura?
+	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
 	unNodo->pid = idPrograma;
 	unNodo->cantPaginas = paginasRequeridas;
-//unNodo.framesAsignados = 0;
+	//unNodo.framesAsignados = 0;
 	unNodo->lista_paginas = list_create();
-//unNodo.punteroClock = -1;
+	//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
 		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
@@ -502,8 +504,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
-
-//enviar rta a nucleo si se pudo inicializar o no
+	free(codigoPrograma);
 
 }
 
@@ -610,7 +611,7 @@ void procesarOperacionesNucleo(int * conexion) {
 			programa = malloc(largo_codigo);
 			recibirCodigoInicializarPrograma(socketNucleo, largo_codigo,
 					programa);
-			inicializarPrograma(pid, paginas_requeridas, programa);
+			inicializarPrograma(pid, paginas_requeridas, programa, socketNucleo);
 			break;
 		case finalizacionPrograma:
 			recibirPID(socketNucleo, &pid);

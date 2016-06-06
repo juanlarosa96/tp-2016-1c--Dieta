@@ -107,6 +107,16 @@ int recibirRespuestaInicializacion(int socketUMC) {
 
 }
 
+void enviarRespuestaInicializacionExito(int socketDestino){
+	int header = inicioProgramaExito;
+	send(socketDestino, &header, sizeof(int), 0);
+}
+
+void enviarRespuestaInicializacionError(int socketDestino){
+	int header = inicioProgramaError;
+	send(socketDestino, &header, sizeof(int), 0);
+}
+
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset,
 		uint32_t size) {
 	int header = solicitarBytes;
