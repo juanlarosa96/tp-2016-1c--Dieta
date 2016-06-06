@@ -200,9 +200,10 @@ void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto) {
 }
 
 void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso,
-		int *largoTexto, char * texto) {
+		int *largoTexto, char ** texto) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoTexto, sizeof(int));
+	*texto = malloc(largoTexto);
 	recibirTodo(socketOrigen, texto, *largoTexto);
 
 }
