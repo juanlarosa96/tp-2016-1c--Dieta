@@ -37,7 +37,6 @@ pthread_mutex_t mutexListaFinalizacionesPendientes;
 typedef struct {
 	t_pcb pcb;
 	int socketConsola;
-	int finalizarPrograma;
 }t_pcbConConsola;
 
 typedef struct {
