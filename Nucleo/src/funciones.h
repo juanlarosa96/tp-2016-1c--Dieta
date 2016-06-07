@@ -97,4 +97,5 @@ void finalizarProceso(t_pcbConConsola siguientePcb);
 void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento);
 void crearHilosEntradaSalida();
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo);
+void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo);
 #endif /* FUNCIONES_H_ */

@@ -84,21 +84,33 @@ void manejarCPU(void * socket) {
 					break;
 
 				case primitivaImprimir:
-
+					;
 					int largoTexto;
 					char *texto;
 					uint32_t pid;
-					recibirValorAImprimir(socketCpu,&pid,&largoTexto,&texto);
-					int listSize = list_size(listaConsolas),i;
+					recibirValorAImprimir(socketCpu, &pid, &largoTexto, &texto);
+					int listSize = list_size(listaConsolas), i;
 
-					pthread_mutex_lock(mutexListaConsolas);
-					for(i=0;i<listSize,i++;){
-						t_pcbConConsola * elemento = (t_pcbConConsola *) list_get(listaConsolas,i);
-						if(elemento->pcb.pid == pid){
-							enviarResultadoDeEjecucionAnsisop(elemento->socketConsola,texto,largoTexto);
+					pthread_mutex_lock(&mutexListaConsolas);
+					for (i = 0; i < listSize; i++) {
+						t_pcbConConsola * elemento = (t_pcbConConsola *) list_get(listaConsolas, i);
+						if (elemento->pcb.pid == pid) {
+							enviarResultadoDeEjecucionAnsisop(elemento->socketConsola, texto, largoTexto);
 						}
 					}
-					pthread_mutex_unlock(mutexListaConsolas);
+					pthread_mutex_unlock(&mutexListaConsolas);
+					break;
+
+				case headerEntradaSalida:
+					if (recibirHeader(socketCpu) == headerPcb) {
+						siguientePcb.pcb = recibirPcb(socketCpu);
+
+						int largo, tiempo;
+						char * nombre;
+						recibirEntradaSalida(socketCpu, &largo, &nombre, &tiempo);
+						ponerEnColaBloqueados(siguientePcb, nombre, largo, tiempo);
+					}
+
 					break;
 
 				}
@@ -290,6 +302,55 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		} else {
 			finalizarProceso(pedidoDeIO.pcb);
 		}
+	}
+
+}
+
+void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo) {
+
+	int j, sizeLista = list_size(listaFinalizacionesPendientes), encontrado = 0;
+	int * socketEnLista;
+
+	pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+
+	for (j = 0; j < sizeLista; j++) {
+		socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
+		if (siguientePcb.socketConsola == *socketEnLista) {
+			finalizarProceso(siguientePcb);
+			list_remove(listaFinalizacionesPendientes, j);
+
+			pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+			encontrado = 1;
+			AgregarAProcesoColaFinalizados(siguientePcb);
+			j = sizeLista;
+		}
+	}
+
+	if (!encontrado) {
+		t_pcbBloqueado pcbBloqueado;
+		pcbBloqueado.pcb = siguientePcb;
+		pcbBloqueado.unidadesTiempoIO = tiempo;
+
+		int contador = 0, i, existeDispositivo = 0;
+
+		while (vectorDispositivos[contador] != NULL) {
+			contador++;
+		}
+
+		for (i = 0; i < contador; i++) {
+
+			if (!strcmp(vectorDispositivos[i], nombre)) {
+				pthread_mutex_lock(vectorMutexDispositivosIO[i]);
+				AgregarAProcesoColaBloqueados(vectorColasBloqueados[i], pcbBloqueado);
+				pthread_mutex_unlock(vectorMutexDispositivosIO[i]);
+				existeDispositivo = 1;
+			}
+
+		}
+		if (!existeDispositivo) {
+			log_error(logger,"No existe el dispositivo solicitado por el proceso pid %d",pcbBloqueado.pcb.pcb.pid);
+		}
+
 	}
 
 }
