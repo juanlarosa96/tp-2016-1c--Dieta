@@ -411,12 +411,47 @@ int buscarVictimaClock(uint32_t pid) {
 	return victima;
 
 }
+void modificarFrameEnListaPaginas(int indiceProceso, uint32_t idFrame,
+		uint32_t paginaNueva) {
+	t_nodo_lista_procesos * nodoProceso;
+	t_nodo_lista_paginas * nodoPagina;
+	int i = 0;
+	int acierto = 0;
 
-/*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
- //Busco bit de referencia en 0
- buscarPuntero(pid);
+	pthread_mutex_lock(&mutexProcesos);
+	nodoProceso = list_get(listaProcesos, indiceProceso);
 
- }*/
+	while (i < list_size(nodoProceso->lista_paginas) && acierto == 0) {
+		nodoPagina = list_get(nodoProceso->lista_paginas, i);
+		if (nodoPagina->nro_pagina == paginaNueva) {
+			nodoPagina->nroFrame = idFrame;
+			nodoPagina->status = 'M';
+			acierto = 1;
+		}
+
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
+
+}
+
+void reemplazoClock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina) {
+	int indiceFrame;
+	int idFrame;
+	t_nodo_lista_frames * frameAux;
+	int indiceProceso;
+
+	indiceFrame = buscarVictimaClock(pid);
+	pthread_mutex_lock(&mutexFrames);
+	frameAux = list_get(listaFrames, indiceFrame);
+	frameAux->pid = pid;
+	idFrame = frameAux->nroFrame;
+	pthread_mutex_unlock(&mutexFrames);
+
+	indiceProceso = encontrarPosicionEnListaProcesos(pid);
+	modificarFrameEnListaPaginas(indiceProceso, idFrame, paginaNueva);
+
+}
 
 void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
 	t_entrada_tlb* nodoAux;
