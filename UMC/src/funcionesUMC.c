@@ -242,15 +242,18 @@ void flushTLB() {
 void limpiarEntradasTLB(uint32_t pid) {
 	t_entrada_tlb* nodoAux;
 	int i = 0;
+	int acierto = 0;
 
 	pthread_mutex_lock(&mutexTLB);
-	while (i < list_size(TLB)) {
+	while (i < list_size(TLB) && acierto == 0) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid) {
 			nodoAux->pid = 0;
+			acierto = 1;
 			//list_replace_and_destroy_element(TLB, i, nodoAux,
 			//(void*) entradaTLBdestroy);
 		}
+		i++;
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
