@@ -509,9 +509,10 @@ void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 }
 
 void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso,
-		int *largoNombreDispositivo, char * nombreDispositivo, int *tiempo) {
+		int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoNombreDispositivo, sizeof(int));
+	*nombreDispositivo = malloc(*largoNombreDispositivo);
 	recibirTodo(socketOrigen, nombreDispositivo, *largoNombreDispositivo);
 	recibirTodo(socketOrigen, tiempo, sizeof(int));
 }
@@ -650,4 +651,3 @@ void enviarSleepQuantum(int socketCPU, int  sleep) {
 	send(socketCPU, data, sizeof(int) * 2, 0);
 	free(data);
 }
-
