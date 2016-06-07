@@ -569,6 +569,32 @@ void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
 	pthread_mutex_unlock(&mutexTLB);
 
 }
+void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame){
+	t_entrada_tlb* aux;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB) && acierto == 0) {
+		aux = list_get(TLB, i);
+		if (aux->pid == 0) {
+			aux->pid = pid;
+			aux->nroFrame = nroFrame;
+			aux->nroPagina = nroPagina;
+			pthread_mutex_lock(&mutexContadorMemoria);
+			aux->ultAcceso = accesoMemoria;
+			pthread_mutex_unlock(&mutexContadorMemoria);
+			acierto = 1;
+		}
+		i++;
+	}
+
+	if(acierto == 0){
+		lru(nroPagina, pid, nroFrame);
+	}
+	pthread_mutex_unlock(&mutexTLB);
+
+}
 
 void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		uint32_t pid) {
@@ -583,15 +609,17 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			return data;
 		}
-		//TLB Miss
 	}
-
+	//TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) {
 		//buscarEnSwap
 		//poner el puntero donde la tengo en memprincipal
 	}
+
+	//nroFrame > 1
+	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
 
@@ -627,6 +655,8 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	if (nroFrame == -1) {
 		//buscarEnSwap
 	}
+	//nroFrame > 1
+	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	escrituraMemoria(nroFrame, offset, tamanio, buffer);
 
