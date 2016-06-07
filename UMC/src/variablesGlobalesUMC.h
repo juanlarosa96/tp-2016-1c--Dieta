@@ -21,9 +21,9 @@ pthread_mutex_t mutexTLB;
 pthread_mutex_t mutexSwap;
 pthread_mutex_t mutexMemoriaPrincipal;
 pthread_mutex_t mutexContadorMemoria;  //EVALUAR SI ES NECESARIO
-pthread_mutex_t mutexRetardo;
+pthread_mutex_t mutexRetardo; //EVALUAR SI ES ESTRICAMENTE NECESARIO
 
-uint16_t entradasTLB; //lo saco del archivo de config
+uint16_t entradasTLB;
 uint32_t accesoMemoria; //contador de accesos a memoria para LRU
 
 t_log* logger;
@@ -34,6 +34,6 @@ int size_frames;
 int retardo;
 int socketSwap;
 int framesPorProceso;
-
+char * algoritmo;
 
 #endif /* VARIABLESGLOBALESUMC_H_ */
