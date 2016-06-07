@@ -562,13 +562,13 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		return;
 	}
 
-//aca tengo que crear un puntero o una estructura?
+	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
 	unNodo->pid = idPrograma;
 	unNodo->cantPaginas = paginasRequeridas;
-//unNodo.framesAsignados = 0;
+	unNodo->framesAsignados = 0;
+	unNodo->punteroClock = -1;
 	unNodo->lista_paginas = list_create();
-//unNodo.punteroClock = -1;
 	int i;
 	for (i = 0; i < paginasRequeridas; i++) {
 		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
