@@ -37,8 +37,9 @@ int main(int argc, char *argv[]) {
 	entradasTLB = config_get_int_value(config, "ENTRADAS_TLB");
 	retardo = config_get_int_value(config, "RETARDO");
 	framesPorProceso = config_get_int_value(config, "MARCO_X_PROC");
+	algoritmo = config_get_string_value(config, "ALGORITMO");
 
-	//Reservo Memoria
+			//Reservo Memoria
 	int memoriaDisponible = (cant_frames) * (size_frames);
 	memoriaPrincipal = malloc(memoriaDisponible);
 	memset(memoriaPrincipal, 0, sizeof(memoriaDisponible));
@@ -131,6 +132,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	log_info(logger, "Se estableció la conexión con Núcleo", texto);
+
 
 	enviarTamanioPagina(nuevaConexion, size_frames);
 
