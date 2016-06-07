@@ -79,8 +79,8 @@ void recibirPID(int socketUMC, uint32_t * pid);
 void enviarFinalizacionProgramaConsola(int socketConsola);
 
 //header: 15
-void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso, int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo);
-void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,t_nombre_dispositivo dispositivo,int tiempo);
+void recibirEntradaSalida(int socketOrigen, int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo);
+void enviarEntradaSalida(int socketNucleo, t_pcb pcb, t_nombre_dispositivo dispositivo, int tiempo);
 
 //header: 21
 void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo);

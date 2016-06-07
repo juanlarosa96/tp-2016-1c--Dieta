@@ -471,23 +471,20 @@ void recibirPID(int socketUMC, uint32_t * pid) {
 	recibirTodo(socketUMC, pid, sizeof(uint32_t));
 }
 
-void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
+void enviarEntradaSalida(int socketNucleo, t_pcb pcb,
 		t_nombre_dispositivo dispositivo, int tiempo) {
 	int header = headerEntradaSalida;
 
+	enviarPcb(socketNucleo,pcb);
 
 	void *data = malloc(
-			sizeof(int) + sizeof(uint32_t) + sizeof(int)+ strlen(dispositivo) + 1
+			sizeof(int) + sizeof(int)+ strlen(dispositivo) + 1
 					 + sizeof(int)); //header + pid + largoNombreDispositivo + nombreDispositivo + tiempo
 	int offset = 0, str_size = 0, largoNombreDispositivo = strlen(dispositivo)
 			+ 1;
 
 	str_size = sizeof(int);
 	memcpy(data + offset, &header, str_size);
-	offset += str_size;
-
-	str_size = sizeof(uint32_t);
-	memcpy(data + offset, &id_proceso, str_size);
 	offset += str_size;
 
 	str_size = sizeof(int);
@@ -508,9 +505,7 @@ void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 
 }
 
-void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso,
-		int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo) {
-	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
+void recibirEntradaSalida(int socketOrigen, int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo) {
 	recibirTodo(socketOrigen, largoNombreDispositivo, sizeof(int));
 	*nombreDispositivo = malloc(*largoNombreDispositivo);
 	recibirTodo(socketOrigen, nombreDispositivo, *largoNombreDispositivo);
