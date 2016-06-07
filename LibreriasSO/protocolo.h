@@ -83,6 +83,7 @@ void recibirEntradaSalida(int socketOrigen, int *largoNombreDispositivo, char **
 void enviarEntradaSalida(int socketNucleo, t_pcb pcb, t_nombre_dispositivo dispositivo, int tiempo);
 
 //header: 21
+void enviarPaginasRequeridasASwap(int, int);
 void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo);
 
 //header: 22 // header 23
