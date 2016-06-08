@@ -779,7 +779,10 @@ void liberarPaginas(int indiceListaProceso) {
 
 }
 
+
+
 void finalizarPrograma(uint32_t idPrograma) {
+	int header = finalizacionPrograma;
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
 	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
@@ -794,10 +797,11 @@ void finalizarPrograma(uint32_t idPrograma) {
 		limpiarEntradasTLB(idPrograma);
 	}
 
-//TERMINAR FUNCION!!!
+	pthread_mutex_lock(&mutexSwap);
+	send(socketSwap, &header, sizeof(int),0); //Informar a Swap de la finalización del programa
+	pthread_mutex_unlock(&mutexSwap);
 
-//mutex para swap
-//InformarSwap() swap borrame tooodo
+
 	log_info(logger, "Se finalizó programa pid %d", idPrograma);
 
 }
