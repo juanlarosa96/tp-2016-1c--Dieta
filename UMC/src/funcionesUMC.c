@@ -7,6 +7,8 @@
 
 #include "funcionesUMC.h"
 
+#define OVERFLOW -2
+
 void cambiarRetardo(int nuevoRetardo) {
 	retardo = nuevoRetardo;
 }
@@ -23,25 +25,29 @@ void destruirPagina(t_nodo_lista_paginas * nodo) {
 	free(nodo);
 }
 
-int encontrarPosicionEnListaProcesos(int pid) {
+int encontrarPosicionEnListaProcesos(uint32_t pid) {
 	t_nodo_lista_procesos * aux;
 
 	int i = 0;
-	int encontrado = 1;
+	int encontrado = 0;
 
 	usleep(retardo * 1000);
 
 	pthread_mutex_lock(&mutexProcesos);
-	while ((i < list_size(listaProcesos)) && encontrado != 0) {
+	while ((i < list_size(listaProcesos)) && encontrado == 0) {
 		aux = list_get(listaProcesos, i);
 
 		if (aux->pid == pid) {
-			encontrado = 0;
+			encontrado = 1;
 		} else {
 			i++;
 		}
 	}
 	pthread_mutex_unlock(&mutexProcesos);
+
+	if (encontrado == 0) {
+		return -1; //no se encontró el pid
+	}
 
 	return i;
 }
@@ -164,8 +170,7 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	t_nodo_lista_paginas* nodoPagAux;
 	int i = 0;
 	int j = 0;
-	int pidEncontrado = 0;
-	int aciertoPagina = 0;
+	int pidEncontrado = 0, paginaEncontrada = 0;
 
 	usleep(retardo * 1000);
 
@@ -175,18 +180,18 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 		nodoAux = list_get(listaProcesos, i);
 		if (nodoAux->pid == pid) {
 			pidEncontrado = 1;
-			while (j < list_size(listaProcesos) && aciertoPagina == 0) {
+			while (j < list_size(nodoAux->lista_paginas)
+					&& paginaEncontrada == 0) {
 				nodoPagAux = list_get(nodoAux->lista_paginas, j);
 
 				if (nodoPagAux->nro_pagina == nroPagina) {
+					paginaEncontrada = 1;
 					if (nodoPagAux->status == 'M') { //estaEnMemoria
 						frame = nodoPagAux->nroFrame;  //aplicarLRU para TLB
-						aciertoPagina = 1;
 					} else {
 						return -1;
 						//buscarEnSwap
 					}
-
 				}
 				j++;
 			} //fin While de lista de paginas
@@ -194,6 +199,10 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 		i++;
 	} //fin while lista procesos
 	pthread_mutex_unlock(&mutexProcesos);
+
+	if(paginaEncontrada == 0){
+		return OVERFLOW;
+	}
 
 	return (int) frame;
 }
@@ -618,6 +627,7 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	void * data;
 	int nroFrame;
+	int pedidoValido;
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
@@ -637,15 +647,17 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		int exito;
 		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
 		if (exito == -1) {
-			//avisar a Swap para matar proceso
+			//avisar a Swap para matar proceso. llamo a finalizarPrograma()
 			//avisar a Nucleo para matar proceso
 			//avisar a CPU para matar proceso
 			log_error(logger,
 					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
 					pid);
-			pthread_exit(NULL);
 		}
 
+	} else if(nroFrame == OVERFLOW){
+		//avisar que hay overflow
+		log_error(logger, "Pedido inválido de pid %d. Fuera del espacio de direcciones.",pid);
 	}
 
 	//nroFrame >- 1
@@ -663,7 +675,8 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		void * buffer, uint32_t pid) {
 
 	int nroFrame;
-//chequear si hay stack overflow
+
+	//chequear si hay stack overflow
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
@@ -691,6 +704,8 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 					pid);
 			pthread_exit(NULL);
 		}
+	} else if (nroFrame == OVERFLOW){
+
 	}
 
 	//nroFrame > 1
@@ -756,12 +771,11 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 }
 
-
-
-void liberarPaginas(int indiceListaProceso){
+void liberarPaginas(int indiceListaProceso) {
 	t_nodo_lista_procesos * procesoAux;
 	procesoAux = list_get(listaProcesos, indiceListaProceso);
-	list_clean_and_destroy_elements(procesoAux->lista_paginas, (void*) destruirPagina);
+	list_clean_and_destroy_elements(procesoAux->lista_paginas,
+			(void*) destruirPagina);
 
 }
 
@@ -797,6 +811,23 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 	(*idProcesoActivo) = idNuevoPrograma;
 }
 
+void dumpPID(int pid) {
+	int indice;
+	indice = encontrarPosicionEnListaProcesos((uint32_t) pid);
+
+	if (indice == -1) {
+		printf("PID no válido\n");
+	}
+
+	t_nodo_lista_procesos* nodoProceso;
+	pthread_mutex_lock(&listaProcesos);
+	nodoProceso = list_get(listaProcesos, indice);
+	pthread_mutex_unlock(&listaProcesos);
+
+	FILE * reporte;
+	reporte = fopen("./Dump", "w+");
+}
+
 int clean_stdin() {
 	while (getchar() != '\n')
 		;
@@ -807,27 +838,43 @@ void consolaUMC(void) {
 	char * comando = malloc(30);
 	char c;
 	int nuevoRetardo;
+	int pid;
 
 	while (1) {
 		printf("Ingrese comando:\n");
 		scanf("%s", comando);
-		if (strncmp(comando, "flush", 5) == 0) {
-			printf("Sobre que quiere hacer flush?\n-tlb\n-memory");
+		if (strncasecmp(comando, "flush", 5) == 0) {
+			printf("¿Sobre que quiere hacer flush?\n-tlb\n-memory");
 			scanf("%s", comando);
 
-			if (strncmp(comando, "tlb", 3) == 0) {
+			if (strncasecmp(comando, "tlb", 3) == 0) {
 				printf("Se ejecutará: flush TLB\n");
 				flushTLB();
-				log_info(logger, "Se ejecutó flush TLB");
-			} else if (strncmp(comando, "memory", 6) == 0) {
+				log_info(logger, "Se ejecutó flush TLB\n");
+			} else if (strncasecmp(comando, "memory", 6) == 0) {
 				printf("Se ejecutará: Flush Memoria Principal\n");
 				flushMemory();
 				log_info(logger, "Se ejecutó flush Memory");
 			}
-		} else if (strncmp(comando, "dump", 4) == 0) {
-			printf("Se ejecutará: Dump\n");
-			//dump()
-		} else if (strncmp(comando, "retardo", 7) == 0) {
+		} else if (strncasecmp(comando, "dump", 4) == 0) {
+			printf("¿Sobre qué quiere hacer dump?\n -total \n -pid \n");
+			scanf("%s", comando);
+			if (strncasecmp(comando, "pid", 3) == 0) {
+				do {
+					printf("Ingrese nuevo retardo: \n");
+
+				} while ((scanf("%d%c", &pid, &c) != 2 || c != '\n')
+						&& clean_stdin());
+
+				printf("Se ejecutará: Dump del proceso %d\n", pid);
+
+				dumpPID(pid);
+			} else if (strncasecmp(comando, "total", 5) == 0) {
+				printf("Se ejecutará: Dump de todos los procesos\n");
+				//dumpTotal();
+			}
+
+		} else if (strncasecmp(comando, "retardo", 7) == 0) {
 			do {
 				printf("Ingrese nuevo retardo: \n");
 
