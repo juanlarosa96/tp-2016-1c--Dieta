@@ -635,3 +635,8 @@ void enviarSleepQuantum(int socketCPU, int  sleep) {
 	send(socketCPU, data, sizeof(int) * 2, 0);
 	free(data);
 }
+
+void enviarFinalizacionProgramaNucleo(int socketNucleo){
+	int header = finalizacionPrograma;
+	send(socketNucleo,&header,sizeof(int),0);
+}

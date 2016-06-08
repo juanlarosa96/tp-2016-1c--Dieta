@@ -96,4 +96,5 @@ void recibirSignal(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemafo
 int recibirCantidadQuantum(int socketOrigen);
 void enviarUnidadesQuantum(int socketCPU, int  unidades);
 void enviarSleepQuantum(int socketCPU, int  sleep);
+void enviarFinalizacionProgramaNucleo(int socketNucleo);
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
