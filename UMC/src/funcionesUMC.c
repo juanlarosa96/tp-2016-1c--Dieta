@@ -9,10 +9,6 @@
 
 #define OVERFLOW -2
 
-void cambiarRetardo(int nuevoRetardo) {
-	retardo = nuevoRetardo;
-}
-
 void destruirProceso(t_nodo_lista_procesos * nodo) {
 	free(nodo);
 }
@@ -23,6 +19,14 @@ void destruirFrame(t_nodo_lista_frames * nodo) {
 
 void destruirPagina(t_nodo_lista_paginas * nodo) {
 	free(nodo);
+}
+
+void liberarPaginas(int indiceListaProceso) {
+	t_nodo_lista_procesos * procesoAux;
+	procesoAux = list_get(listaProcesos, indiceListaProceso);
+	list_clean_and_destroy_elements(procesoAux->lista_paginas,
+			(void*) destruirPagina);
+
 }
 
 int encontrarPosicionEnListaProcesos(uint32_t pid) {
@@ -207,20 +211,6 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	return (int) frame;
 }
 
-void flushTLB() {
-	t_entrada_tlb* aux;
-	int i = 0;
-	pthread_mutex_lock(&mutexTLB);
-	while (i < list_size(TLB)) {
-		aux = list_get(TLB, i);
-		aux->pid = 0;
-
-		i++;
-	}
-
-	pthread_mutex_unlock(&mutexTLB);
-}
-
 void limpiarEntradasTLB(uint32_t pid) {
 	t_entrada_tlb* nodoAux;
 	int i = 0;
@@ -240,6 +230,21 @@ void limpiarEntradasTLB(uint32_t pid) {
 	pthread_mutex_unlock(&mutexTLB);
 
 }
+
+void flushTLB() {
+	t_entrada_tlb* aux;
+	int i = 0;
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB)) {
+		aux = list_get(TLB, i);
+		aux->pid = 0;
+
+		i++;
+	}
+
+	pthread_mutex_unlock(&mutexTLB);
+}
+
 
 void flushMemory() {
 	int i;
@@ -391,29 +396,6 @@ int buscarVictimaClock(uint32_t pid) {
 	return victima;
 
 }
-void modificarFrameEnListaPaginas(int indiceProceso, uint32_t idFrame,
-		uint32_t paginaNueva) {
-	t_nodo_lista_procesos * nodoProceso;
-	t_nodo_lista_paginas * nodoPagina;
-	int i = 0;
-	int acierto = 0;
-
-	pthread_mutex_lock(&mutexProcesos);
-	nodoProceso = list_get(listaProcesos, indiceProceso);
-
-	while (i < list_size(nodoProceso->lista_paginas) && acierto == 0) {
-		nodoPagina = list_get(nodoProceso->lista_paginas, i);
-		if (nodoPagina->nro_pagina == paginaNueva) {
-			nodoPagina->nroFrame = idFrame;
-			nodoPagina->status = 'M';
-			acierto = 1;
-		}
-
-		i++;
-	}
-	pthread_mutex_unlock(&mutexProcesos);
-
-}
 
 int buscarVictimaClockModificado(uint32_t pid) {
 	int indice;
@@ -471,6 +453,32 @@ int buscarVictimaClockModificado(uint32_t pid) {
 	return victima;
 
 }
+
+void modificarFrameEnListaPaginas(int indiceProceso, uint32_t idFrame,
+		uint32_t paginaNueva) {
+	t_nodo_lista_procesos * nodoProceso;
+	t_nodo_lista_paginas * nodoPagina;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoProceso = list_get(listaProcesos, indiceProceso);
+
+	while (i < list_size(nodoProceso->lista_paginas) && acierto == 0) {
+		nodoPagina = list_get(nodoProceso->lista_paginas, i);
+		if (nodoPagina->nro_pagina == paginaNueva) {
+			nodoPagina->nroFrame = idFrame;
+			nodoPagina->status = 'M';
+			acierto = 1;
+		}
+
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
+
+}
+
+
 
 void actualizarPaginaAReemplazar(int indiceProceso, int idFrame) {
 	t_nodo_lista_procesos * nodoProceso;
@@ -676,8 +684,6 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 
 	int nroFrame;
 
-	//chequear si hay stack overflow
-
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
@@ -685,8 +691,9 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			return;
 		}
-	} //TLB Miss
+	}
 
+	//TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) {
@@ -718,7 +725,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
-		char * codigoPrograma, int socketNucleo) {
+		char * codigoPrograma, int socketNucleo) { //creo que está terminada
 
 	int largoPrograma = strlen(codigoPrograma) + 1; //?
 
@@ -738,7 +745,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * pagina = malloc(size_frames);
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
-		for(j = 0; j < paginasCodigo; j++){
+		for(j = 0; j < paginasCodigo; j++){ //Le mando pagina por pagina a Swap
 			if(largoPrograma > size_frames){
 			memcpy(pagina, posicionAux, size_frames); //chequear si en la ultima pagina tira error
 			}
@@ -787,16 +794,6 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 }
 
-void liberarPaginas(int indiceListaProceso) {
-	t_nodo_lista_procesos * procesoAux;
-	procesoAux = list_get(listaProcesos, indiceListaProceso);
-	list_clean_and_destroy_elements(procesoAux->lista_paginas,
-			(void*) destruirPagina);
-
-}
-
-
-
 void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	int header = finalizacionPrograma;
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
@@ -829,6 +826,10 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 	}
 
 	(*idProcesoActivo) = idNuevoPrograma;
+}
+
+void cambiarRetardo(int nuevoRetardo) {
+	retardo = nuevoRetardo;
 }
 
 void dumpPID(int pid) {
