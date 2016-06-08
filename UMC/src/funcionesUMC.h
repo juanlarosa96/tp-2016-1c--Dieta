@@ -20,7 +20,7 @@
 
 int encontrarPosicionEnListaProcesos(int pid);
 
-void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma);
+void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma, int socketNucleo);
 
 void* solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio, uint32_t pid);
 

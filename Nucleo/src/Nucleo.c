@@ -16,6 +16,13 @@ int main(int argc, char **argv) {
 	int PUERTO_UMC = config_get_int_value(config, "PUERTO_UMC");
 	char* IP_UMC = config_get_string_value(config, "IP_UMC");
 	uint32_t PAGINAS_STACK = config_get_int_value(config, "PAGINAS_STACK");
+	cantidadQuantum = config_get_int_value(config, "QUANTUM");
+	retardoQuantum = config_get_int_value(config, "QUANTUM_SLEEP");
+
+	vectorDispositivos = config_get_array_value(config, "IO_ID");
+	vectorRetardoDispositivos = config_get_array_value(config, "IO_SLEEP");
+
+	crearHilosEntradaSalida();
 
 	//Creo log para el Núcleo
 
@@ -79,7 +86,6 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexColaListos, NULL);
 	pthread_mutex_init(&mutexColaFinalizados, NULL);
 	pthread_mutex_init(&mutexListaConsolas, NULL);
-	pthread_mutex_init(&mutexVariableNuevaConexion, NULL);
 	pthread_mutex_init(&mutexListaFinalizacionesPendientes, NULL);
 
 	fd_set bolsaDeSockets;
@@ -108,7 +114,6 @@ int main(int argc, char **argv) {
 			if (FD_ISSET(i, &bolsaAuxiliar)) { // we got one!!
 				if (i == listener) {
 					// handle new connections
-					pthread_mutex_lock(&mutexVariableNuevaConexion);
 					//Espera hasta que el hilo haya guardado el valor que se le paso como parametro
 					//antes de sobreEscribir la variable nuevaConexion
 					nuevaConexion = aceptarConexion(servidorNucleo, &direccionCliente);
@@ -138,8 +143,9 @@ int main(int argc, char **argv) {
 						pthread_attr_t attr;
 						pthread_attr_init(&attr);
 						pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-						pthread_create(&nuevoHilo, &attr, (void *) &manejarCPU, (void *) &nuevaConexion); //Creo hilo que maneje el nuevo CPU
+						int * socketConexionParaThread = malloc(sizeof(int));
+						*socketConexionParaThread = nuevaConexion;
+						pthread_create(&nuevoHilo, &attr, (void *) manejarCPU, (void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
 
 						pthread_attr_destroy(&attr);
 
@@ -181,17 +187,18 @@ int main(int argc, char **argv) {
 								list_destroy(nuevoPcb.indice_stack);
 
 							} else {
-								t_pcbConConsola pcbListo;
-								pcbListo.pcb = nuevoPcb;
-								pcbListo.socketConsola = i;
-								pcbListo.finalizarPrograma = 0;
-								AgregarAProcesoColaListos(pcbListo);
+								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));
+								pcbListo->pcb = nuevoPcb;
+								pcbListo->socketConsola = i;
+								AgregarAProcesoColaListos(*pcbListo);
 
 								pthread_mutex_lock(&mutexListaConsolas);
-								list_add(listaConsolas, (void *) &pcbListo);
+								list_add(listaConsolas, (void *) pcbListo);
 								pthread_mutex_unlock(&mutexListaConsolas);
 
 								free(programa);
+
+								log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
 
 							}
 						} else {
@@ -204,8 +211,8 @@ int main(int argc, char **argv) {
 
 					case finalizacionPrograma:
 						;
-						int j, sizeCola = queue_size(cola_PCBListos), encontrado = 0;
-
+						int j, sizeCola = queue_size(cola_PCBListos), sizeColaBloqueados, encontrado = 0;
+						//Busco pcb en cola de procesos listos
 						for (j = 0; j < sizeCola; j++) {
 
 							t_pcbConConsola * elementoAux = (t_pcbConConsola *) queue_pop(cola_PCBListos);
@@ -218,11 +225,36 @@ int main(int argc, char **argv) {
 							}
 						}
 
+						int contador = 0, k;
+						while (vectorDispositivos[contador] != NULL) {
+							contador++;
+						}
+						//Busco pcb en colas de procesos bloqueados
+						for (k = 0; k < contador; k++) {
+
+							sizeColaBloqueados = queue_size(vectorColasBloqueados[k]);
+							pthread_mutex_lock(vectorMutexDispositivosIO[k]);
+
+							for (j = 0; j < sizeColaBloqueados; j++) {
+
+								t_pcbBloqueado * elementoAux = (t_pcbBloqueado*) queue_pop(vectorColasBloqueados[k]);
+
+								if (elementoAux->pcb.socketConsola == i) {
+									finalizarProceso(elementoAux->pcb);
+									encontrado = 1;
+								} else {
+									queue_push(cola_PCBListos, (void *) elementoAux);
+								}
+							}
+							pthread_mutex_unlock(vectorMutexDispositivosIO[k]);
+						}
+
 						if (!encontrado) {
-							int socketProcesoFinalizado = i;
+							int * socketProcesoFinalizado = malloc(sizeof(int));
+							*socketProcesoFinalizado = i;
 
 							pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-							list_add(listaFinalizacionesPendientes,&socketProcesoFinalizado);
+							list_add(listaFinalizacionesPendientes, socketProcesoFinalizado);
 							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
 

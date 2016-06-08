@@ -8,10 +8,7 @@
 #include "funcionesUMC.h"
 
 void cambiarRetardo(int nuevoRetardo) {
-	pthread_mutex_lock(&mutexRetardo);
 	retardo = nuevoRetardo;
-	pthread_mutex_unlock(&mutexRetardo);
-
 }
 
 void destruirProceso(t_nodo_lista_procesos * nodo) {
@@ -27,6 +24,8 @@ int encontrarPosicionEnListaProcesos(int pid) {
 
 	int i = 0;
 	int encontrado = 1;
+
+	usleep(retardo * 1000);
 
 	pthread_mutex_lock(&mutexProcesos);
 	while ((i < list_size(listaProcesos)) && encontrado != 0) {
@@ -57,6 +56,7 @@ void liberarFrames(uint32_t pid) {
 	}
 	pthread_mutex_unlock(&mutexFrames);
 }
+
 int cantidadFramesDisponibles() {
 	int i = 0;
 	int contador = 0;
@@ -121,52 +121,6 @@ void reservarFrames(uint32_t pid, int cantPaginas) {
 
 }
 
-void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
-		char * codigoPrograma) {
-
-	int largoPrograma = strlen(codigoPrograma) + 1; //?
-	int paginasCodigo = largoPrograma / size_frames
-			+ largoPrograma % size_frames; //not sure
-
-	pthread_mutex_lock(&mutexSwap);
-	enviarCodigoASwap(socketSwap, paginasRequeridas, idPrograma, paginasCodigo);
-	pthread_mutex_unlock(&mutexSwap);
-	log_info(logger, "Se envió nuevo programa a Swap", texto);
-
-//enviarPaginas(enviar pagina x pagina)
-	int framesDisponibles = cantidadFramesDisponibles();
-
-	if (framesDisponibles < framesPorProceso
-			&& framesDisponibles < paginasRequeridas) {
-		//avisar que no se pudo inicializarPrograma a nucleo
-		return;
-	}
-
-	reservarFrames(idPrograma, paginasRequeridas);
-
-//aca tengo que crear un puntero o una estructura?
-	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
-	unNodo->pid = idPrograma;
-	unNodo->cantPaginas = paginasRequeridas;
-//unNodo.framesAsignados = 0;
-	unNodo->lista_paginas = list_create();
-//unNodo.punteroClock = -1;
-	int i;
-	for (i = 0; i < paginasRequeridas; i++) {
-		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
-		unaPagina->nro_pagina = i;
-		unaPagina->status = 'S';
-		list_add(unNodo->lista_paginas, unaPagina);
-	}
-
-	pthread_mutex_lock(&mutexProcesos);
-	list_add(listaProcesos, &unNodo);
-	pthread_mutex_unlock(&mutexProcesos);
-
-//enviar rta a nucleo si se pudo inicializar o no
-
-}
-
 int buscarEnTLB(uint32_t pid, int nroPagina) {
 	int frame = -1;
 
@@ -175,7 +129,6 @@ int buscarEnTLB(uint32_t pid, int nroPagina) {
 	int acierto = 0;
 
 	pthread_mutex_lock(&mutexTLB);
-
 	while (i < list_size(TLB) && acierto == 0) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid && nodoAux->nroPagina == (uint32_t) nroPagina) {
@@ -196,7 +149,11 @@ int buscarEntradaMenosUsadaRecientemente() {
 	int i = 0;
 	t_entrada_tlb* entradaAux;
 
+	pthread_mutex_lock(&mutexContadorMemoria);
 	ultAccesoAuxiliar = (int) accesoMemoria;
+	pthread_mutex_unlock(&mutexContadorMemoria);
+
+	//pthread_mutex_lock(&mutexTLB); OJO, VER SI PONER ANTES DE LRU, NO SE SI ACA ESA BIEN
 	while (i < list_size(TLB)) {
 		entradaAux = list_get(TLB, i);
 		if ((entradaAux->ultAcceso) < ultAccesoAuxiliar) {
@@ -204,8 +161,8 @@ int buscarEntradaMenosUsadaRecientemente() {
 			indice = i;
 		}
 		i++;
-
 	}
+	//pthread_mutex_unlock(&mutexTLB);
 
 	return indice;
 
@@ -243,12 +200,14 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	int pidEncontrado = 0;
 	int aciertoPagina = 0;
 
+	usleep(retardo * 1000);
+
 	pthread_mutex_lock(&mutexProcesos);
 
 	while (i < list_size(listaProcesos) && pidEncontrado == 0) {
-		nodoAux = list_get(listaProcesos, i); //list_get empieza en 1 o 0?
+		nodoAux = list_get(listaProcesos, i);
 		if (nodoAux->pid == pid) {
-
+			pidEncontrado = 1;
 			while (j < list_size(listaProcesos) && aciertoPagina == 0) {
 				nodoPagAux = list_get(nodoAux->lista_paginas, j);
 
@@ -266,16 +225,44 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 			} //fin While de lista de paginas
 		} //fin if nodoAux == pid
 		i++;
-	}
+	} //fin while lista procesos
 	pthread_mutex_unlock(&mutexProcesos);
 
 	return (int) frame;
 }
 
 void flushTLB() {
+	t_entrada_tlb* aux;
+	int i = 0;
 	pthread_mutex_lock(&mutexTLB);
-	list_clean_and_destroy_elements(TLB, (void *) entradaTLBdestroy);
+	while (i < list_size(TLB)) {
+		aux = list_get(TLB, i);
+		aux->pid = 0;
+
+		i++;
+	}
+
 	pthread_mutex_unlock(&mutexTLB);
+}
+
+void limpiarEntradasTLB(uint32_t pid) {
+	t_entrada_tlb* nodoAux;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB) && acierto == 0) {
+		nodoAux = list_get(TLB, i);
+		if (nodoAux->pid == pid) {
+			nodoAux->pid = 0;
+			acierto = 1;
+			//list_replace_and_destroy_element(TLB, i, nodoAux,
+			//(void*) entradaTLBdestroy);
+		}
+		i++;
+	}
+	pthread_mutex_unlock(&mutexTLB);
+
 }
 
 void flushMemory() {
@@ -310,6 +297,25 @@ void actualizarBitReferencia(uint32_t frame) {
 
 }
 
+void actualizarBitModificado(uint32_t frame) {
+	int i = 0;
+	int acierto = 0;
+	t_nodo_lista_frames * nodoAuxiliar;
+	pthread_mutex_lock(&mutexFrames);
+	while (i < list_size(listaFrames) && acierto == 0) {
+		nodoAuxiliar = list_get(listaFrames, i);
+		if (nodoAuxiliar->nroFrame == frame) {
+			nodoAuxiliar->bitModificado = 1;
+			/*list_replace_and_destroy_element(listaFrames, i, nodoAuxiliar,
+			 (void*) destruirFrame); */			//no estoy segura del destoy
+			acierto = 1;
+		}
+		i++;
+	}
+	pthread_mutex_unlock(&mutexFrames);
+
+}
+
 void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
 	void * bytes = malloc(tamanio);
 	int posicion = (int) frame * size_frames + offset;
@@ -319,8 +325,275 @@ void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
 	void * posicionAux = memoriaPrincipal + posicion;
 	memcpy(bytes, posicionAux, tamanio);
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	pthread_mutex_lock(&mutexContadorMemoria);
+	accesoMemoria++;
+	pthread_mutex_unlock(&mutexContadorMemoria);
 	actualizarBitReferencia(frame);
 	return bytes;
+}
+
+void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
+		void * buffer) {
+	int posicion = (int) frame * size_frames + offset;
+	usleep(retardo * 1000);
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
+	void * posicionAux = memoriaPrincipal + posicion;
+	memcpy(posicionAux, buffer, tamanio);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	pthread_mutex_lock(&mutexContadorMemoria);
+	accesoMemoria++;
+	pthread_mutex_unlock(&mutexContadorMemoria);
+	actualizarBitReferencia(frame);
+	actualizarBitModificado(frame);
+	free(buffer);
+}
+
+int moverPuntero(uint32_t pid, int puntero) { //busco el proximo frame que tenga el pid
+	t_nodo_lista_frames * nodoFrame;
+	int punteroADevolver;
+	int acierto = 0;
+
+	puntero++;
+	if (puntero == list_size(listaFrames)) {
+		puntero = 0;
+	}
+
+	while (puntero < list_size(listaFrames) && acierto == 0) {
+		nodoFrame = list_get(listaFrames, puntero);
+		if (nodoFrame->pid == pid) {
+			punteroADevolver = puntero;
+			acierto = 1;
+		}
+
+		puntero++;
+		if (puntero == list_size(listaFrames)) {
+			puntero = 0;
+		}
+
+	}
+
+	return punteroADevolver;
+}
+
+int buscarVictimaClock(uint32_t pid) {
+	int indice;
+	int puntero;
+	int nuevoPuntero;
+	int victima;
+	int acierto;
+	t_nodo_lista_procesos* nodoAux;
+	t_nodo_lista_frames* nodoFrame;
+	indice = encontrarPosicionEnListaProcesos(pid);
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoAux = list_get(listaProcesos, indice);
+	puntero = nodoAux->punteroClock;
+	pthread_mutex_unlock(&mutexProcesos);
+
+	pthread_mutex_lock(&mutexFrames);
+	while (puntero < list_size(listaFrames) && acierto == 0) {
+		nodoFrame = list_get(listaFrames, puntero);
+		if (nodoFrame->pid == pid) {
+			if (nodoFrame->bitReferencia == 0) {
+				victima = puntero; //encontre la victima
+				nuevoPuntero = moverPuntero(pid, puntero);
+				nodoAux->punteroClock = nuevoPuntero; //corro puntero
+				acierto = 1;
+			} else {
+				nodoFrame->bitReferencia = 0;
+			}
+		}
+		puntero++;
+
+		if (puntero == list_size(listaFrames)) {
+			puntero = 0;
+		}
+
+	}
+	pthread_mutex_unlock(&mutexFrames);
+
+	return victima;
+
+}
+void modificarFrameEnListaPaginas(int indiceProceso, uint32_t idFrame,
+		uint32_t paginaNueva) {
+	t_nodo_lista_procesos * nodoProceso;
+	t_nodo_lista_paginas * nodoPagina;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoProceso = list_get(listaProcesos, indiceProceso);
+
+	while (i < list_size(nodoProceso->lista_paginas) && acierto == 0) {
+		nodoPagina = list_get(nodoProceso->lista_paginas, i);
+		if (nodoPagina->nro_pagina == paginaNueva) {
+			nodoPagina->nroFrame = idFrame;
+			nodoPagina->status = 'M';
+			acierto = 1;
+		}
+
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
+
+}
+
+int buscarVictimaClockModificado(uint32_t pid) {
+	int indice;
+	int puntero;
+	int nuevoPuntero;
+	int victima;
+	int acierto = 0;
+	int cantVueltas = 0;
+	t_nodo_lista_procesos* nodoAux;
+	t_nodo_lista_frames* nodoFrame;
+	indice = encontrarPosicionEnListaProcesos(pid);
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoAux = list_get(listaProcesos, indice);
+	puntero = nodoAux->punteroClock;
+	pthread_mutex_unlock(&mutexProcesos);
+
+	pthread_mutex_lock(&mutexFrames);
+	while (puntero < list_size(listaFrames) && acierto == 0) {
+		nodoFrame = list_get(listaFrames, puntero);
+		if (nodoFrame->pid == pid && cantVueltas == 0) {
+			if (nodoFrame->bitReferencia == 0
+					&& nodoFrame->bitModificado == 0) {
+				victima = puntero; //encontre la victima
+				nuevoPuntero = moverPuntero(pid, puntero);
+				nodoAux->punteroClock = nuevoPuntero; //corro puntero
+				acierto = 1;
+			}
+		} else if (nodoFrame->pid == pid && cantVueltas == 1) {
+			if (nodoFrame->bitReferencia == 0
+					&& nodoFrame->bitModificado == 1) {
+				victima = puntero; //encontre la victima
+				nuevoPuntero = moverPuntero(pid, puntero);
+				nodoAux->punteroClock = nuevoPuntero; //corro puntero
+				acierto = 1;
+			} else {
+				nodoFrame->bitReferencia = 0;
+			}
+		}
+		puntero++;
+
+		if (puntero == list_size(listaFrames)) {
+			puntero = 0;
+
+			if (cantVueltas == 0) {
+				cantVueltas++;
+			} else {
+				cantVueltas = 0;
+			}
+		}
+
+	}
+	pthread_mutex_unlock(&mutexFrames);
+
+	return victima;
+
+}
+
+void actualizarPaginaAReemplazar(int indiceProceso, int idFrame) {
+	t_nodo_lista_procesos * nodoProceso;
+	t_nodo_lista_paginas * nodoPagina;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexProcesos);
+	nodoProceso = list_get(listaProcesos, indiceProceso);
+
+	while (i < list_size(nodoProceso->lista_paginas) && acierto == 0) {
+		nodoPagina = list_get(nodoProceso->lista_paginas, i);
+		if (nodoPagina->nroFrame == (uint32_t) idFrame) {
+			nodoPagina->status = 'S';
+			acierto = 1;
+		}
+
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
+
+}
+
+void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
+		void * codigoPagina) {
+	int indiceFrame;
+	int idFrame;
+	t_nodo_lista_frames * frameAux;
+	int indiceProceso;
+
+	if (strncasecmp(algoritmo, "CLOCK", 5) == 0) {
+		indiceFrame = buscarVictimaClock(pid);
+	} else if (strncasecmp(algoritmo, "CLOCK-M", 7) == 0) {
+		indiceFrame = buscarVictimaClockModificado(pid);
+	} else {
+		log_error(logger, "Algoritmo Desconocido. Abortando UMC");
+		abort();
+	}
+
+	pthread_mutex_lock(&mutexFrames);
+	frameAux = list_get(listaFrames, indiceFrame);
+	idFrame = frameAux->nroFrame;
+	if(frameAux->bitModificado == 1){
+		//enviarPaginaASwap
+	}
+	pthread_mutex_unlock(&mutexFrames);
+
+	indiceProceso = encontrarPosicionEnListaProcesos(pid);
+
+	actualizarPaginaAReemplazar(indiceProceso, idFrame); //cambia status de pagina anterior de 'M' a 'S'
+
+	modificarFrameEnListaPaginas(indiceProceso, idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
+
+}
+
+void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
+	t_entrada_tlb* nodoAux;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB) && acierto == 0) {
+		nodoAux = list_get(TLB, i);
+		if (nodoAux->pid == pid && nodoAux->nroFrame == (uint32_t) nroFrame) {
+			pthread_mutex_lock(&mutexContadorMemoria);
+			nodoAux->ultAcceso = accesoMemoria;
+			pthread_mutex_unlock(&mutexContadorMemoria);
+			acierto = 1;
+		}
+		i++;
+	}
+	pthread_mutex_unlock(&mutexTLB);
+
+}
+void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame){
+	t_entrada_tlb* aux;
+	int i = 0;
+	int acierto = 0;
+
+	pthread_mutex_lock(&mutexTLB);
+	while (i < list_size(TLB) && acierto == 0) {
+		aux = list_get(TLB, i);
+		if (aux->pid == 0) {
+			aux->pid = pid;
+			aux->nroFrame = nroFrame;
+			aux->nroPagina = nroPagina;
+			pthread_mutex_lock(&mutexContadorMemoria);
+			aux->ultAcceso = accesoMemoria;
+			pthread_mutex_unlock(&mutexContadorMemoria);
+			acierto = 1;
+		}
+		i++;
+	}
+
+	if(acierto == 0){
+		lru(nroPagina, pid, nroFrame);
+	}
+	pthread_mutex_unlock(&mutexTLB);
+
 }
 
 void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
@@ -333,17 +606,20 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
 			data = lecturaMemoria(nroFrame, offset, tamanio);
+			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			return data;
 		}
-		//TLB Miss
 	}
-
+	//TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) {
 		//buscarEnSwap
 		//poner el puntero donde la tengo en memprincipal
 	}
+
+	//nroFrame > 1
+	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
 
@@ -360,38 +636,6 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 }
 
-void actualizarBitModificado(uint32_t frame) {
-	int i = 0;
-	int acierto = 0;
-	t_nodo_lista_frames * nodoAuxiliar;
-	pthread_mutex_lock(&mutexFrames);
-	while (i < list_size(listaFrames) && acierto == 0) {
-		nodoAuxiliar = list_get(listaFrames, i);
-		if (nodoAuxiliar->nroFrame == frame) {
-			nodoAuxiliar->bitModificado = 1;
-			list_replace_and_destroy_element(listaFrames, i, nodoAuxiliar,
-					(void*) destruirFrame); //no estoy segura del destoy
-			acierto = 1;
-		}
-		i++;
-	}
-	pthread_mutex_unlock(&mutexFrames);
-
-}
-
-void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
-		void * buffer) {
-	int posicion = (int) frame * size_frames + offset;
-	usleep(retardo * 1000);
-	pthread_mutex_lock(&mutexMemoriaPrincipal);
-	void * posicionAux = memoriaPrincipal + posicion;
-	memcpy(posicionAux, buffer, tamanio);
-	pthread_mutex_unlock(&mutexMemoriaPrincipal);
-	actualizarBitReferencia(frame);
-	actualizarBitModificado(frame);
-	free(buffer);
-}
-
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		void * buffer, uint32_t pid) {
 
@@ -402,6 +646,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
 			escrituraMemoria(nroFrame, offset, tamanio, buffer);
+			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			return;
 		}
 	} //TLB Miss
@@ -410,69 +655,73 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	if (nroFrame == -1) {
 		//buscarEnSwap
 	}
+	//nroFrame > 1
+	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	escrituraMemoria(nroFrame, offset, tamanio, buffer);
 
 	printf("Almacenar Bytes \n");
 }
 
-void limpiarEntradasTLB(uint32_t pid) {
-	t_entrada_tlb* nodoAux;
-	int i = 0;
+void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
+		char * codigoPrograma, int socketNucleo) {
 
-	pthread_mutex_lock(&mutexTLB);
-	while (i < list_size(TLB)) {
-		nodoAux = list_get(TLB, i);
-		if (nodoAux->pid == pid) {
-			nodoAux->pid = 0;
-			//list_replace_and_destroy_element(TLB, i, nodoAux,
-			//(void*) entradaTLBdestroy);
-		}
+	int largoPrograma = strlen(codigoPrograma) + 1; //?
+
+	int paginasCodigo = largoPrograma / size_frames;
+	if ((largoPrograma % size_frames) != 0) {
+		paginasCodigo++;
 	}
-	pthread_mutex_unlock(&mutexTLB);
 
-}
+	int respuestaInicializacion;
 
-int buscarPuntero(uint32_t pid) {
-	int indice;
-	int puntero;
-	int victima;
-	t_nodo_lista_procesos* nodoAux;
-	t_nodo_lista_frames* nodoFrame;
+	pthread_mutex_lock(&mutexSwap);
+	enviarPaginasRequeridasASwap(socketSwap, paginasRequeridas);
+	respuestaInicializacion = recibirRespuestaInicializacion(socketSwap);
+	log_info(logger, "Se envió nuevo programa pid %d a Swap", idPrograma);
+
+	if (respuestaInicializacion == inicioProgramaExito) {
+		enviarCodigoASwap(socketSwap, idPrograma, paginasCodigo,
+				codigoPrograma);
+		enviarRespuestaInicializacionExito(socketNucleo);
+	} else {
+		enviarRespuestaInicializacionError(socketNucleo);
+		log_info(logger,
+				"No se pudo inicializar programa pid %d. No hay espacio en Swap",
+				idPrograma);
+		return;
+	}
+	pthread_mutex_unlock(&mutexSwap);
+
+	//aca tengo que crear un puntero o una estructura?
+	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
+	unNodo->pid = idPrograma;
+	unNodo->cantPaginas = paginasRequeridas;
+	unNodo->framesAsignados = 0;
+	unNodo->punteroClock = -1;
+	unNodo->lista_paginas = list_create();
 	int i;
-	indice = encontrarPosicionEnListaProcesos(pid);
+	for (i = 0; i < paginasRequeridas; i++) {
+		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
+		unaPagina->nro_pagina = i;
+		unaPagina->status = 'S';
+		list_add(unNodo->lista_paginas, unaPagina);
+	}
 
 	pthread_mutex_lock(&mutexProcesos);
-	nodoAux = list_get(listaProcesos, indice);
+	list_add(listaProcesos, &unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
-	puntero = nodoAux->punteroClock;
 
-//Primero busco bit de referencia en 0
+	log_info(logger, "Se inicializó nuevo programa pid %d", idPrograma);
 
-	while (puntero < list_size(listaFrames)) {
-		nodoFrame = list_get(listaFrames, puntero);
-		if (nodoFrame->pid == pid) {
-			if (nodoFrame->bitReferencia == 0) {
-				victima = puntero;
-				//corro el puntero
-				return victima; //encontre la victima
-			}
-
-		}
-	}
+	free(codigoPrograma);
 
 }
-
-/*void clock(uint32_t pid, uint32_t paginaNueva, void * codigoPagina){
- //Busco bit de referencia en 0
- buscarPuntero(pid);
-
- }*/
 
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
-	pthread_mutex_lock(&mutexProcesos);
+	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
 	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
 			(void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
@@ -487,7 +736,7 @@ void finalizarPrograma(uint32_t idPrograma) {
 
 //mutex para swap
 //InformarSwap() swap borrame tooodo
-	log_info(logger, "Se finalizó programa", texto);
+	log_info(logger, "Se finalizó programa pid %d", idPrograma);
 
 }
 
@@ -509,7 +758,7 @@ int clean_stdin() {
 void consolaUMC(void) {
 	char * comando = malloc(30);
 	char c;
-	int retardo;
+	int nuevoRetardo;
 
 	while (1) {
 		printf("Ingrese comando:\n");
@@ -521,22 +770,27 @@ void consolaUMC(void) {
 			if (strncmp(comando, "tlb", 3) == 0) {
 				printf("Se ejecutará: flush TLB\n");
 				flushTLB();
+				log_info(logger, "Se ejecutó flush TLB");
 			} else if (strncmp(comando, "memory", 6) == 0) {
 				printf("Se ejecutará: Flush Memoria Principal\n");
 				flushMemory();
+				log_info(logger, "Se ejecutó flush Memory");
 			}
 		} else if (strncmp(comando, "dump", 4) == 0) {
 			printf("Se ejecutará: Dump\n");
 			//dump()
 		} else if (strncmp(comando, "retardo", 7) == 0) {
 			do {
-				printf("\n Ingrese nuevo retardo: ");
+				printf("Ingrese nuevo retardo: \n");
 
-			} while ((scanf("%d%c", &retardo, &c) != 2 || c != '\n')
+			} while ((scanf("%d%c", &nuevoRetardo, &c) != 2 || c != '\n')
 					&& clean_stdin());
 
-			printf("se ejecutará: Cambio de retardo\n");
-			cambiarRetardo(retardo);
+			printf("Se ejecutará: Cambio de retardo\n");
+			cambiarRetardo(nuevoRetardo);
+			log_info(logger,
+					"Se ejecutó cambio de retardo. El retardo ahora es %d",
+					retardo);
 		} else {
 			printf("Comando no válido.\n");
 		}
@@ -569,7 +823,8 @@ void procesarOperacionesNucleo(int * conexion) {
 			programa = malloc(largo_codigo);
 			recibirCodigoInicializarPrograma(socketNucleo, largo_codigo,
 					programa);
-			inicializarPrograma(pid, paginas_requeridas, programa);
+			inicializarPrograma(pid, paginas_requeridas, programa,
+					socketNucleo);
 			break;
 		case finalizacionPrograma:
 			recibirPID(socketNucleo, &pid);

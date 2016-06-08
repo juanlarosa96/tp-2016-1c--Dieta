@@ -37,29 +37,37 @@ int main(int argc, char *argv[]) {
 	entradasTLB = config_get_int_value(config, "ENTRADAS_TLB");
 	retardo = config_get_int_value(config, "RETARDO");
 	framesPorProceso = config_get_int_value(config, "MARCO_X_PROC");
+	algoritmo = config_get_string_value(config, "ALGORITMO");
 
-	//Reservo Memoria
+			//Reservo Memoria
 	int memoriaDisponible = (cant_frames) * (size_frames);
 	memoriaPrincipal = malloc(memoriaDisponible);
 	memset(memoriaPrincipal, 0, sizeof(memoriaDisponible));
 
-	//Inicializo variables globales
+	//Inicializo listas compartidas
 	listaFrames = list_create();
 	listaProcesos = list_create();
 	TLB = list_create();
-	texto = "info";
+
+	//Inicializo mutex
 	pthread_mutex_init(&mutexFrames, NULL);
 	pthread_mutex_init(&mutexProcesos, NULL);
 	pthread_mutex_init(&mutexSwap, NULL);
 	pthread_mutex_init(&mutexTLB, NULL);
 	pthread_mutex_init(&mutexContadorMemoria, NULL);
+	pthread_mutex_init(&mutexMemoriaPrincipal, NULL);
+	pthread_mutex_init(&mutexRetardo, NULL);
 
-	//Log para UMC
+	//Inicializo variables globales
+	texto = "info";
+	accesoMemoria = 0;
+
+	//Inicializo log para UMC
 	logger = log_create("UMC.log", "UMC", 1, log_level_from_string("INFO"));
 
 	//Hilo para Consola de UMC
 	pthread_t hiloConsola;
-	pthread_create(&hiloConsola, NULL, (void *) &consolaUMC, NULL);
+	pthread_create(&hiloConsola, NULL, (void *) consolaUMC, NULL);
 
 	int puerto_servidor = config_get_int_value(config, "PUERTO");
 	int puerto_swap = config_get_int_value(config, "PUERTO_SWAP");
@@ -125,6 +133,7 @@ int main(int argc, char *argv[]) {
 
 	log_info(logger, "Se estableció la conexión con Núcleo", texto);
 
+
 	enviarTamanioPagina(nuevaConexion, size_frames);
 
 	//Hilo para manejar las solicitudes de Nucleo
@@ -157,17 +166,15 @@ int main(int argc, char *argv[]) {
 
 			pthread_attr_t attr;
 			pthread_t hiloCPU;
-
-
 			pthread_attr_init(&attr);
 			pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 			pthread_create(&hiloCPU, &attr,
 					(void *) procesarSolicitudOperacionCPU, socketCPU);
 			pthread_attr_destroy(&attr);
 
-			log_info(logger, "Nuevo CPU conectado", texto);
+			log_info(logger, "Nuevo CPU conectado");
 		} else {
-			log_error(logger, "Se esperaba un CPU. Conexion inesperada", texto);
+			log_error(logger, "Se esperaba un CPU. Conexion inesperada");
 			close(nuevaConexion);
 		}
 

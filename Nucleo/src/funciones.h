@@ -30,7 +30,6 @@ char *texto;
 pthread_mutex_t mutexColaListos;
 pthread_mutex_t mutexColaFinalizados;
 pthread_mutex_t mutexListaConsolas;
-pthread_mutex_t mutexVariableNuevaConexion;
 pthread_mutex_t mutexListaFinalizacionesPendientes;
 
 
@@ -38,10 +37,18 @@ pthread_mutex_t mutexListaFinalizacionesPendientes;
 typedef struct {
 	t_pcb pcb;
 	int socketConsola;
-	int finalizarPrograma;
 }t_pcbConConsola;
 
+typedef struct {
+	int retardoDispositivo;
+	pthread_mutex_t * mutex;
+	t_queue * colaBloqueados;
+}t_parametroThreadDispositivoIO;
 
+typedef struct {
+	t_pcbConConsola pcb;
+	int unidadesTiempoIO;
+}t_pcbBloqueado;
 
 /*typedef struct t_colaPcb{
 	t_pcbConConsola pcb;
@@ -57,6 +64,13 @@ t_queue *cola_PCBBloqueados;
 int clienteUMC;
 int pidPcb;
 int tamanioPagina;
+char ** vectorDispositivos;
+char ** vectorRetardoDispositivos;
+pthread_mutex_t ** vectorMutexDispositivosIO;
+t_queue ** vectorColasBloqueados;
+int cantidadQuantum;
+int retardoQuantum;
+
 
 t_list *listaConsolas;
 t_list *listaFinalizacionesPendientes;
@@ -81,4 +95,7 @@ t_pcbConConsola DevolverProcesoColaListos();
 
 void finalizarProceso(t_pcbConConsola siguientePcb);
 void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento);
+void crearHilosEntradaSalida();
+void manejarIO(t_parametroThreadDispositivoIO * datosHilo);
+void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo);
 #endif /* FUNCIONES_H_ */

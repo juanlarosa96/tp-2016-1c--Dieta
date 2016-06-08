@@ -93,7 +93,7 @@ t_puntero definirVariable(t_nombre_variable variable) {
 
 	}
 	printf("Defino variable\n");
-	return posicionVariable;
+	return posicionVariable->posicionDeVariable.pagina * tamanioPagina + posicionVariable->posicionDeVariable.offset;
 }
 t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 	printf("Obtengo posición variable\n");

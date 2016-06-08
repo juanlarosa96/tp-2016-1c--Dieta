@@ -107,6 +107,16 @@ int recibirRespuestaInicializacion(int socketUMC) {
 
 }
 
+void enviarRespuestaInicializacionExito(int socketDestino){
+	int header = inicioProgramaExito;
+	send(socketDestino, &header, sizeof(int), 0);
+}
+
+void enviarRespuestaInicializacionError(int socketDestino){
+	int header = inicioProgramaError;
+	send(socketDestino, &header, sizeof(int), 0);
+}
+
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset,
 		uint32_t size) {
 	int header = solicitarBytes;
@@ -200,9 +210,10 @@ void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto) {
 }
 
 void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso,
-		int *largoTexto, char * texto) {
+		int *largoTexto, char ** texto) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoTexto, sizeof(int));
+	*texto = malloc(largoTexto);
 	recibirTodo(socketOrigen, texto, *largoTexto);
 
 }
@@ -460,23 +471,20 @@ void recibirPID(int socketUMC, uint32_t * pid) {
 	recibirTodo(socketUMC, pid, sizeof(uint32_t));
 }
 
-void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
+void enviarEntradaSalida(int socketNucleo, t_pcb pcb,
 		t_nombre_dispositivo dispositivo, int tiempo) {
 	int header = headerEntradaSalida;
 
+	enviarPcb(socketNucleo,pcb);
 
 	void *data = malloc(
-			sizeof(int) + sizeof(uint32_t) + sizeof(int)+ strlen(dispositivo) + 1
+			sizeof(int) + sizeof(int)+ strlen(dispositivo) + 1
 					 + sizeof(int)); //header + pid + largoNombreDispositivo + nombreDispositivo + tiempo
 	int offset = 0, str_size = 0, largoNombreDispositivo = strlen(dispositivo)
 			+ 1;
 
 	str_size = sizeof(int);
 	memcpy(data + offset, &header, str_size);
-	offset += str_size;
-
-	str_size = sizeof(uint32_t);
-	memcpy(data + offset, &id_proceso, str_size);
 	offset += str_size;
 
 	str_size = sizeof(int);
@@ -497,10 +505,9 @@ void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,
 
 }
 
-void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso,
-		int *largoNombreDispositivo, char * nombreDispositivo, int *tiempo) {
-	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
+void recibirEntradaSalida(int socketOrigen, int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo) {
 	recibirTodo(socketOrigen, largoNombreDispositivo, sizeof(int));
+	*nombreDispositivo = malloc(*largoNombreDispositivo);
 	recibirTodo(socketOrigen, nombreDispositivo, *largoNombreDispositivo);
 	recibirTodo(socketOrigen, tiempo, sizeof(int));
 }
@@ -512,11 +519,27 @@ void enviarFinalizacionProgramaConsola(int socketConsola) {
 
 }
 
+void enviarPaginasRequeridasASwap(int socketSwap, int paginasRequeridas){
+	int header = inicializarProgramaSwap;
+	void * data = malloc(sizeof(int) + sizeof(int));
+	int offset = 0, size = 0;
+
+	size = sizeof(int);
+	memcpy(data, &header, size);
+
+	offset += size;
+	memcpy(data + offset, &paginasRequeridas, size);
+
+	offset += size;
+
+	send(socketSwap, data, offset, 0);
+}
+
 void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo){ //check esta funcion
 	int header = inicializarProgramaSwap;
 
 	void * data = malloc(sizeof(int) + sizeof(int) + sizeof(uint32_t) + sizeof(int));
-	int offset = 0, size = 0;
+	int offset = 0, size = 0, i;
 
 	size = sizeof(int);
 	memcpy(data, &header, size);
@@ -534,10 +557,12 @@ void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamani
 
 	offset += size;
 
-	send(socketSwap,data, offset, 0);
+	send(socketSwap, data, offset, 0);
 
 	free(data);
 }
+
+
 
 void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo){
 	int header = headerWait;
@@ -609,4 +634,33 @@ void recibirSignal(int socketOrigen, uint32_t *id_proceso,
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoNombreSemaforo, sizeof(int));
 	recibirTodo(socketOrigen, nombreSemaforo, *largoNombreSemaforo);
+}
+
+
+int recibirCantidadQuantum(int socketOrigen) {
+	int cantidad;
+	int bytesRecibidos;
+	if ((bytesRecibidos = recv(socketOrigen, &cantidad, sizeof(int), 0)) <= 0) {
+		return bytesRecibidos;
+	} else {
+		return cantidad;
+	}
+}
+
+void enviarUnidadesQuantum(int socketCPU, int  unidades) {
+	int header = quantumUnidades;
+	void * data = malloc(sizeof(int) + sizeof(int));
+	memcpy(data, &header, sizeof(int));
+	memcpy(data + sizeof(int), &unidades, sizeof(int));
+	send(socketCPU, data, sizeof(int) * 2, 0);
+	free(data);
+}
+
+void enviarSleepQuantum(int socketCPU, int  sleep) {
+	int header = quantumSleep;
+	void * data = malloc(sizeof(int) + sizeof(int));
+	memcpy(data, &header, sizeof(int));
+	memcpy(data + sizeof(int), &sleep, sizeof(int));
+	send(socketCPU, data, sizeof(int) * 2, 0);
+	free(data);
 }

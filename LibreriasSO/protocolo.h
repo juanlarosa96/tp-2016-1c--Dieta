@@ -37,7 +37,9 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	inicializarProgramaSwap = 21,
 	headerWait = 22,
 	headerSignal = 23,
-	finDeQuantum = 24
+	finDeQuantum = 24,
+	quantumSleep = 25,
+	quantumUnidades = 26
 
 };
 int recibirHeader(int socketOrigen);
@@ -50,6 +52,8 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina);
 void enviarPedidoPaginas(int socketUMC, int cantidadPaginas);
 void enviarInicializacionPrograma(int socketUMC,uint32_t pid,int largoPrograma,char * programa, uint32_t paginas_codigo);
 void recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *paginasRequeridas, int *largoCodigo);
+void enviarRespuestaInicializacionExito(int socketDestino);
+void enviarRespuestaInicializacionError(int socketDestino);
 void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo);
 int recibirRespuestaInicializacion(int socketUMC);
 //header: 8
@@ -64,7 +68,7 @@ void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offs
 void recibirPedidoAlmacenarBytes(int socketUMC, uint32_t *nroPagina, uint32_t *offset, uint32_t *size);
 void recibirBufferPedidoAlmacenarBytes(int socketUMC, int largoPedido, char * buffer);
 void enviarValorAImprimir(int socketNucleo, uint32_t id_proceso, char * texto);
-void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char * texto);
+void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTexto, char ** texto);
 void enviarPcb(int socketCPU, t_pcb pcb);
 t_pcb recibirPcb (int socketNucleo);
 
@@ -75,10 +79,11 @@ void recibirPID(int socketUMC, uint32_t * pid);
 void enviarFinalizacionProgramaConsola(int socketConsola);
 
 //header: 15
-void recibirEntradaSalida(int socketOrigen, uint32_t *id_proceso, int *largoNombreDispositivo, char * nombreDispositivo, int *tiempo);
-void enviarEntradaSalida(int socketNucleo, uint32_t id_proceso,t_nombre_dispositivo dispositivo,int tiempo);
+void recibirEntradaSalida(int socketOrigen, int *largoNombreDispositivo, char ** nombreDispositivo, int *tiempo);
+void enviarEntradaSalida(int socketNucleo, t_pcb pcb, t_nombre_dispositivo dispositivo, int tiempo);
 
 //header: 21
+void enviarPaginasRequeridasASwap(int, int);
 void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo);
 
 //header: 22 // header 23
@@ -87,4 +92,7 @@ void recibirWait(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo
 void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo);
 void recibirSignal(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo);
 
+int recibirCantidadQuantum(int socketOrigen);
+void enviarUnidadesQuantum(int socketCPU, int  unidades);
+void enviarSleepQuantum(int socketCPU, int  sleep);
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
