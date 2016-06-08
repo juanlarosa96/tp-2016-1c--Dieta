@@ -893,7 +893,9 @@ void consolaUMC(void) {
 
 }
 
-void procesarOperacionesNucleo(void) {
+void procesarOperacionesNucleo(int * conexion) {
+	int socketNucleo = *conexion;
+	free(conexion);
 
 	while (1) {
 
