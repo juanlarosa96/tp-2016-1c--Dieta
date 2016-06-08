@@ -652,7 +652,6 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	void * data;
 	int nroFrame;
 
-
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
@@ -709,9 +708,24 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	} //TLB Miss
 
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
+
 	if (nroFrame == -1) {
-		//buscarEnSwap
+		//codigoPagina = pedirleASwapQueMeDeLaPagina(pid, nroPagina);
+		//recibirPagina(buffer)
+		void * bufferPagina;
+		int exito;
+		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
+		if (exito == -1) {
+			//avisar a Swap para matar proceso
+			//avisar a Nucleo para matar proceso
+			//avisar a CPU para matar proceso
+			log_error(logger,
+					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
+					pid);
+			pthread_exit(NULL);
+		}
 	}
+
 	//nroFrame > 1
 	cargarEnTLB(pid, nroPagina, nroFrame);
 
