@@ -548,6 +548,7 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 
 	modificarFrameEnListaPaginas(indiceProceso, idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
 
+	escrituraMemoria(idFrame, 0, size_frames, codigoPagina);
 }
 
 void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
@@ -600,15 +601,16 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 	t_nodo_lista_procesos * auxProceso;
 	int i = 0, j = 0;
 	int acierto = 0, aciertoAux = 0, permitido = 0, disponible = 0;
+	uint32_t idFrame;
 
 	//Primero busco en la lista de procesos a ver si llego a su máximo de frames por proceso
 	pthread_mutex_lock(&mutexProcesos);
-	while(j < list_size(listaProcesos) && aciertoAux == 0) {
+	while (j < list_size(listaProcesos) && aciertoAux == 0) {
 		auxProceso = list_get(listaProcesos, j);
-		if(auxProceso->pid == pid){
-			if((auxProceso->framesAsignados) <= framesPorProceso){
+		if (auxProceso->pid == pid) {
+			if ((auxProceso->framesAsignados) < framesPorProceso) {
 				permitido = 1;
-				if(auxProceso->framesAsignados == 0){
+				if (auxProceso->framesAsignados == 0) {
 					// disponible = hayFramesDisponibles();
 				}
 			}
@@ -618,32 +620,26 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 	}
 	pthread_mutex_lock(&mutexProcesos);
 
-	if(disponible == 0){
-		//avisar a Nucleo
-		//avisar a Swap
-		//avisar a CPU
+	if (disponible == 0 && auxProceso->framesAsignados == 0) {
 		return -1; //No se puede cargar página en memoria.
-		log_error(logger, "No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.", pid);
-		pthread_exit(NULL);
 	}
 
-
-	if(permitido == 1){
-	pthread_mutex_lock(&mutexFrames);
-	while (i < list_size(listaFrames) && acierto == 0) {
-		aux = list_get(listaFrames, i);
-		if (aux->pid == 0) {
-			aux->pid = pid;
-			aux->bitModificado = 0;
-			aux->bitReferencia = 1;
-			acierto = 1;
+	if (permitido == 1) {
+		pthread_mutex_lock(&mutexFrames);
+		while (i < list_size(listaFrames) && acierto == 0) {
+			aux = list_get(listaFrames, i);
+			if (aux->pid == 0) {
+				aux->pid = pid;
+				aux->bitModificado = 0;
+				aux->bitReferencia = 1;
+				idFrame = aux->nroFrame;
+				acierto = 1;
+			}
+			i++;
 		}
-		i++;
-	}
-	pthread_mutex_unlock(&mutexFrames);
-	}
-
-	if (acierto == 0 || permitido == 0) {
+		pthread_mutex_unlock(&mutexFrames);
+		escrituraMemoria(idFrame, 0, size_frames, buffer);
+	} else {
 		algoritmoDeReemplazo(pid, nroPagina, buffer);
 	}
 
@@ -655,7 +651,7 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	void * data;
 	int nroFrame;
-	int exito;
+
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
@@ -669,13 +665,24 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) {
-		void * buffer;
 		//codigoPagina = pedirleASwapQueMeDeLaPagina(pid, nroPagina);
-		exito = cargarPaginaEnMemoria(pid, nroPagina, buffer);
-		//poner el puntero donde la tengo en memPrincipal
+		//recibirPagina(buffer)
+		void * bufferPagina;
+		int exito;
+		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
+		if (exito == -1) {
+			//avisar a Swap para matar proceso
+			//avisar a Nucleo para matar proceso
+			//avisar a CPU para matar proceso
+			log_error(logger,
+					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
+					pid);
+			pthread_exit(NULL);
+		}
+
 	}
 
-	//nroFrame > 1
+	//nroFrame >- 1
 	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
