@@ -716,6 +716,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	printf("Almacenar Bytes \n");
 }
 
+
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma, int socketNucleo) {
 
@@ -726,7 +727,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		paginasCodigo++;
 	}
 
-	int respuestaInicializacion;
+	int respuestaInicializacion, j, i;
 
 	pthread_mutex_lock(&mutexSwap);
 	enviarPaginasRequeridasASwap(socketSwap, paginasRequeridas);
@@ -734,9 +735,25 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	log_info(logger, "Se envió nuevo programa pid %d a Swap", idPrograma);
 
 	if (respuestaInicializacion == inicioProgramaExito) {
-		enviarCodigoASwap(socketSwap, idPrograma, paginasCodigo,
-				codigoPrograma);
+		char * pagina = malloc(size_frames);
+		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
+
+		for(j = 0; j < paginasCodigo; j++){
+			if(largoPrograma > size_frames){
+			memcpy(pagina, posicionAux, size_frames); //chequear si en la ultima pagina tira error
+			}
+			else{
+			memcpy(pagina, posicionAux, largoPrograma);
+			}
+
+			send(socketSwap,pagina,size_frames,0);
+			posicionAux += size_frames;
+			largoPrograma -= size_frames;
+		}
+
+		free(pagina);
 		enviarRespuestaInicializacionExito(socketNucleo);
+
 	} else {
 		enviarRespuestaInicializacionError(socketNucleo);
 		log_info(logger,
@@ -746,14 +763,13 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	}
 	pthread_mutex_unlock(&mutexSwap);
 
-	//aca tengo que crear un puntero o una estructura?
 	t_nodo_lista_procesos* unNodo = malloc(sizeof(t_nodo_lista_procesos));
 	unNodo->pid = idPrograma;
 	unNodo->cantPaginas = paginasRequeridas;
 	unNodo->framesAsignados = 0;
 	unNodo->punteroClock = -1;
 	unNodo->lista_paginas = list_create();
-	int i;
+
 	for (i = 0; i < paginasRequeridas; i++) {
 		t_nodo_lista_paginas* unaPagina = malloc(sizeof(t_nodo_lista_paginas));
 		unaPagina->nro_pagina = i;
@@ -781,7 +797,7 @@ void liberarPaginas(int indiceListaProceso) {
 
 
 
-void finalizarPrograma(uint32_t idPrograma) {
+void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	int header = finalizacionPrograma;
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
