@@ -19,6 +19,10 @@ void destruirFrame(t_nodo_lista_frames * nodo) {
 	free(nodo);
 }
 
+void destruirPagina(t_nodo_lista_paginas * nodo) {
+	free(nodo);
+}
+
 int encontrarPosicionEnListaProcesos(int pid) {
 	t_nodo_lista_procesos * aux;
 
@@ -789,15 +793,25 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 }
 
+
+
+void liberarPaginas(int indiceListaProceso){
+	t_nodo_lista_procesos * procesoAux;
+	procesoAux = list_get(listaProcesos, indiceListaProceso);
+	list_clean_and_destroy_elements(procesoAux->lista_paginas, (void*) destruirPagina);
+
+}
+
 void finalizarPrograma(uint32_t idPrograma) {
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
 	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
+	liberarPaginas(indiceListaProcesos);
 	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
 			(void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
 
-	liberarFrames(idPrograma);
+	liberarFrames(idPrograma); //pongo ids en cero
 
 	if (entradasTLB > 0) {
 		limpiarEntradasTLB(idPrograma);
