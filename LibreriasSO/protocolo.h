@@ -34,6 +34,7 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	headerEntradaSalida = 15,
 	pedidoMemoriaOK = 16,
 	pedidoMemoriaFallo = 17,
+	abortarPrograma = 18,
 	inicializarProgramaSwap = 21,
 	headerWait = 22,
 	headerSignal = 23,
