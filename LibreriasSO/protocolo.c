@@ -535,35 +535,6 @@ void enviarPaginasRequeridasASwap(int socketSwap, int paginasRequeridas){
 	send(socketSwap, data, offset, 0);
 }
 
-void enviarCodigoASwap(int socketSwap, int cantPaginas, uint32_t pid, int tamanioCodigo){ //check esta funcion
-	int header = inicializarProgramaSwap;
-
-	void * data = malloc(sizeof(int) + sizeof(int) + sizeof(uint32_t) + sizeof(int));
-	int offset = 0, size = 0, i;
-
-	size = sizeof(int);
-	memcpy(data, &header, size);
-
-	offset += size;
-	memcpy(data + offset, &cantPaginas, size);
-
-	offset += size;
-	size = sizeof(uint32_t);
-	memcpy(data + offset, &pid, size);
-
-	offset += size;
-	size = sizeof(int);
-	memcpy(data + offset, &tamanioCodigo, size);
-
-	offset += size;
-
-	send(socketSwap, data, offset, 0);
-
-	free(data);
-}
-
-
-
 void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo){
 	int header = headerWait;
 
