@@ -12,6 +12,7 @@
 
 int socketNucleo;
 int tamanioPagina;
+int huboEntradaSalida;
 
 t_pcb pcbRecibido;
 
