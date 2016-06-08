@@ -115,36 +115,37 @@ int main(int argc, char *argv[]) {
 	/*-----------CONEXION CON NUCLEO-----------------*/
 
 	//PRIMERO SE TIENE QUE CONECTAR NUCLEO ANTES QUE LAS CPUS
+	int nuevaConexion;
 	struct sockaddr_in direccionCliente;
 
-	socketNucleo = aceptarConexion(servidorUMC, &direccionCliente);
-	int idRecibido = iniciarHandshake(socketNucleo, IDUMC);
+	nuevaConexion = aceptarConexion(servidorUMC, &direccionCliente);
+	int idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
 
 	while (idRecibido != IDNUCLEO) {
 		log_error(logger,
 				"Se esperaba que se conectara Nucleo. Conexion desconocida",
 				texto);
-		close(socketNucleo);
+		close(nuevaConexion);
 
-		socketNucleo = aceptarConexion(servidorUMC, &direccionCliente);
-		idRecibido = iniciarHandshake(socketNucleo, IDUMC);
+		nuevaConexion = aceptarConexion(servidorUMC, &direccionCliente);
+		idRecibido = iniciarHandshake(nuevaConexion, IDUMC);
 	}
 
 	log_info(logger, "Se estableció la conexión con Núcleo", texto);
 
 
-	enviarTamanioPagina(socketNucleo, size_frames);
+	enviarTamanioPagina(nuevaConexion, size_frames);
 
 	//Hilo para manejar las solicitudes de Nucleo
-	/*int * socketNucleoPuntero = malloc(sizeof(int));
-	*socketNucleoPuntero = socketNucleo;*/
+	int * socketNucleoPuntero = malloc(sizeof(int));
+	*socketNucleoPuntero = nuevaConexion;
 
 	pthread_attr_t attr;
 	pthread_t hiloNucleo;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&hiloNucleo, &attr, (void *) procesarOperacionesNucleo, NULL);
+	pthread_create(&hiloNucleo, &attr, (void *) procesarOperacionesNucleo, socketNucleoPuntero);
 	pthread_attr_destroy(&attr);
 
 	/*-----------CONEXION CON CPUs-----------*/
