@@ -168,10 +168,9 @@ int main(int argc, char *argv[]) {
 	 caracter = getc(archivo);
 	 }*/
 
-
 	signalApagado = 0;
 	int header;
-	int quantumTotal=0,quantumRetardo=0;
+	int quantumTotal = 0, quantumRetardo = 0;
 
 	while (!signalApagado) {
 
@@ -205,15 +204,22 @@ int main(int argc, char *argv[]) {
 
 				pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina);
 				lineaAnsisop[instruccion.offset + 1] = '\0';
+				int respuestaUMC = recibirHeader(socketUMC);
 
-				analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
-				usleep(quantumRetardo * 1000);
-				unidadQuantum++;
+				if (respuestaUMC == pedidoMemoriaOK) {
+					analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
+					usleep(quantumRetardo * 1000);
+					unidadQuantum++;
+
+				} else {
+					sigoEjecutando = 0;
+					enviarFinalizacionProgramaNucleo(socketNucleo);
+				}
 
 			}
-			if(huboEntradaSalida == 0){
-			enviarPcb(socketNucleo, pcbRecibido);
-			}else{
+			if (huboEntradaSalida == 0) {
+				enviarPcb(socketNucleo, pcbRecibido);
+			} else {
 				huboEntradaSalida = 0;
 			}
 			break;
