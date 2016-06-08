@@ -88,43 +88,6 @@ void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
 
 }
 
-void reservarFrames(uint32_t pid, int cantPaginas) {
-	int i = 0;
-	int contador = 0;
-	int contadorFrames;
-	t_nodo_lista_frames* nodoAux;
-	if (cantPaginas < framesPorProceso) {
-		contadorFrames = cantPaginas;
-		pthread_mutex_lock(&mutexFrames);
-		while (i < list_size(listaFrames) && contadorFrames > 0) {
-			nodoAux = list_get(listaFrames, i);
-			if (nodoAux->pid == 0) {
-				contador++;
-				contadorFrames--;
-				if (contador == 1) {
-					inicializarPuntero(pid, i);
-				}
-			}
-		}
-		pthread_mutex_unlock(&mutexFrames);
-	} else {
-		contadorFrames = framesPorProceso;
-		pthread_mutex_lock(&mutexFrames);
-		while (i < list_size(listaFrames) && contadorFrames > 0) {
-			nodoAux = list_get(listaFrames, i);
-			if (nodoAux->pid == 0) {
-				contador++;
-				contadorFrames--;
-				if (contador == 1) {
-					inicializarPuntero(pid, i);
-				}
-			}
-		}
-		pthread_mutex_unlock(&mutexFrames);
-	}
-
-}
-
 int buscarEnTLB(uint32_t pid, int nroPagina) {
 	int frame = -1;
 
@@ -883,9 +846,7 @@ void consolaUMC(void) {
 
 }
 
-void procesarOperacionesNucleo(int * conexion) {
-	int socketNucleo = *conexion;
-	free(conexion);
+void procesarOperacionesNucleo(void) {
 
 	while (1) {
 
