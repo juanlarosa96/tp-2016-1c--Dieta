@@ -122,7 +122,9 @@ int imprimirTexto(char* texto) {
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
-	enviarEntradaSalida(socketNucleo, pcbRecibido.pid, dispositivo, tiempo);
+	huboEntradaSalida = 1;
+	sigoEjecutando = 0;
+	enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
 
 }
 

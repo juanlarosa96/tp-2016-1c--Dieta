@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
 	 caracter = getc(archivo);
 	 }*/
 
-	sigoEjecutando = 1;
+
 	signalApagado = 0;
 	int header;
 	int quantumTotal=0,quantumRetardo=0;
@@ -197,6 +197,7 @@ int main(int argc, char *argv[]) {
 			enviarCambioProcesoActivo(socketUMC, pcbRecibido.pid);
 
 			int unidadQuantum = 0;
+			sigoEjecutando = 1;
 
 			while (unidadQuantum < quantumTotal && sigoEjecutando) {
 				t_intructions instruccion = pcbRecibido.indice_codigo.instrucciones[pcbRecibido.pc];
@@ -210,7 +211,11 @@ int main(int argc, char *argv[]) {
 				unidadQuantum++;
 
 			}
+			if(huboEntradaSalida == 0){
 			enviarPcb(socketNucleo, pcbRecibido);
+			}else{
+				huboEntradaSalida = 0;
+			}
 			break;
 		}
 
