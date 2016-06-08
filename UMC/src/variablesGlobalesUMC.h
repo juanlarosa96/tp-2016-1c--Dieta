@@ -33,6 +33,7 @@ void * memoriaPrincipal;
 int size_frames;
 int retardo;
 int socketSwap;
+int socketNucleo;
 int framesPorProceso;
 char * algoritmo;
 
