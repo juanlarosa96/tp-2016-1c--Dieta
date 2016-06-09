@@ -14,6 +14,7 @@ int socketNucleo;
 int socketUMC;
 int tamanioPagina;
 int huboEntradaSalida;
+int huboSaltoLinea;
 
 t_pcb pcbRecibido;
 

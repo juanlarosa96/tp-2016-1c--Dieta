@@ -197,6 +197,7 @@ int main(int argc, char *argv[]) {
 
 			int unidadQuantum = 0;
 			sigoEjecutando = 1;
+			huboSaltoLinea=0;
 
 			while (unidadQuantum < quantumTotal && sigoEjecutando) {
 				t_intructions instruccion = pcbRecibido.indice_codigo.instrucciones[pcbRecibido.pc];
@@ -210,6 +211,12 @@ int main(int argc, char *argv[]) {
 					analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
 					usleep(quantumRetardo * 1000);
 					unidadQuantum++;
+
+					if(!huboSaltoLinea){
+						pcbRecibido.pc++;
+					}else{
+						huboSaltoLinea=0;
+					}
 
 				} else {
 					sigoEjecutando = 0;
