@@ -94,6 +94,7 @@ void AgregarAProcesoColaListos(t_pcbConConsola elemento);
 t_pcbConConsola DevolverProcesoColaListos();
 
 void finalizarProceso(t_pcbConConsola siguientePcb);
+void abortarProceso(t_pcbConConsola siguientePcb);
 void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento);
 void crearHilosEntradaSalida();
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo);
