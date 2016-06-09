@@ -114,7 +114,9 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	nuevoRegistroStack->variable_retorno.pagina = donde_retornar / tamanioPagina;
 	nuevoRegistroStack->variable_retorno.offset = donde_retornar % tamanioPagina;
 	nuevoRegistroStack->variable_retorno.size = 4;
-
 	nuevoRegistroStack->direccion_retorno = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+
+	pushPila(pcbRecibido.indice_stack,registroStackAnterior);
+	pushPila(pcbRecibido.indice_stack,nuevoRegistroStack);
 }
 
