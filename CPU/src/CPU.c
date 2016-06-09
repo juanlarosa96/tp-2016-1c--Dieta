@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+
 	//creo socket umc
-	int socketUMC;
 	crearSocket(&socketUMC);
 
 	//me intento conectar

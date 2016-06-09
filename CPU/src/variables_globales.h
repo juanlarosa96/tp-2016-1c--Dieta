@@ -11,6 +11,7 @@
 #include <structs.h>
 
 int socketNucleo;
+int socketUMC;
 int tamanioPagina;
 int huboEntradaSalida;
 
