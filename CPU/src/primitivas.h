@@ -34,6 +34,7 @@ void wait(t_nombre_semaforo identificador_semaforo);
 void signal(t_nombre_semaforo identificador_semaforo);
 void irAlLabel(t_nombre_etiqueta etiqueta);
 void retornar(t_valor_variable retorno);
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar);
 
 
 #endif /* PRIMITIVAS_H_ */

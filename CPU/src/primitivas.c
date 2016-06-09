@@ -104,3 +104,17 @@ void retornar(t_valor_variable retorno){
 	}
 }
 
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+
+	t_registro_pila * nuevoRegistroStack = malloc(sizeof(t_registro_pila));
+	t_registro_pila * registroStackAnterior = popPila(pcbRecibido.indice_stack);
+	nuevoRegistroStack->posicionUltimaVariable = registroStackAnterior->posicionUltimaVariable;
+	list_create(nuevoRegistroStack->lista_argumentos);
+	list_create(nuevoRegistroStack->lista_variables);
+	nuevoRegistroStack->variable_retorno.pagina = donde_retornar / tamanioPagina;
+	nuevoRegistroStack->variable_retorno.offset = donde_retornar % tamanioPagina;
+	nuevoRegistroStack->variable_retorno.size = 4;
+
+	nuevoRegistroStack->direccion_retorno = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+}
+
