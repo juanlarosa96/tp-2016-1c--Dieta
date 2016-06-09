@@ -11,6 +11,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-void hexdump(void *memoria, unsigned int len);
+void hexdump(FILE * archi, void *memoria, unsigned int len);
 
 #endif /* HEXDUMP_H_ */
