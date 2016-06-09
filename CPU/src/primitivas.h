@@ -32,6 +32,7 @@ int imprimirTexto(char* texto);
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
 void wait(t_nombre_semaforo identificador_semaforo);
 void signal(t_nombre_semaforo identificador_semaforo);
+void irAlLabel(t_nombre_etiqueta etiqueta);
 
 
 #endif /* PRIMITIVAS_H_ */

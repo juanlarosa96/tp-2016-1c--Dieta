@@ -143,3 +143,8 @@ void signal(t_nombre_semaforo identificador_semaforo) {
 	enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 
 }
+
+void irAlLabel(t_nombre_etiqueta etiqueta){
+	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+	huboSaltoLinea = 1;
+}
