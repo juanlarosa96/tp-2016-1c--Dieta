@@ -209,10 +209,21 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	nuevoPcb.indice_codigo.cantidadInstrucciones = metadata->instrucciones_size;
 	nuevoPcb.indice_codigo.numeroInstruccionInicio = metadata->instruccion_inicio;
 
+	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
+
 	t_list * pilaInicial;
 	pilaInicial = list_create();
+
+	t_registro_pila * registroPila = malloc(sizeof(t_registro_pila));
+	registroPila->lista_argumentos = list_create();
+	registroPila->lista_variables = list_create();
+	registroPila->posicionUltimaVariable = nuevoPcb.paginas_codigo * tamanioPagina;
+
+	list_add(pilaInicial,(void *)registroPila);
+
 	nuevoPcb.indice_stack = pilaInicial;
-	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
+
+
 
 	metadata_destruir(metadata);
 
