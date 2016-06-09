@@ -97,4 +97,5 @@ int recibirCantidadQuantum(int socketOrigen);
 void enviarUnidadesQuantum(int socketCPU, int  unidades);
 void enviarSleepQuantum(int socketCPU, int  sleep);
 void enviarFinalizacionProgramaNucleo(int socketNucleo);
+void enviarAbortarProgramaNucleo(int socketNucleo);
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */

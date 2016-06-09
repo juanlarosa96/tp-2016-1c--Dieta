@@ -640,3 +640,9 @@ void enviarFinalizacionProgramaNucleo(int socketNucleo){
 	int header = finalizacionPrograma;
 	send(socketNucleo,&header,sizeof(int),0);
 }
+
+void enviarAbortarProgramaNucleo(int socketNucleo){
+	int header = abortarPrograma;
+	send(socketNucleo,&header,sizeof(int),0);
+}
+
