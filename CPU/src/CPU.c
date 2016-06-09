@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 
 				} else {
 					sigoEjecutando = 0;
-					enviarFinalizacionProgramaNucleo(socketNucleo);
+					enviarAbortarProgramaNucleo(socketNucleo);
 				}
 
 			}
