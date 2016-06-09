@@ -104,7 +104,13 @@ t_valor_variable dereferenciar(t_puntero puntero) {
 	return puntero;
 }
 void asignar(t_puntero puntero, t_valor_variable variable) {
-	printf("Asignar\n");
+	int numeroPagina = puntero/tamanioPagina;
+	int offset = puntero%tamanioPagina;
+	enviarPedidoAlmacenarBytes(socketUMC,numeroPagina,offset,4,&variable);
+	if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
+		enviarAbortarProgramaNucleo(socketNucleo);
+		sigoEjecutando = 0;
+	}
 }
 int imprimir(t_valor_variable valor) {
 	//falta definir logger
