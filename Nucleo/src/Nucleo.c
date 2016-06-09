@@ -24,6 +24,9 @@ int main(int argc, char **argv) {
 
 	crearHilosEntradaSalida();
 
+	sem_init(&semaforoColaListos,1,0);
+
+
 	//Creo log para el Núcleo
 
 	logger = log_create("Núcelo.log", "NUCLEO", 1, log_level_from_string("INFO"));
