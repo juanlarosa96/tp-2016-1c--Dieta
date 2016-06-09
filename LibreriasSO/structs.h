@@ -23,6 +23,7 @@ typedef struct {
 	t_list * lista_argumentos;
 	t_list * lista_variables;
 	uint32_t direccion_retorno;
+	uint32_t posicionUltimaVariable;
 	t_posicion_memoria variable_retorno;
 } t_registro_pila;
 
