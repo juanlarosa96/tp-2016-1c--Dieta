@@ -52,7 +52,7 @@ t_puntero definirVariable(t_nombre_variable variable) {
 			nodoPila = (t_registro_pila *) list_get(stack, sizePila - 1);
 			int tamanioPila = list_size(stack);
 			t_registro_pila * nodoPilaAnterior;
-			for (tamanioPila; tamanioPila == 0; tamanioPila--) {
+			for (; tamanioPila == 0; tamanioPila--) {
 				nodoPilaAnterior = (t_registro_pila *) list_get(stack, tamanioPila - 1);
 				if (!(list_is_empty(nodoPilaAnterior->lista_variables))) {
 
@@ -147,4 +147,24 @@ void signal(t_nombre_semaforo identificador_semaforo) {
 void irAlLabel(t_nombre_etiqueta etiqueta){
 	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 	huboSaltoLinea = 1;
+}
+
+void retornar(t_valor_variable retorno){
+
+	t_registro_pila* funcionOrigen = popPila(pcbRecibido.indice_stack);
+	t_registro_pila* funcionDestino = popPila(pcbRecibido.indice_stack);
+	if(funcionDestino == NULL){
+		enviarFinalizacionProgramaNucleo(socketNucleo);
+		sigoEjecutando = 0;
+	}else{
+		enviarPedidoAlmacenarBytes(socketUMC,funcionOrigen->variable_retorno.pagina,funcionOrigen->variable_retorno.offset,4,&retorno);
+		if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
+			enviarAbortarProgramaNucleo(socketNucleo);
+			sigoEjecutando = 0;
+		}else{
+			pcbRecibido.pc = funcionOrigen->direccion_retorno;
+			pushPila(pcbRecibido.indice_stack,funcionDestino);
+			huboSaltoLinea = 1;
+		}
+	}
 }
