@@ -27,13 +27,9 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 	int cantPaginasCodigo;
 	recibirTodo(cliente, &cantPaginasCodigo, sizeof(int));
 
-	int cantPaginasStack = cantPaginasTotal - cantPaginasCodigo;
-
 	proceso->pID = pid;
 	proceso->frameInicial = frameInicial;
 	proceso->cantPaginas = cantPaginasTotal;
-	proceso->cantPaginasCodigo = cantPaginasCodigo;
-	proceso->cantPaginasStack = cantPaginasStack;
 
 	list_add(listaProcesos,proceso);
 	int i;
@@ -171,7 +167,7 @@ int compactar(char*archivo){
 			ultimoFrameLibre++;
 		}
 	}
-	sleep(retardoCompactacion);
+	usleep(retardoCompactacion*1000);
 	return ultimoFrameLibre;
 }
 
