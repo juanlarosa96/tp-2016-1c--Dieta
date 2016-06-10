@@ -14,11 +14,17 @@
 #include <sockets.h>
 #include <protocolo.h>
 #include "Structs.h"
+#include <unistd.h>
 
-int iniciarProgramaAnsisop(int cliente, char*archivo,char bitMap[]);
-int chequearMemoriaDisponible(int cantidadDePaginas,char bitMap[]);
+int iniciarProgramaAnsisop(int cliente, char*archivo);
+int chequearMemoriaDisponible(int cantidadDePaginas,char*archivo);
 void avisarUMCFallo(int cliente);
 void avisarUMCExito(int cliente);
-void compactar();
+int compactar(char*archivo);
 
+void guardarPaginas(int cliente, char*archivo);
+
+void enviarPaginas(int cliente,char*archivo);
+
+void finalizarProgramaAnsisop(int cliente);
 #endif /* FUNCIONES_H_ */

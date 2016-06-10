@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "funciones.h"
+#include "VariablesGlobales.h"
 
 int main(int argc, char *argv[]) {
 
@@ -70,6 +71,11 @@ int main(int argc, char *argv[]) {
 
 	char*archivoSwap = mmap((caddr_t)0, sizePagina , PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
 
+	int i;
+	bitMap= malloc (sizeof(int)*cantidadDeFrames);
+	for(i=0;i<cantidadDeFrames;i++){bitMap[i]=0;}
+
+	listaProcesos = list_create();
 //---------------------------------------------------------------------------
 	int servidorSwap;
 	if (crearSocket(&servidorSwap)) {
@@ -100,19 +106,25 @@ int main(int argc, char *argv[]) {
 
 	printf("Se conectó UMC\n");
 
-	char bitMap [cantidadDeFrames];
-	int i;
-	for(i=0;i<cantidadDeFrames;i++){bitMap[i]=0;}
-
-
 	while(1){
 		int header = recibirHeader(cliente);
 
 		switch(header){
 
-		case 21: //en el enum del protocolo esta como "InicializarProgramaASwap"
-			iniciarProgramaAnsisop(cliente,archivoSwap,bitMap);
+			case inicializarProgramaSwap:
+				iniciarProgramaAnsisop(cliente,archivoSwap);
+				break;
+			case guardarPaginasEnSwap:
+				guardarPaginas(cliente,archivoSwap);
+				break;
+			case pedirPaginaASwap:
+				enviarPaginas(cliente,archivoSwap);
+				break;
+			case finalizacionPrograma:
+				finalizarProgramaAnsisop(cliente);
+				break;
 		}
+
 	}
 
 
