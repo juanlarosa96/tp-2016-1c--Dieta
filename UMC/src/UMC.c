@@ -40,9 +40,9 @@ int main(int argc, char *argv[]) {
 	algoritmo = config_get_string_value(config, "ALGORITMO");
 
 			//Reservo Memoria
-	int memoriaDisponible = (cant_frames) * (size_frames);
-	memoriaPrincipal = malloc(memoriaDisponible);
-	memset(memoriaPrincipal, 0, sizeof(memoriaDisponible));
+	tamanioMemoria = (cant_frames) * (size_frames);
+	memoriaPrincipal = malloc(tamanioMemoria);
+	memset(memoriaPrincipal, 0, sizeof(tamanioMemoria));
 
 	//Inicializo listas compartidas
 	listaFrames = list_create();
