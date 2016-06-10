@@ -54,13 +54,28 @@ t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 	return posicion;
 }
 t_valor_variable dereferenciar(t_puntero puntero) {
-	printf("Dereferenciar\n");
-	return puntero;
+	int valorVariable;
+	int numeroPagina = puntero/tamanioPagina;
+	int offset = puntero%tamanioPagina;
+	t_posicion_memoria posicionMemoria;
+	posicionMemoria.pagina = numeroPagina;
+	posicionMemoria.offset = offset;
+	posicionMemoria.size = 4;
+	enviarPedidosDePosicionMemoria(socketUMC, posicionMemoria, (void *) & valorVariable, tamanioPagina);
+	if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
+		enviarAbortarProgramaNucleo(socketNucleo);
+		sigoEjecutando = 0;
+	}
+	return valorVariable;
 }
 void asignar(t_puntero puntero, t_valor_variable variable) {
 	int numeroPagina = puntero/tamanioPagina;
 	int offset = puntero%tamanioPagina;
-	enviarPedidoAlmacenarBytes(socketUMC,numeroPagina,offset,4,&variable);
+	t_posicion_memoria posicionMemoria;
+	posicionMemoria.pagina = numeroPagina;
+	posicionMemoria.offset = offset;
+	posicionMemoria.size = 4;
+	enviarAlmacenamientosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &variable, tamanioPagina);
 	if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
