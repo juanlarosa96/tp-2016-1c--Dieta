@@ -326,7 +326,7 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
 		pthread_mutex_unlock(datosHilo->mutex);
 
-		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
+		sleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo);
 		log_info(logger, "Programa pid %d termino IO", pedidoDeIO.pcb.pcb.pid);
 
 		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
