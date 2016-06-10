@@ -786,7 +786,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	}
 
 	pthread_mutex_lock(&mutexProcesos);
-	list_add(listaProcesos, &unNodo);
+	list_add(listaProcesos, unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
 	log_info(logger, "Se inicializó nuevo programa pid %d", idPrograma);
