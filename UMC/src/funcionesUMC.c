@@ -81,6 +81,7 @@ int cantidadFramesDisponibles() {
 		if (nodoAux->pid == 0) {
 			contador++;
 		}
+		i++;
 	}
 	pthread_mutex_unlock(&mutexFrames);
 	return contador;
