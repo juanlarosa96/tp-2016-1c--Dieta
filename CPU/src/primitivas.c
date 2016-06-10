@@ -31,8 +31,27 @@ t_puntero definirVariable(t_nombre_variable variable) {
 
 }
 t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
+	t_puntero posicion = -1;
+	int argumento = variable - '0';
+	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
+
+	if(argumento >= 0 && argumento <= 9){
+		posicion = list_get(regPila->lista_argumentos, argumento);
+	}else {
+		int largoLista = list_size(regPila->lista_variables);
+		int i = 0;
+		t_identificadorConPosicionMemoria * elementoLista;
+		for(; i < largoLista; i++ ){
+			elementoLista = list_get(regPila->lista_variables, i);
+			if(elementoLista->identificador == variable){
+				posicion = elementoLista->posicionDeVariable.pagina * tamanioPagina + elementoLista->posicionDeVariable.offset;
+			}
+
+		}
+	}
 	printf("Obtengo posición variable\n");
-	return variable;
+	pushPila(pcbRecibido.indice_stack,regPila);
+	return posicion;
 }
 t_valor_variable dereferenciar(t_puntero puntero) {
 	int valorVariable;
