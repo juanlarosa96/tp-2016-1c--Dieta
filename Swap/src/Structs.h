@@ -12,8 +12,7 @@ typedef struct{
 	uint32_t pID;
 	int frameInicial;
 	int cantPaginas;
-	int cantPaginasCodigo;
-	int cantPaginasStack;
+
 }t_proceso;
 
 #endif /* STRUCTS_H_ */
