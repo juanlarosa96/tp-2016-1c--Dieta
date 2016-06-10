@@ -10,7 +10,8 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 
-void hexdump(FILE * archi, void *memoria, unsigned int len);
+void hexdump(FILE * archivo, void *memoria, unsigned int len);
 
 #endif /* HEXDUMP_H_ */

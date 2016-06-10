@@ -12,7 +12,7 @@
 
 #include "hexdump.h"
 
-void hexdump(FILE * archi, void *memoria, unsigned int len)
+void hexdump(FILE* archivo, void *memoria, unsigned int len)
 {
         unsigned int i, j;
 
@@ -22,19 +22,19 @@ void hexdump(FILE * archi, void *memoria, unsigned int len)
                 if(i % HEXDUMP_COLS == 0)
                 {
                         printf("0x%06x: ", i);
-                        fprintf(archi,"0x%06x: ", i);
+                        fprintf(archivo,"0x%06x: ", i);
                 }
 
                 /* print hex data */
                 if(i < len)
                 {
                         printf("%02x ", 0xFF & ((char*)memoria)[i]);
-                        fprintf(archi, "%02x ", 0xFF & ((char*)memoria)[i]);
+                        fprintf(archivo, "%02x ", 0xFF & ((char*)memoria)[i]);
                 }
                 else /* end of block, just aligning for ASCII dump */
                 {
                         printf("   ");
-                        fprintf(archi, "   ");
+                        fprintf(archivo, "   ");
                 }
 
                 /* print ASCII dump */
@@ -45,21 +45,21 @@ void hexdump(FILE * archi, void *memoria, unsigned int len)
                                 if(j >= len) /* end of block, not really printing */
                                 {
                                         putchar(' ');
-                                        fputc(' ', archi);
+                                        fputc(' ', archivo);
                                 }
                                 else if(isprint(((char*)memoria)[j])) /* printable char */
                                 {
                                         putchar(0xFF & ((char*)memoria)[j]);
-                                        fputc(0xFF & ((char*)memoria)[j],archi);
+                                        fputc(0xFF & ((char*)memoria)[j],archivo);
                                 }
                                 else /* other char */
                                 {
                                         putchar('.');
-                                        fputc('.',archi);
+                                        fputc('.',archivo);
                                 }
                         }
                         putchar('\n');
-                        fputc('\n', archi);
+                        fputc('\n', archivo);
                 }
         }
 }
