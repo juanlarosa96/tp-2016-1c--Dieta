@@ -35,5 +35,6 @@ int retardo;
 int socketSwap;
 int framesPorProceso;
 char * algoritmo;
+int tamanioMemoria;
 
 #endif /* VARIABLESGLOBALESUMC_H_ */
