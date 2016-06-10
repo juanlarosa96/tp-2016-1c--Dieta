@@ -33,6 +33,7 @@ void manejarCPU(void * socket) {
 
 		cambioProceso = 0;
 
+		sem_wait(&semaforoColaListos);
 		t_pcbConConsola siguientePcb = DevolverProcesoColaListos();
 		if (siguientePcb.socketConsola != -1) {
 			enviarPcb(socketCpu, siguientePcb.pcb);
@@ -172,6 +173,7 @@ void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
 	pthread_mutex_lock(&mutexColaListos);
 	AgregarACola(elemento, cola_PCBListos);
 	pthread_mutex_unlock(&mutexColaListos);
+	sem_post(&semaforoColaListos);
 }
 
 void AgregarAProcesoColaNuevos(t_pcbConConsola elemento) {
@@ -207,10 +209,21 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	nuevoPcb.indice_codigo.cantidadInstrucciones = metadata->instrucciones_size;
 	nuevoPcb.indice_codigo.numeroInstruccionInicio = metadata->instruccion_inicio;
 
+	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
+
 	t_list * pilaInicial;
 	pilaInicial = list_create();
+
+	t_registro_pila * registroPila = malloc(sizeof(t_registro_pila));
+	registroPila->lista_argumentos = list_create();
+	registroPila->lista_variables = list_create();
+	registroPila->posicionUltimaVariable = nuevoPcb.paginas_codigo * tamanioPagina;
+
+	list_add(pilaInicial,(void *)registroPila);
+
 	nuevoPcb.indice_stack = pilaInicial;
-	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
+
+
 
 	metadata_destruir(metadata);
 
@@ -290,6 +303,9 @@ void crearHilosEntradaSalida() {
 		pthread_mutex_init(vectorMutexDispositivosIO[i], NULL);
 		parametro->mutex = vectorMutexDispositivosIO[i];
 		sprintf(vectorDispositivos[i], "%d", parametro->retardoDispositivo);
+		vectorSemaforosDispositivosIO[i] = malloc(sizeof(sem_t *));
+		sem_init(vectorSemaforosDispositivosIO[i],1,0);
+		parametro->semaforo = vectorSemaforosDispositivosIO[i];
 
 		pthread_t nuevoHilo;
 		pthread_attr_t attr;
@@ -305,6 +321,7 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 
 	while (1) {
 		t_pcbBloqueado pedidoDeIO;
+		sem_wait(datosHilo->semaforo);
 		pthread_mutex_lock(datosHilo->mutex);
 		pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
 		pthread_mutex_unlock(datosHilo->mutex);
@@ -368,6 +385,7 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 				pthread_mutex_lock(vectorMutexDispositivosIO[i]);
 				AgregarAProcesoColaBloqueados(vectorColasBloqueados[i], pcbBloqueado);
 				pthread_mutex_unlock(vectorMutexDispositivosIO[i]);
+				sem_post(vectorSemaforosDispositivosIO[i]);
 				existeDispositivo = 1;
 			}
 

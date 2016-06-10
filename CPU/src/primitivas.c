@@ -8,92 +8,27 @@
 #include "primitivas.h"
 
 t_puntero definirVariable(t_nombre_variable variable) {
-	t_list* stack = pcbRecibido.indice_stack;
-	t_identificadorConPosicionMemoria * posicionVariable = malloc(sizeof(t_identificadorConPosicionMemoria));
-	t_registro_pila * nodoPila;
-	posicionVariable->identificador = variable;
 
-	if (list_is_empty(stack)) {
-		nodoPila = malloc(sizeof(t_registro_pila));
-		nodoPila->lista_argumentos = list_create();
-		nodoPila->lista_variables = list_create();
+	t_posicion_memoria * posicionVariable = malloc(sizeof(t_posicion_memoria));
+	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
+	posicionVariable->pagina = regPila->posicionUltimaVariable / tamanioPagina;
+	posicionVariable->offset = regPila->posicionUltimaVariable % tamanioPagina;
+	posicionVariable->size = 4;
+	regPila->posicionUltimaVariable += 4;
 
-		posicionVariable->posicionDeVariable.pagina = pcbRecibido.paginas_codigo;
-		posicionVariable->posicionDeVariable.offset = 0;
-		posicionVariable->posicionDeVariable.size = sizeof(uint32_t);
-
-		list_add(nodoPila->lista_variables, (void *) posicionVariable);
-		pushPila(stack, nodoPila);
-
-	} else {
-		int sizePila = list_size(stack);
-		if (sizePila == 1) {
-			nodoPila = (t_registro_pila *) list_get(stack, sizePila - 1);
-			int sizeLista = list_size(nodoPila->lista_variables);
-			t_identificadorConPosicionMemoria * posicionVariableAnterior = list_get(nodoPila->lista_variables, sizeLista - 1);
-
-			if (posicionVariableAnterior->posicionDeVariable.offset + posicionVariableAnterior->posicionDeVariable.size > tamanioPagina) {
-
-				posicionVariable->posicionDeVariable.pagina = posicionVariableAnterior->posicionDeVariable.pagina
-						+ (posicionVariableAnterior->posicionDeVariable.offset + posicionVariableAnterior->posicionDeVariable.size) / tamanioPagina;
-
-				int offset = posicionVariableAnterior->posicionDeVariable.offset + posicionVariableAnterior->posicionDeVariable.size;
-				while (offset > tamanioPagina) {
-					offset = offset - tamanioPagina;
-				}
-				posicionVariable->posicionDeVariable.offset = offset;
-			} else {
-				posicionVariable->posicionDeVariable.pagina = posicionVariableAnterior->posicionDeVariable.pagina;
-				posicionVariable->posicionDeVariable.offset = posicionVariableAnterior->posicionDeVariable.offset
-						+ posicionVariableAnterior->posicionDeVariable.size;
-			}
-			list_add(nodoPila->lista_variables, (void *) posicionVariable);
-		} else {
-			nodoPila = (t_registro_pila *) list_get(stack, sizePila - 1);
-			int tamanioPila = list_size(stack);
-			t_registro_pila * nodoPilaAnterior;
-			for (; tamanioPila == 0; tamanioPila--) {
-				nodoPilaAnterior = (t_registro_pila *) list_get(stack, tamanioPila - 1);
-				if (!(list_is_empty(nodoPilaAnterior->lista_variables))) {
-
-					int sizeLista = list_size(nodoPilaAnterior->lista_variables); //Si la lista del elemento anterior de la pila esta vacia
-					t_identificadorConPosicionMemoria * posicionVariableAnterior = list_get(nodoPilaAnterior->lista_variables, sizeLista - 1);
-
-					if (posicionVariableAnterior->posicionDeVariable.offset + posicionVariableAnterior->posicionDeVariable.size > tamanioPagina) {
-
-						posicionVariable->posicionDeVariable.pagina = posicionVariableAnterior->posicionDeVariable.pagina
-								+ (posicionVariableAnterior->posicionDeVariable.offset + posicionVariableAnterior->posicionDeVariable.size)
-										/ tamanioPagina;
-
-						int offset = posicionVariableAnterior->posicionDeVariable.offset + posicionVariableAnterior->posicionDeVariable.size;
-						while (offset > tamanioPagina) {
-							offset = offset - tamanioPagina;
-						}
-						posicionVariable->posicionDeVariable.offset = offset;
-					} else {
-						posicionVariable->posicionDeVariable.pagina = posicionVariableAnterior->posicionDeVariable.pagina;
-						posicionVariable->posicionDeVariable.offset = posicionVariableAnterior->posicionDeVariable.offset
-								+ posicionVariableAnterior->posicionDeVariable.size;
-					}
-
-				}
-				list_add(nodoPila->lista_variables, (void *) posicionVariable);
-				break;
-			}
-			if (tamanioPila == 0){
-				posicionVariable->posicionDeVariable.pagina = pcbRecibido.paginas_codigo;
-				posicionVariable->posicionDeVariable.offset = 0;
-				posicionVariable->posicionDeVariable.size = sizeof(uint32_t);
-
-				list_add(nodoPila->lista_variables, (void *) posicionVariable);
-
-			}
-
-		}
-
+	int aux = variable - '0';
+	if(aux>= 0 && aux <=9){
+		list_add(regPila->lista_argumentos,posicionVariable);
+	} else{
+		t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof (t_identificadorConPosicionMemoria));
+		nuevaVariable->identificador = variable;
+		nuevaVariable->posicionDeVariable = *posicionVariable;
+		free(posicionVariable);
 	}
-	printf("Defino variable\n");
-	return posicionVariable->posicionDeVariable.pagina * tamanioPagina + posicionVariable->posicionDeVariable.offset;
+
+	pushPila(pcbRecibido.indice_stack,regPila);
+	return regPila->posicionUltimaVariable - 4;
+
 }
 t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 	printf("Obtengo posición variable\n");
@@ -168,3 +103,20 @@ void retornar(t_valor_variable retorno){
 		}
 	}
 }
+
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+
+	t_registro_pila * nuevoRegistroStack = malloc(sizeof(t_registro_pila));
+	t_registro_pila * registroStackAnterior = popPila(pcbRecibido.indice_stack);
+	nuevoRegistroStack->posicionUltimaVariable = registroStackAnterior->posicionUltimaVariable;
+	list_create(nuevoRegistroStack->lista_argumentos);
+	list_create(nuevoRegistroStack->lista_variables);
+	nuevoRegistroStack->variable_retorno.pagina = donde_retornar / tamanioPagina;
+	nuevoRegistroStack->variable_retorno.offset = donde_retornar % tamanioPagina;
+	nuevoRegistroStack->variable_retorno.size = 4;
+	nuevoRegistroStack->direccion_retorno = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+
+	pushPila(pcbRecibido.indice_stack,registroStackAnterior);
+	pushPila(pcbRecibido.indice_stack,nuevoRegistroStack);
+}
+

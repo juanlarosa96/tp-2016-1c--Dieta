@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <semaphore.h>
 
 t_log* logger;
 char *texto;
@@ -31,6 +32,8 @@ pthread_mutex_t mutexColaListos;
 pthread_mutex_t mutexColaFinalizados;
 pthread_mutex_t mutexListaConsolas;
 pthread_mutex_t mutexListaFinalizacionesPendientes;
+
+sem_t semaforoColaListos;
 
 
 
@@ -42,6 +45,7 @@ typedef struct {
 typedef struct {
 	int retardoDispositivo;
 	pthread_mutex_t * mutex;
+	sem_t * semaforo;
 	t_queue * colaBloqueados;
 }t_parametroThreadDispositivoIO;
 
@@ -67,6 +71,7 @@ int tamanioPagina;
 char ** vectorDispositivos;
 char ** vectorRetardoDispositivos;
 pthread_mutex_t ** vectorMutexDispositivosIO;
+sem_t ** vectorSemaforosDispositivosIO;
 t_queue ** vectorColasBloqueados;
 int cantidadQuantum;
 int retardoQuantum;
