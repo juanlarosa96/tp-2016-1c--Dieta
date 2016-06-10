@@ -590,3 +590,21 @@ void enviarAbortarProgramaNucleo(int socketNucleo) {
 	send(socketNucleo, &header, sizeof(int), 0);
 }
 
+void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariable){
+	int header = pedidoVariableCompartida;
+	void * data = malloc(sizeof(int) + sizeof(char));
+	memcpy(data, &header, sizeof(int));
+	memcpy(data + sizeof(int), &variable, sizeof(char));
+	send(socketNucleo, data, sizeof(int)+sizeof(char), 0);
+	recibirTodo(socketNucleo, (void *) punteroVariable, sizeof(int));
+}
+
+void asignarCompartidaNucleo(int socketNucleo, char variable, int valor){
+	int header = asignacionVariableCompartida;
+	void * data = malloc(sizeof(int) *2 + sizeof(char));
+	memcpy(data, &header, sizeof(int));
+	memcpy(data + sizeof(int), &variable, sizeof(char));
+	memcpy(data + sizeof(int) + sizeof(char), &valor, sizeof(int));
+	send(socketNucleo, data, sizeof(int)*2 +sizeof(char), 0);
+}
+

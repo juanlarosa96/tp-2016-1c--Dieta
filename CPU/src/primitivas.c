@@ -81,17 +81,14 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 	huboEntradaSalida = 1;
 	sigoEjecutando = 0;
 	enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
-
 }
 
 void wait(t_nombre_semaforo identificador_semaforo) {
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
-
 }
 
 void signal(t_nombre_semaforo identificador_semaforo) {
 	enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
-
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
@@ -115,6 +112,19 @@ void retornar(t_valor_variable retorno){
 			pcbRecibido.pc = funcionOrigen->direccion_retorno;
 			pushPila(pcbRecibido.indice_stack,funcionDestino);
 			huboSaltoLinea = 1;
+
+			int sizeLista = list_size(funcionOrigen->lista_argumentos),i;
+			for(i = 0; i < sizeLista; i++){
+				free(list_remove(funcionOrigen->lista_argumentos,0));
+				}
+			list_destroy(funcionOrigen->lista_argumentos);
+
+			sizeLista = list_size(funcionOrigen->lista_variables);
+			for(i = 0; i < sizeLista; i++){
+				free(list_remove(funcionOrigen->lista_variables,0));
+			}
+			list_destroy(funcionOrigen->lista_variables);
+			free(funcionOrigen);
 		}
 	}
 }
@@ -135,3 +145,13 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	pushPila(pcbRecibido.indice_stack,nuevoRegistroStack);
 }
 
+t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
+	t_valor_variable valorVariable;
+	pedirCompartidaNucleo(socketNucleo, variable, &valorVariable);
+	return valorVariable;
+}
+
+t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	asignarCompartidaNucleo(socketNucleo, variable, valor);
+	return valor;
+}
