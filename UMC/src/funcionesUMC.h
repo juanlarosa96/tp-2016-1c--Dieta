@@ -16,6 +16,7 @@
 #include <commons/txt.h>
 #include "structsUMC.h"
 #include "variablesGlobalesUMC.h"
+#include "hexdump.h"
 
 /*-------OperatoriaUMC-------*/
 
