@@ -746,7 +746,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
 		for(j = 0; j < paginasCodigo; j++){ //Le mando pagina por pagina a Swap
-			if(largoPrograma > size_frames){
+			if(largoPrograma >= size_frames){
 			memcpy(pagina, posicionAux, size_frames); //chequear si en la ultima pagina tira error
 			}
 			else{
@@ -832,21 +832,92 @@ void cambiarRetardo(int nuevoRetardo) {
 	retardo = nuevoRetardo;
 }
 
-void dumpPID(int pid) {
-	int indice;
-	indice = encontrarPosicionEnListaProcesos((uint32_t) pid);
+void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo){
+    int i=0;
+    t_nodo_lista_paginas*nodoAuxPagina;
+    printf("Numero de Pagina\tEstado\n");
+    fprintf(archivo,"Numero de Pagina\tEstado\n");
+    pthread_mutex_lock(&mutexProcesos);
+    while(i<list_size(nodoAux->lista_paginas)){
+        nodoAuxPagina=list_get(nodoAux->lista_paginas,i);
+        printf("%d               \t%c\n",nodoAuxPagina->nro_pagina,nodoAuxPagina->status);
+        fprintf(archivo,"%d               \t%c\n",nodoAuxPagina->nro_pagina,nodoAuxPagina->status);
+        i++;
+    }
+    pthread_mutex_unlock(&mutexProcesos);
+}
 
-	if (indice == -1) {
-		printf("PID no válido\n");
-	}
+void dumpPIDAuxiliar(t_nodo_lista_procesos*nodoAux,FILE*archivo){
+    fprintf(archivo,"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+    printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+    printf("%d\t%d                            \t%d\n",nodoAux->pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
+    fprintf(archivo,"%d\t%d                            \t%d\n",nodoAux->pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
+    dumpEstructuraPaginas(nodoAux,archivo);
+}
 
-	t_nodo_lista_procesos* nodoProceso;
-	pthread_mutex_lock(&listaProcesos);
-	nodoProceso = list_get(listaProcesos, indice);
-	pthread_mutex_unlock(&listaProcesos);
+void dumpTodosLosProcesos(){
+    FILE*archivo=fopen("dumpUMC.txt","w+");
+    int i=0;
+    t_nodo_lista_procesos*nodoAux;
+    pthread_mutex_lock(&mutexProcesos);
+    while(i<list_size(listaProcesos)){
+        nodoAux=list_get(listaProcesos,i);
+        dumpPIDAuxiliar(nodoAux,archivo);
+        i++;
+    }
+    pthread_mutex_unlock(&mutexProcesos);
 
-	FILE * reporte;
-	reporte = fopen("./Dump", "w+");
+    printf("\nDump de Memoria Principal\n");
+    fprintf(archivo,"\nDump de Memoria Principal\n");
+    pthread_mutex_lock(&mutexMemoriaPrincipal);
+    hexdump(archivo,memoriaPrincipal, tamanioMemoria);
+    pthread_mutex_unlock(&mutexMemoriaPrincipal);
+    fclose(archivo);
+}
+
+
+
+void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo){
+    int i=0;
+    t_nodo_lista_paginas* nodoAuxPagina;
+    printf("\nDump memoria del PID:\n");
+    fprintf(archivo,"\nDump memoria del PID:\n");
+    pthread_mutex_lock(&mutexProcesos);
+    while(i<list_size(nodoAux->lista_paginas)){
+        nodoAuxPagina=list_get(nodoAux->lista_paginas,i);
+        if(nodoAuxPagina->status=='M'){
+            void*buffer=lecturaMemoria(nodoAuxPagina->nroFrame,0,size_frames);
+            hexdump(archivo,buffer,size_frames);
+            free(buffer);
+        }
+        i++;
+    }
+    pthread_mutex_unlock(&mutexProcesos);
+}
+void dumpPID(uint32_t pid){
+    int indiceProceso = encontrarPosicionEnListaProcesos(pid);
+
+    if(indiceProceso==-1){
+        printf("PID no valido\n");
+        return;
+    }
+
+    FILE* reporte = fopen("dumpPID.txt","w+");
+    fprintf(reporte,"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+    printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+
+    pthread_mutex_lock(&mutexProcesos);
+    t_nodo_lista_procesos*nodoAux=list_get(listaProcesos,indiceProceso);
+    pthread_mutex_unlock(&mutexProcesos);
+
+    printf("%d\t%d                            \t%d\n",pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
+    fprintf(reporte,"%d\t%d                            \t%d\n",pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
+
+    dumpEstructuraPaginas(nodoAux,reporte);
+    dumpMemoriaPID(nodoAux,reporte);
+
+    fclose(reporte);
+
 }
 
 int clean_stdin() {
