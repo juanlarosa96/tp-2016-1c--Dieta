@@ -743,6 +743,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	log_info(logger, "Se envió nuevo programa pid %d a Swap", idPrograma);
 
 	if (respuestaInicializacion == inicioProgramaExito) {
+		send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //envio ID a Swap
 		char * pagina = malloc(size_frames);
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
@@ -813,6 +814,7 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 
 	pthread_mutex_lock(&mutexSwap);
 	send(socketSwap, &header, sizeof(int),0); //Informar a Swap de la finalización del programa
+	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
 	pthread_mutex_unlock(&mutexSwap);
 
 
@@ -1040,12 +1042,11 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		uint32_t size;
 		void * bufferPedido;
 		uint32_t idNuevoProcesoActivo;
-		//char * nroCpu = string_itoa(conexion); para poner nro de cpu
 
 		switch (header) {
 		case 0:
 
-			log_info(logger, "Se desconectó CPU nro", texto); //como carajo pongo el nro?
+			log_info(logger, "Se desconectó CPU nro %d", conexion); //como carajo pongo el nro?
 			pthread_exit(NULL);
 
 		case solicitarBytes:
