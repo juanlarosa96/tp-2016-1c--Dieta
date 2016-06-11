@@ -400,7 +400,7 @@ int buscarVictimaClock(uint32_t pid) {
 
 int buscarVictimaClockModificado(uint32_t pid) {
 	int indice;
-	int puntero;
+	int puntero, punteroInicial;
 	int nuevoPuntero;
 	int victima;
 	int acierto = 0;
@@ -413,6 +413,7 @@ int buscarVictimaClockModificado(uint32_t pid) {
 	nodoAux = list_get(listaProcesos, indice);
 	puntero = nodoAux->punteroClock;
 	pthread_mutex_unlock(&mutexProcesos);
+	punteroInicial = puntero;
 
 	pthread_mutex_lock(&mutexFrames);
 	while (puntero < list_size(listaFrames) && acierto == 0) {
@@ -440,15 +441,15 @@ int buscarVictimaClockModificado(uint32_t pid) {
 
 		if (puntero == list_size(listaFrames)) {
 			puntero = 0;
-
-			if (cantVueltas == 0) {
-				cantVueltas++;
-			} else {
-				cantVueltas = 0;
-			}
 		}
 
+		if ((cantVueltas == 0) && (puntero == punteroInicial)) {
+			cantVueltas++;
+		} else if ((cantVueltas == 1) && (puntero == punteroInicial)) {
+			cantVueltas = 0;
+			}
 	}
+
 	pthread_mutex_unlock(&mutexFrames);
 
 	return victima;
