@@ -6,48 +6,119 @@
  */
 #include "funciones.h"
 
-int iniciarProgramaAnsisop(int cliente, char*archivo,char bitMap[]) {
+int iniciarProgramaAnsisop(int cliente, char*archivo) {
 
-	/*int cantPaginasCodigo;
-	recibirTodo(cliente, &cantPaginasCodigo, sizeof(int));
-
-	int cantPaginasStack;
-	recibirTodo(cliente, &cantPaginasStack, sizeof(int));*/
-
-	//SWAP AHORA VA A RECIBIR CANT PAGINAS TOTAL, PID, TAMANIO CODIGO, Y DSPS EL CODIGO EN PAGINAS!!
-	//TERMINAR DE CORREGIR LA FUNCION
+	t_proceso * proceso = malloc(sizeof(t_proceso));
 
 	int cantPaginasTotal;
 	recibirTodo(cliente, &cantPaginasTotal, sizeof(int));
 
-	if (chequearMemoriaDisponible(cantPaginasTotal, bitMap) == 0) {
+	int frameInicial= chequearMemoriaDisponible(cantPaginasTotal,archivo);
+	if (frameInicial == -1) {
 		avisarUMCFallo(cliente);
-		return 1;
+		return 0;
 	} else {
 		avisarUMCExito(cliente);
 	}
 
-	int pid;
-	recibirTodo(cliente, &pid, sizeof(int));
+	uint32_t pid;
+	recibirTodo(cliente, &pid, sizeof(uint32_t));
 
-	int tamanioCodigo; //tamaño en paginas del codigo
-	recibirTodo(cliente, &tamanioCodigo, sizeof(int));
+	int cantPaginasCodigo;
+	recibirTodo(cliente, &cantPaginasCodigo, sizeof(int));
 
+	proceso->pID = pid;
+	proceso->frameInicial = frameInicial;
+	proceso->cantPaginas = cantPaginasTotal;
+
+	list_add(listaProcesos,proceso);
 	int i;
-	for (i = 0; i < tamanioCodigo; i++) {
-		char *pagina = malloc(sizePagina);
-		recibirTodo(cliente, pagina, sizePagina);
-		archivo[i] = pagina;
-		bitMap[i] = 1;
-		free(pagina); // no estoy segura de que este bien!
-	}// coregir el tema de que siempre sobreescribe las primeras n paginas del swap
+	char *pagina = malloc(sizePagina);
 
-	return 1;// este return es fruta
+	for (i = 0; i < cantPaginasTotal; i++) {
+		if(i < cantPaginasCodigo){
+
+		recibirTodo(cliente, pagina, sizePagina);
+		archivo[frameInicial] = *pagina;
+		usleep(retardoAcceso*1000);
+
+		}
+
+		bitMap[frameInicial] = 1;
+		frameInicial ++;
+	}
+	free(pagina);
+	return 1;
 }
 
+void guardarPaginas(int cliente,char*archivo){
+
+	int nroPagina;
+	recibirTodo(cliente,&nroPagina,sizeof(int));
+
+	uint32_t pID;
+	recibirTodo(cliente,&pID,sizeof(uint32_t));
+
+	char *pagina = malloc(sizePagina);
+	recibirTodo(cliente,pagina,sizeof(sizePagina));
+
+	int i;
+	t_proceso *procesoAux;
+	for(i = 0 ; i < list_size(listaProcesos) ; i++){
+		procesoAux = list_get(listaProcesos,i);
+
+		if (procesoAux->pID == pID ){
+			usleep(retardoAcceso*1000);
+			archivo[procesoAux->frameInicial + nroPagina] = *pagina;
+			break;
+		}
+
+	}
+}
+
+void enviarPaginas(int cliente,char*archivo){
+	uint32_t pID;
+	recibirTodo(cliente,&pID,sizeof(uint32_t));
+
+	int nroPagina;
+	recibirTodo(cliente,&nroPagina,sizeof(int));
+
+	int i;
+		t_proceso *procesoAux;
+		for(i = 0 ; i < list_size(listaProcesos) ; i++){
+			procesoAux = list_get(listaProcesos,i);
+
+			if (procesoAux->pID == pID ){
+				usleep(retardoAcceso*1000);
+				send(cliente,&(archivo[procesoAux->frameInicial + nroPagina]),sizePagina,0);
+				break;
+			}
+
+		}
 
 
-int chequearMemoriaDisponible(int cantPaginas, char bitMap[]) {
+}
+
+void finalizarProgramaAnsisop(cliente){
+
+	uint32_t pID;
+	recibirTodo(cliente,&pID,sizeof(uint32_t));
+
+	int i;
+	t_proceso *procesoAux;
+	for(i = 0 ; i < list_size(listaProcesos) ; i++){
+	procesoAux = list_get(listaProcesos,i);
+	if (procesoAux->pID == pID ){
+		int a;
+		for(a=0;a<procesoAux->cantPaginas;a++){
+			bitMap[a+procesoAux->frameInicial]=0;
+		}
+	    free(list_remove(listaProcesos,i));
+				}
+	}
+}
+
+int chequearMemoriaDisponible(int cantPaginas,char*archivo) {
 	int cantidadContinua, i, cantidadTotal;
 	cantidadContinua = i = cantidadTotal = 0;
 	int hayContinuas = 0, hayTotales = 0;
@@ -61,17 +132,17 @@ int chequearMemoriaDisponible(int cantPaginas, char bitMap[]) {
 		}
 		if (cantidadTotal == cantPaginas){hayTotales = 1;}
 		if (cantidadContinua == cantPaginas){hayContinuas = 1;}
+		i++;
 	}
 
 	if(hayTotales){
 			if(hayContinuas){
-				return 1;
+				return (i-1)-cantPaginas;
 			} else{
-			compactar();
-			return 1;
+			return compactar(archivo);
 			}
 	} else {
-	return 0;
+	return -1;
 	}
 }
 
@@ -85,6 +156,21 @@ void avisarUMCExito(int cliente) {
 	send(cliente, &header, sizeof(int), 0);
 }
 
-void compactar(){
-
+int compactar(char*archivo){
+	int i;
+	int ultimoFrameLibre = 0;
+	for(i=0;i<cantidadDeFrames-1;i++){
+		if(bitMap[i]==0 && bitMap[i+1]==1){
+			archivo[i] = archivo[i+1];
+			bitMap[i]=1;
+			bitMap[i+1]=0;
+			i = ultimoFrameLibre -1;
+		}
+		if(bitMap[i]==1){
+			ultimoFrameLibre++;
+		}
+	}
+	usleep(retardoCompactacion*1000);
+	return ultimoFrameLibre;
 }
+

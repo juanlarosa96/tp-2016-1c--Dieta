@@ -188,6 +188,8 @@ int main(int argc, char **argv) {
 								free(nuevoPcb.indice_etiquetas.etiquetas);
 								free(nuevoPcb.indice_codigo.instrucciones);
 								list_destroy(nuevoPcb.indice_stack);
+								enviarFinalizacionProgramaConsola(i);
+								FD_CLR(i, &bolsaDeSockets);
 
 							} else {
 								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));

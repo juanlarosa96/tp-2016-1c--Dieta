@@ -9,9 +9,10 @@
 #define STRUCTS_H_
 
 typedef struct{
-	uint32_t pid;
+	uint32_t pID;
+	int frameInicial;
 	int cantPaginas;
-	int primerFrame;
+
 }t_proceso;
 
 #endif /* STRUCTS_H_ */

@@ -81,6 +81,7 @@ int cantidadFramesDisponibles() {
 		if (nodoAux->pid == 0) {
 			contador++;
 		}
+		i++;
 	}
 	pthread_mutex_unlock(&mutexFrames);
 	return contador;
@@ -399,7 +400,7 @@ int buscarVictimaClock(uint32_t pid) {
 
 int buscarVictimaClockModificado(uint32_t pid) {
 	int indice;
-	int puntero;
+	int puntero, punteroInicial;
 	int nuevoPuntero;
 	int victima;
 	int acierto = 0;
@@ -412,6 +413,7 @@ int buscarVictimaClockModificado(uint32_t pid) {
 	nodoAux = list_get(listaProcesos, indice);
 	puntero = nodoAux->punteroClock;
 	pthread_mutex_unlock(&mutexProcesos);
+	punteroInicial = puntero;
 
 	pthread_mutex_lock(&mutexFrames);
 	while (puntero < list_size(listaFrames) && acierto == 0) {
@@ -439,15 +441,15 @@ int buscarVictimaClockModificado(uint32_t pid) {
 
 		if (puntero == list_size(listaFrames)) {
 			puntero = 0;
-
-			if (cantVueltas == 0) {
-				cantVueltas++;
-			} else {
-				cantVueltas = 0;
-			}
 		}
 
+		if ((cantVueltas == 0) && (puntero == punteroInicial)) {
+			cantVueltas++;
+		} else if ((cantVueltas == 1) && (puntero == punteroInicial)) {
+			cantVueltas = 0;
+			}
 	}
+
 	pthread_mutex_unlock(&mutexFrames);
 
 	return victima;
@@ -742,6 +744,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	log_info(logger, "Se envió nuevo programa pid %d a Swap", idPrograma);
 
 	if (respuestaInicializacion == inicioProgramaExito) {
+		send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //envio ID a Swap
 		char * pagina = malloc(size_frames);
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
@@ -785,7 +788,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	}
 
 	pthread_mutex_lock(&mutexProcesos);
-	list_add(listaProcesos, &unNodo);
+	list_add(listaProcesos, unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
 	log_info(logger, "Se inicializó nuevo programa pid %d", idPrograma);
@@ -812,6 +815,7 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 
 	pthread_mutex_lock(&mutexSwap);
 	send(socketSwap, &header, sizeof(int),0); //Informar a Swap de la finalización del programa
+	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
 	pthread_mutex_unlock(&mutexSwap);
 
 
@@ -875,8 +879,6 @@ void dumpTodosLosProcesos(){
     fclose(archivo);
 }
 
-
-
 void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo){
     int i=0;
     t_nodo_lista_paginas* nodoAuxPagina;
@@ -894,6 +896,7 @@ void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo){
     }
     pthread_mutex_unlock(&mutexProcesos);
 }
+
 void dumpPID(uint32_t pid){
     int indiceProceso = encontrarPosicionEnListaProcesos(pid);
 
@@ -953,17 +956,17 @@ void consolaUMC(void) {
 			scanf("%s", comando);
 			if (strncasecmp(comando, "pid", 3) == 0) {
 				do {
-					printf("Ingrese nuevo retardo: \n");
+					printf("Ingrese PID: \n");
 
 				} while ((scanf("%d%c", &pid, &c) != 2 || c != '\n')
 						&& clean_stdin());
 
-				printf("Se ejecutará: Dump del proceso %d\n", pid);
+				printf("Se ejecutará: Dump del proceso pid %d\n", pid);
 
 				dumpPID(pid);
 			} else if (strncasecmp(comando, "total", 5) == 0) {
 				printf("Se ejecutará: Dump de todos los procesos\n");
-				//dumpTotal();
+				dumpTodosLosProcesos();
 			}
 
 		} else if (strncasecmp(comando, "retardo", 7) == 0) {
@@ -1040,12 +1043,11 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		uint32_t size;
 		void * bufferPedido;
 		uint32_t idNuevoProcesoActivo;
-		//char * nroCpu = string_itoa(conexion); para poner nro de cpu
 
 		switch (header) {
 		case 0:
 
-			log_info(logger, "Se desconectó CPU nro", texto); //como carajo pongo el nro?
+			log_info(logger, "Se desconectó CPU nro %d", conexion); //como carajo pongo el nro?
 			pthread_exit(NULL);
 
 		case solicitarBytes:

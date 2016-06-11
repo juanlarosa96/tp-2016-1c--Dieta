@@ -23,7 +23,7 @@ t_puntero definirVariable(t_nombre_variable variable) {
 		t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof (t_identificadorConPosicionMemoria));
 		nuevaVariable->identificador = variable;
 		nuevaVariable->posicionDeVariable = *posicionVariable;
-		list_add(regPila->lista_variables, nuevaVariable);
+		list_add(regPila->lista_variables,nuevaVariable);
 		free(posicionVariable);
 	}
 
