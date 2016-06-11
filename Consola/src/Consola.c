@@ -21,14 +21,6 @@ int main(int argc, char **argv) {
 
 	strcpy(ruta, argv[2]); //Recibe ruta de programa ansisop
 
-	char comando[10];
-	printf("\nEscriba comando\n");
-	scanf("%s", comando);
-	while (strcmp(comando, "Prueba")) {
-		printf("Comando no valido \n");
-		scanf("%s", comando);
-	}
-
 	//Creo log para la consola
 	t_log* logger;
 	logger = log_create("Consola.log", "CONSOLA", 1,
