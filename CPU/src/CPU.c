@@ -47,7 +47,6 @@ int main(int argc, char *argv[]) {
 	char* ip_nucleo = config_get_string_value(config, "IP_NUCLEO");
 
 	//creo socket nucleo
-
 	crearSocket(&socketNucleo);
 
 	//me intento conectar
@@ -84,34 +83,6 @@ int main(int argc, char *argv[]) {
 		log_error(logger, "Error recibiendo el tamaño de pagina", texto);
 		return 1;
 	}
-
-	/*
-	 //recibo ruta del nucleo
-	 char* ruta = malloc(30);
-	 int bytesRecibidosRuta = recv(clienteNucleo, ruta, 30, 0);
-	 ruta[bytesRecibidosRuta] = '\0';
-
-	 //recibo mensaje del nucleo
-	 char* buffer = malloc(10);
-	 int bytesRecibidos = recv(clienteNucleo, buffer, 10, 0);
-	 buffer[bytesRecibidos] = '\0';
-	 printf("Nucleo dice: %s\n", buffer);
-
-	 //cliente de UMC
-	 struct sockaddr_in direccionServidorUMC;
-	 direccionServidorUMC.sin_family = AF_INET;
-	 direccionServidorUMC.sin_addr.s_addr = inet_addr(ip_umc);
-	 direccionServidorUMC.sin_port = htons(puerto_umc);
-
-	 int clienteUMC = socket(AF_INET, SOCK_STREAM, 0);
-	 if (connect(clienteUMC, (void*) &direccionServidorUMC, sizeof(direccionServidorUMC)) != 0) {
-	 perror("No se pudo conectar a la UMC");
-	 return 1;
-	 }
-
-
-	 send(clienteUMC, buffer, strlen(buffer), 0);
-
 
 	 //parser
 	 /*FILE* archivo;

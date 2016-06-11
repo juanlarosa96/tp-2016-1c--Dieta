@@ -7,6 +7,7 @@
 
 #ifndef VARIABLES_GLOBALES_H_
 #define VARIABLES_GLOBALES_H_
+#define TAM_VAR 4
 
 #include <structs.h>
 

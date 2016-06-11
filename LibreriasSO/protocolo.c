@@ -607,4 +607,3 @@ void asignarCompartidaNucleo(int socketNucleo, char variable, int valor){
 	memcpy(data + sizeof(int) + sizeof(char), &valor, sizeof(int));
 	send(socketNucleo, data, sizeof(int)*2 +sizeof(char), 0);
 }
-

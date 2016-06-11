@@ -13,8 +13,8 @@ t_puntero definirVariable(t_nombre_variable variable) {
 	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
 	posicionVariable->pagina = regPila->posicionUltimaVariable / tamanioPagina;
 	posicionVariable->offset = regPila->posicionUltimaVariable % tamanioPagina;
-	posicionVariable->size = 4;
-	regPila->posicionUltimaVariable += 4;
+	posicionVariable->size = TAM_VAR;
+	regPila->posicionUltimaVariable += TAM_VAR;
 
 	int aux = variable - '0';
 	if(aux>= 0 && aux <=9){
@@ -23,14 +23,19 @@ t_puntero definirVariable(t_nombre_variable variable) {
 		t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof (t_identificadorConPosicionMemoria));
 		nuevaVariable->identificador = variable;
 		nuevaVariable->posicionDeVariable = *posicionVariable;
+		list_add(regPila->lista_variables, nuevaVariable);
 		free(posicionVariable);
 	}
 
 	pushPila(pcbRecibido.indice_stack,regPila);
-	return regPila->posicionUltimaVariable - 4;
+	return regPila->posicionUltimaVariable - TAM_VAR;
 
 }
+
 t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
+	/*
+	 * me pasan un identif y me fijo en el stack de cpu cual es la pos
+	 */
 	t_puntero posicion = -1;
 	int argumento = variable - '0';
 	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
@@ -54,13 +59,17 @@ t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 	return posicion;
 }
 t_valor_variable dereferenciar(t_puntero puntero) {
+	/*
+	 * me dan un puntero y devuelvo el valor (le pido a umc el valor de la var en ese puntero)
+	 * me pasan directo el byte donde arranca la variable y tengo que transformar en pag y offset
+	 */
 	int valorVariable;
 	int numeroPagina = puntero/tamanioPagina;
 	int offset = puntero%tamanioPagina;
 	t_posicion_memoria posicionMemoria;
 	posicionMemoria.pagina = numeroPagina;
 	posicionMemoria.offset = offset;
-	posicionMemoria.size = 4;
+	posicionMemoria.size = TAM_VAR;
 	enviarPedidosDePosicionMemoria(socketUMC, posicionMemoria, (void *) & valorVariable, tamanioPagina);
 	if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
 		enviarAbortarProgramaNucleo(socketNucleo);
@@ -69,12 +78,16 @@ t_valor_variable dereferenciar(t_puntero puntero) {
 	return valorVariable;
 }
 void asignar(t_puntero puntero, t_valor_variable variable) {
+	/*
+	 * me pasan el byte donde arranco a guardar y el valor
+	 * calculo pag offset y le pido a umc que lo guarde
+	 */
 	int numeroPagina = puntero/tamanioPagina;
 	int offset = puntero%tamanioPagina;
 	t_posicion_memoria posicionMemoria;
 	posicionMemoria.pagina = numeroPagina;
 	posicionMemoria.offset = offset;
-	posicionMemoria.size = 4;
+	posicionMemoria.size = TAM_VAR;
 	enviarAlmacenamientosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &variable, tamanioPagina);
 	if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
 		enviarAbortarProgramaNucleo(socketNucleo);
@@ -82,6 +95,9 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 	}
 }
 int imprimir(t_valor_variable valor) {
+	/*
+	 * me pasan un valor y se lo paso a nucleo para que selo pase a ocnsola para imprimirlo
+	 */
 	//falta definir logger
 	char* texto = string_itoa(valor);
 	int largoTexto = strlen(texto);
@@ -90,6 +106,9 @@ int imprimir(t_valor_variable valor) {
 	return largoTexto;
 }
 int imprimirTexto(char* texto) {
+	/*
+	 * mismo que imprimir
+	 */
 	//falta definir logger
 	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
 	int largoTexto = strlen(texto);
@@ -97,33 +116,51 @@ int imprimirTexto(char* texto) {
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
+	/*
+	 * le aviso al nucleo que un proceso quiere usar un dispositivo de e/s por tanto tiempo
+	 * le aviso que bloquee el proceso
+	 */
 	huboEntradaSalida = 1;
 	sigoEjecutando = 0;
 	enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
 }
 
 void wait(t_nombre_semaforo identificador_semaforo) {
+	/*
+	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
+	 */
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 }
 
 void signal(t_nombre_semaforo identificador_semaforo) {
+	/*
+	 * el prog ansisop hace un signal de este semaforo
+	 */
 	enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
+	/*
+	 * cambio el pc a la primera instruccion de la etiqueta
+	 */
 	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 	huboSaltoLinea = 1;
 }
 
 void retornar(t_valor_variable retorno){
-
+	/*
+	 * si stoy en main termino el proceso
+	 * si no:
+	 * guardo retorno en la var corresp al retorno (dir de retorno del reg pila)
+	 * hago pop para sacar el reg del indice de stack, por ende vuevlo a la funcion anterior
+	 */
 	t_registro_pila* funcionOrigen = popPila(pcbRecibido.indice_stack);
 	t_registro_pila* funcionDestino = popPila(pcbRecibido.indice_stack);
 	if(funcionDestino == NULL){
 		enviarFinalizacionProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
 	}else{
-		enviarPedidoAlmacenarBytes(socketUMC,funcionOrigen->variable_retorno.pagina,funcionOrigen->variable_retorno.offset,4,&retorno);
+		enviarPedidoAlmacenarBytes(socketUMC,funcionOrigen->variable_retorno.pagina,funcionOrigen->variable_retorno.offset,TAM_VAR,&retorno);
 		if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
 			enviarAbortarProgramaNucleo(socketNucleo);
 			sigoEjecutando = 0;
@@ -149,7 +186,9 @@ void retornar(t_valor_variable retorno){
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
-
+	/*
+	 * creo un nuevo regPila en indice stack
+	 */
 	t_registro_pila * nuevoRegistroStack = malloc(sizeof(t_registro_pila));
 	t_registro_pila * registroStackAnterior = popPila(pcbRecibido.indice_stack);
 	nuevoRegistroStack->posicionUltimaVariable = registroStackAnterior->posicionUltimaVariable;
@@ -157,7 +196,7 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	list_create(nuevoRegistroStack->lista_variables);
 	nuevoRegistroStack->variable_retorno.pagina = donde_retornar / tamanioPagina;
 	nuevoRegistroStack->variable_retorno.offset = donde_retornar % tamanioPagina;
-	nuevoRegistroStack->variable_retorno.size = 4;
+	nuevoRegistroStack->variable_retorno.size = TAM_VAR;
 	nuevoRegistroStack->direccion_retorno = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 
 	pushPila(pcbRecibido.indice_stack,registroStackAnterior);
@@ -165,12 +204,20 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
+	/*
+	 * le pido a nucleo el val de la var compartida
+	 */
 	t_valor_variable valorVariable;
 	pedirCompartidaNucleo(socketNucleo, variable, &valorVariable);
 	return valorVariable;
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	/*
+	 * le digo a nucleo que guarde el val de la var compartida
+	 */
 	asignarCompartidaNucleo(socketNucleo, variable, valor);
 	return valor;
 }
+
+
