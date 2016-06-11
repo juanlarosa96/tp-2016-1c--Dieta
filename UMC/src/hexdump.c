@@ -21,19 +21,16 @@ void hexdump(FILE* archivo, void *memoria, unsigned int len)
                 /* print offset */
                 if(i % HEXDUMP_COLS == 0)
                 {
-                        printf("0x%06x: ", i);
                         fprintf(archivo,"0x%06x: ", i);
                 }
 
                 /* print hex data */
                 if(i < len)
                 {
-                        printf("%02x ", 0xFF & ((char*)memoria)[i]);
                         fprintf(archivo, "%02x ", 0xFF & ((char*)memoria)[i]);
                 }
                 else /* end of block, just aligning for ASCII dump */
                 {
-                        printf("   ");
                         fprintf(archivo, "   ");
                 }
 
@@ -44,21 +41,17 @@ void hexdump(FILE* archivo, void *memoria, unsigned int len)
                         {
                                 if(j >= len) /* end of block, not really printing */
                                 {
-                                        putchar(' ');
                                         fputc(' ', archivo);
                                 }
                                 else if(isprint(((char*)memoria)[j])) /* printable char */
                                 {
-                                        putchar(0xFF & ((char*)memoria)[j]);
                                         fputc(0xFF & ((char*)memoria)[j],archivo);
                                 }
                                 else /* other char */
                                 {
-                                        putchar('.');
                                         fputc('.',archivo);
                                 }
                         }
-                        putchar('\n');
                         fputc('\n', archivo);
                 }
         }
