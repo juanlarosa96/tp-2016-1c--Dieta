@@ -596,6 +596,7 @@ void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariabl
 	memcpy(data, &header, sizeof(int));
 	memcpy(data + sizeof(int), &variable, sizeof(char));
 	send(socketNucleo, data, sizeof(int)+sizeof(char), 0);
+	free(data);
 	recibirTodo(socketNucleo, (void *) punteroVariable, sizeof(int));
 }
 
@@ -606,6 +607,7 @@ void asignarCompartidaNucleo(int socketNucleo, char variable, int valor){
 	memcpy(data + sizeof(int), &variable, sizeof(char));
 	memcpy(data + sizeof(int) + sizeof(char), &valor, sizeof(int));
 	send(socketNucleo, data, sizeof(int)*2 +sizeof(char), 0);
+	free(data);
 }
 
 void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina){ //Sofi comment: chequearla!
