@@ -651,9 +651,11 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) {
-		//codigoPagina = pedirleASwapQueMeDeLaPagina(pid, nroPagina);
+		void * bufferPagina = malloc(size_frames);
+		pthread_mutex_lock(&mutexSwap);
+		pedirPaginaASwap(socketSwap, pid, nroPagina);
 		//recibirPagina(buffer)
-		void * bufferPagina;
+		pthread_mutex_unlock(&mutexSwap);
 		int exito;
 		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
 		if (exito == -1) {
