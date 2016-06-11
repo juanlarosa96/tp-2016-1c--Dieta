@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 			case guardarPaginasEnSwap:
 				guardarPaginas(cliente,archivoSwap);
 				break;
-			case pedirPaginaASwap:
+			case pedidoPaginaASwap:
 				enviarPaginas(cliente,archivoSwap);
 				break;
 			case finalizacionPrograma:
