@@ -607,3 +607,17 @@ void asignarCompartidaNucleo(int socketNucleo, char variable, int valor){
 	memcpy(data + sizeof(int) + sizeof(char), &valor, sizeof(int));
 	send(socketNucleo, data, sizeof(int)*2 +sizeof(char), 0);
 }
+
+void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina){ //Sofi comment: chequearla!
+	int header = pedidoPaginaASwap;
+	int offset = 0;
+	void * data = malloc(sizeof(int) *2 + sizeof(uint32_t));
+	memcpy(data, &header, sizeof(int));
+	offset += sizeof(int);
+	memcpy(data + offset, &pid, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(data + offset, &nroPagina, sizeof(int));
+	offset += sizeof(int);
+	send(socketSwap, data, offset,0);
+	free(data);
+}

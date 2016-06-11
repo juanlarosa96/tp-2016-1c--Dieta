@@ -36,7 +36,7 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	pedidoMemoriaFallo = 17,
 	abortarPrograma = 18,
 	guardarPaginasEnSwap = 19,
-	pedirPaginaASwap = 20,
+	pedidoPaginaASwap = 20,
 	inicializarProgramaSwap = 21,
 	headerWait = 22,
 	headerSignal = 23,
@@ -103,5 +103,6 @@ void enviarFinalizacionProgramaNucleo(int socketNucleo);
 void enviarAbortarProgramaNucleo(int socketNucleo);
 void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariable);
 void asignarCompartidaNucleo(int socketNucleo, char variable, int valor);
+void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina); //check tipo ultimo parametro
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
