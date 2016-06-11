@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 	int puertoServidor =   config_get_int_value(config,"PUERTO_ESCUCHA");
 	cantidadDeFrames =   config_get_int_value(config,"CANTIDAD_PAGINAS");
 	sizePagina =   config_get_int_value(config,"TAMANIO_PAGINA");
+	retardoAcceso = config_get_int_value(config,"RETARDO_ACCESO");
 	retardoCompactacion =   config_get_int_value(config,"RETARDO_COMPACTACION");
 	char*nombre = config_get_string_value(config,"NOMBRE_SWAP");
 

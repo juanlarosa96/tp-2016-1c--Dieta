@@ -11,6 +11,7 @@
 int cantidadDeFrames;
 int sizePagina;
 int retardoCompactacion;
+int retardoAcceso;
 int *bitMap;
 t_list *listaProcesos;
 
