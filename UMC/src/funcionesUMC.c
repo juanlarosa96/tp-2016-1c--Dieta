@@ -876,8 +876,6 @@ void dumpTodosLosProcesos(){
     fclose(archivo);
 }
 
-
-
 void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo){
     int i=0;
     t_nodo_lista_paginas* nodoAuxPagina;
@@ -895,6 +893,7 @@ void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo){
     }
     pthread_mutex_unlock(&mutexProcesos);
 }
+
 void dumpPID(uint32_t pid){
     int indiceProceso = encontrarPosicionEnListaProcesos(pid);
 
@@ -954,17 +953,17 @@ void consolaUMC(void) {
 			scanf("%s", comando);
 			if (strncasecmp(comando, "pid", 3) == 0) {
 				do {
-					printf("Ingrese nuevo retardo: \n");
+					printf("Ingrese PID: \n");
 
 				} while ((scanf("%d%c", &pid, &c) != 2 || c != '\n')
 						&& clean_stdin());
 
-				printf("Se ejecutará: Dump del proceso %d\n", pid);
+				printf("Se ejecutará: Dump del proceso pid %d\n", pid);
 
 				dumpPID(pid);
 			} else if (strncasecmp(comando, "total", 5) == 0) {
 				printf("Se ejecutará: Dump de todos los procesos\n");
-				//dumpTotal();
+				dumpTodosLosProcesos();
 			}
 
 		} else if (strncasecmp(comando, "retardo", 7) == 0) {
