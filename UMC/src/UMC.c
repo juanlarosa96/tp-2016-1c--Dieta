@@ -181,6 +181,10 @@ int main(int argc, char *argv[]) {
 
 	pthread_join(hiloConsola, NULL);
 
+	list_clean(listaProcesos);
+	list_clean(listaFrames);
+	list_clean(TLB);
+
 	config_destroy(config);
 
 	return EXIT_SUCCESS;
