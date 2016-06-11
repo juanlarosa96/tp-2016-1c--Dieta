@@ -40,6 +40,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 
 		recibirTodo(cliente, pagina, sizePagina);
 		archivo[frameInicial] = *pagina;
+		usleep(retardoAcceso*1000);
 
 		}
 
@@ -67,6 +68,7 @@ void guardarPaginas(int cliente,char*archivo){
 		procesoAux = list_get(listaProcesos,i);
 
 		if (procesoAux->pID == pID ){
+			usleep(retardoAcceso*1000);
 			archivo[procesoAux->frameInicial + nroPagina] = *pagina;
 			break;
 		}
@@ -87,6 +89,7 @@ void enviarPaginas(int cliente,char*archivo){
 			procesoAux = list_get(listaProcesos,i);
 
 			if (procesoAux->pID == pID ){
+				usleep(retardoAcceso*1000);
 				send(cliente,&(archivo[procesoAux->frameInicial + nroPagina]),sizePagina,0);
 				break;
 			}
