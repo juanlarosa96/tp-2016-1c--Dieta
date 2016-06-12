@@ -664,9 +664,12 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 
 }
 
+void enviarBytesACPU(int socketCPU, void * data, int tamanio){
+	send(socketCPU, data, tamanio, 0);
+}
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
-		uint32_t pid, int socketCPU) {
+		uint32_t pid, int socketCPU) { //ahora si posta posta creo que está terminada
 
 	void * data;
 	int nroFrame;
@@ -676,7 +679,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		if (nroFrame > -1) { //TLB Hit
 			data = lecturaMemoria(nroFrame, offset, tamanio);
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
-			//enviarBytesACPU();
+			enviarBytesACPU(socketCPU, data, tamanio);
 			return;
 		}
 	}
@@ -693,7 +696,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
 		if (exito == -1) {
 			finalizarPrograma(pid); //En finalizarPrograma se avisa a Swap para que borre las páginas
-			enviarAbortarProceso(socketCPU, pid); //Le avisa a CPU que finalice el programa
+			enviarAbortarProceso(socketCPU); //Le avisa a CPU que finalice el programa
 			log_error(logger,
 					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
 					pid);
@@ -701,19 +704,22 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		}
 
 	} else if(nroFrame == OVERFLOW){
-		//avisar que hay overflow
+		finalizarPrograma(pid);
+		enviarAbortarProceso(socketCPU);
 		log_error(logger, "Pedido inválido del proceso pid %d. Fuera del espacio de direcciones.",pid);
 		return;
 	}
 
-	cargarEnTLB(pid, nroPagina, nroFrame);
+	if (entradasTLB > 0){
+		cargarEnTLB(pid, nroPagina, nroFrame);
+	}
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
 
-	//enviarBytesACPU
+	enviarPedidoMemoriaOK(socketCPU);
+	enviarBytesACPU(socketCPU, data, tamanio);
 
 	return;
-
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
@@ -1057,13 +1063,14 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		switch (header) {
 		case 0:
 
-			log_info(logger, "Se desconectó CPU nro %d", conexion); //como carajo pongo el nro?
+			log_info(logger, "Se desconectó CPU nro (socket nro %d)", conexion);
 			pthread_exit(NULL);
+			break;
 
 		case solicitarBytes:
 
-			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size); //deserializacion
-			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso, conexion); //operacion
+			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size);
+			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso, conexion);
 			break;
 
 		case almacenarBytes:
@@ -1080,7 +1087,7 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 			break;
 
 		default:
-			log_error(logger, "Hubo problema de conexion con CPU", texto); //nro cpu?
+			log_error(logger, "Hubo problema de conexion con CPU (socket nro %d)", conexion);
 			pthread_exit(NULL);
 
 			break;
