@@ -105,5 +105,6 @@ void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariabl
 void asignarCompartidaNucleo(int socketNucleo, char variable, int valor);
 void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina); //check tipo ultimo parametro
 void enviarAbortarProceso(int socketCPU);
+void enviarPedidoMemoriaOK(int socketCPU);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */

@@ -629,3 +629,8 @@ void enviarAbortarProceso(int socketCPU){
 	send(socketCPU, &header, sizeof(int), 0);
 
 }
+
+void enviarPedidoMemoriaOK(int socketCPU){
+	int header = pedidoMemoriaOK;
+	send(socketCPU, &header, sizeof(int), 0);
+}
