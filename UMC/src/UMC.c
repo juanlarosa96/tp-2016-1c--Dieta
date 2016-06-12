@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 
 	if (crearSocket(&socketSwap)) {
 		printf("Error creando socket\n");
-		log_error(logger, "Se produjo un error creando el socket de UMC",
+		log_error(logger, "Se produjo un error creando el socket cliente de Swap",
 				texto);
 		return 1;
 	}
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	log_info(logger, "Se estableció correctamente el socket servidor", texto);
-	printf("Escuchando\n");
+	log_info(logger, "Escuchando nuevas conexiones");
 
 	/*-----------CONEXION CON NUCLEO-----------------*/
 
