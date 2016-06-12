@@ -624,14 +624,8 @@ void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina){ //Sofi comme
 	free(data);
 }
 
-void enviarAbortarProceso(int socketCPU, uint32_t pid){
-	int header = abortarPrograma;
-	int offset = 0;
-	void * data = malloc(sizeof(int) + sizeof(uint32_t));
-	memcpy(data, &header, sizeof(int));
-	offset += sizeof(int);
-	memcpy(data + offset, &pid, sizeof(uint32_t));
-	offset += sizeof(uint32_t);
-	send(socketCPU, data, offset, 0);
-	free(data);
+void enviarAbortarProceso(int socketCPU){
+	int header = pedidoMemoriaFallo;
+	send(socketCPU, &header, sizeof(int), 0);
+
 }
