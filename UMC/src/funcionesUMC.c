@@ -638,19 +638,46 @@ void recibirPaginaDeSwap(void * pagina){
 	recibirTodo(socketSwap, pagina, size_frames);
 }
 
-void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
-		uint32_t pid) {
+void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
+	int header = finalizacionPrograma;
+	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
+
+	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
+	liberarPaginas(indiceListaProcesos);
+	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
+			(void*) destruirProceso);
+	pthread_mutex_unlock(&mutexProcesos);
+
+	liberarFrames(idPrograma); //pongo ids en cero
+
+	if (entradasTLB > 0) {
+		limpiarEntradasTLB(idPrograma);
+	}
+
+	pthread_mutex_lock(&mutexSwap);
+	send(socketSwap, &header, sizeof(int),0); //Informar a Swap de la finalización del programa
+	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
+	pthread_mutex_unlock(&mutexSwap);
+
+
+	log_info(logger, "Se finalizó programa pid %d", idPrograma);
+
+}
+
+
+void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
+		uint32_t pid, int socketCPU) {
 
 	void * data;
 	int nroFrame;
-	int pedidoValido;
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
 			data = lecturaMemoria(nroFrame, offset, tamanio);
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
-			return data;
+			//enviarBytesACPU();
+			return;
 		}
 	}
 	//TLB Miss
@@ -665,27 +692,27 @@ void * solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		pthread_mutex_unlock(&mutexSwap);
 		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
 		if (exito == -1) {
-			//avisar a Swap para matar proceso. llamo a finalizarPrograma()
-			//avisar a Nucleo para matar proceso
-			//avisar a CPU para matar proceso
+			finalizarPrograma(pid); //En finalizarPrograma se avisa a Swap para que borre las páginas
+			enviarAbortarProceso(socketCPU, pid); //Le avisa a CPU que finalice el programa
 			log_error(logger,
 					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
 					pid);
+			return;
 		}
 
 	} else if(nroFrame == OVERFLOW){
 		//avisar que hay overflow
-		log_error(logger, "Pedido inválido de pid %d. Fuera del espacio de direcciones.",pid);
+		log_error(logger, "Pedido inválido del proceso pid %d. Fuera del espacio de direcciones.",pid);
+		return;
 	}
 
-	//nroFrame >- 1
 	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
 
-	printf("Solicitar Bytes \n");
+	//enviarBytesACPU
 
-	return data;
+	return;
 
 }
 
@@ -805,31 +832,6 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 }
 
-void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
-	int header = finalizacionPrograma;
-	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
-
-	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
-	liberarPaginas(indiceListaProcesos);
-	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
-			(void*) destruirProceso);
-	pthread_mutex_unlock(&mutexProcesos);
-
-	liberarFrames(idPrograma); //pongo ids en cero
-
-	if (entradasTLB > 0) {
-		limpiarEntradasTLB(idPrograma);
-	}
-
-	pthread_mutex_lock(&mutexSwap);
-	send(socketSwap, &header, sizeof(int),0); //Informar a Swap de la finalización del programa
-	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
-	pthread_mutex_unlock(&mutexSwap);
-
-
-	log_info(logger, "Se finalizó programa pid %d", idPrograma);
-
-}
 
 void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 
@@ -1059,8 +1061,9 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 			pthread_exit(NULL);
 
 		case solicitarBytes:
+
 			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size); //deserializacion
-			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso); //operacion
+			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso, conexion); //operacion
 			break;
 
 		case almacenarBytes:
