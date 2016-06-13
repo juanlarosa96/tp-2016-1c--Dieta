@@ -332,22 +332,22 @@ t_pcb recibirPcb(int socketNucleo) {
 	t_list *pilaAuxiliar = list_create();
 	for (i = 0; i < cantidadElementosStack; i++) {
 
-		t_registro_pila elementoPila;
+		t_registro_pila * elementoPila = malloc(sizeof(t_registro_pila));
 		int cantidadElementosLista;
 
-		recibirTodo(socketNucleo, &(elementoPila.direccion_retorno), largo32);
+		recibirTodo(socketNucleo, &(elementoPila->direccion_retorno), largo32);
 
 		recibirTodo(socketNucleo, &cantidadElementosLista, sizeof(int));
 
 		for (j = 0; j < cantidadElementosLista; j++) {
 
-			t_posicion_memoria elementoLista;
+			t_posicion_memoria * elementoLista = malloc(sizeof(t_posicion_memoria));
 
-			recibirTodo(socketNucleo, &(elementoLista.pagina), largo32);
-			recibirTodo(socketNucleo, &(elementoLista.offset), largo32);
-			recibirTodo(socketNucleo, &(elementoLista.size), largo32);
+			recibirTodo(socketNucleo, &(elementoLista->pagina), largo32);
+			recibirTodo(socketNucleo, &(elementoLista->offset), largo32);
+			recibirTodo(socketNucleo, &(elementoLista->size), largo32);
 
-			list_add(elementoPila.lista_argumentos, &elementoLista);
+			list_add(elementoPila->lista_argumentos, elementoLista);
 
 		}
 
@@ -355,22 +355,22 @@ t_pcb recibirPcb(int socketNucleo) {
 
 		for (j = 0; j < cantidadElementosLista; j++) {
 
-			t_identificadorConPosicionMemoria elementoLista;
+			t_identificadorConPosicionMemoria * elementoLista = malloc(sizeof(t_identificadorConPosicionMemoria));
 
-			recibirTodo(socketNucleo, &(elementoLista.identificador), sizeof(char));
-			recibirTodo(socketNucleo, &(elementoLista.posicionDeVariable.pagina), largo32);
-			recibirTodo(socketNucleo, &(elementoLista.posicionDeVariable.offset), largo32);
-			recibirTodo(socketNucleo, &(elementoLista.posicionDeVariable.size), largo32);
+			recibirTodo(socketNucleo, &(elementoLista->identificador), sizeof(char));
+			recibirTodo(socketNucleo, &(elementoLista->posicionDeVariable.pagina), largo32);
+			recibirTodo(socketNucleo, &(elementoLista->posicionDeVariable.offset), largo32);
+			recibirTodo(socketNucleo, &(elementoLista->posicionDeVariable.size), largo32);
 
-			list_add(elementoPila.lista_variables, &elementoLista);
+			list_add(elementoPila->lista_variables, elementoLista);
 
 		}
-		recibirTodo(socketNucleo, &(elementoPila.posicionUltimaVariable), largo32);
-		recibirTodo(socketNucleo, &(elementoPila.variable_retorno.pagina), largo32);
-		recibirTodo(socketNucleo, &(elementoPila.variable_retorno.offset), largo32);
-		recibirTodo(socketNucleo, &(elementoPila.variable_retorno.size), largo32);
+		recibirTodo(socketNucleo, &(elementoPila->posicionUltimaVariable), largo32);
+		recibirTodo(socketNucleo, &(elementoPila->variable_retorno.pagina), largo32);
+		recibirTodo(socketNucleo, &(elementoPila->variable_retorno.offset), largo32);
+		recibirTodo(socketNucleo, &(elementoPila->variable_retorno.size), largo32);
 
-		pushPila(pilaAuxiliar, &elementoPila);
+		pushPila(pilaAuxiliar, elementoPila);
 
 	}
 
@@ -379,7 +379,7 @@ t_pcb recibirPcb(int socketNucleo) {
 
 		t_registro_pila *registro = popPila(pilaAuxiliar);
 		pushPila(pcb.indice_stack, registro);
-		free(registro);
+
 	}
 
 	return pcb;
