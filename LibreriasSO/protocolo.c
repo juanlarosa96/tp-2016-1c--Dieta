@@ -122,9 +122,9 @@ void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, 
 
 	memcpy(buffer, &nroPagina, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(buffer, &offset, sizeof(uint32_t));
+	memcpy(buffer + cursorMemoria, &offset, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(buffer, &size, sizeof(uint32_t));
+	memcpy(buffer + cursorMemoria, &size, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
 
 	send(socketUMC, buffer, cursorMemoria, 0);
@@ -325,7 +325,8 @@ t_pcb recibirPcb(int socketNucleo) {
 	recibirTodo(socketNucleo, &(pcb.indice_codigo.numeroInstruccionInicio), largo32);
 
 	recibirTodo(socketNucleo, &(pcb.indice_etiquetas.largoTotalEtiquetas), largo32);
-	recibirTodo(socketNucleo, &(pcb.indice_etiquetas.etiquetas), pcb.indice_etiquetas.largoTotalEtiquetas);
+	pcb.indice_etiquetas.etiquetas = malloc(sizeof(char)*pcb.indice_etiquetas.largoTotalEtiquetas);
+	recibirTodo(socketNucleo, pcb.indice_etiquetas.etiquetas, pcb.indice_etiquetas.largoTotalEtiquetas);
 
 	recibirTodo(socketNucleo, &cantidadElementosStack, sizeof(int));
 
@@ -375,6 +376,7 @@ t_pcb recibirPcb(int socketNucleo) {
 	}
 
 	//Elementos de pila auxiliar estan en orden inverso
+	pcb.indice_stack = list_create();
 	for (i = 0; i < cantidadElementosStack; i++) {
 
 		t_registro_pila *registro = popPila(pilaAuxiliar);
