@@ -651,11 +651,32 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 }
 
 void recibirPaginaDeSwap(void * pagina) {
-	recibirTodo(socketSwap, pagina, size_frames);
+	int bytesRecibidos;
+	bytesRecibidos = recibirTodo(socketSwap, pagina, size_frames);
+	if (bytesRecibidos == 1){
+		log_error(logger, "Se desconectó Swap. Abortando UMC.");
+		abort();
+	}
+}
+
+void enviarASwapFinalizarPrograma(uint32_t pid){
+	int header = finalizacionPrograma;
+	int error;
+	error = send(socketSwap, &header, sizeof(int), 0);
+	if (error == -1){
+		log_error(logger, "Se desconectó Swap. Abortando UMC.");
+				abort();
+	}
+
+	error = send(socketSwap, &pid, sizeof(uint32_t), 0);
+	if (error == -1){
+		log_error(logger, "Se desconectó Swap. Abortando UMC.");
+				abort();
+	}
+
 }
 
 void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
-	int header = finalizacionPrograma;
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
 	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
@@ -671,8 +692,7 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	}
 
 	pthread_mutex_lock(&mutexSwap);
-	send(socketSwap, &header, sizeof(int), 0); //Informar a Swap de la finalización del programa
-	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
+	enviarASwapFinalizarPrograma(idPrograma);
 	pthread_mutex_unlock(&mutexSwap);
 
 	log_info(logger, "Se finalizó programa pid %d", idPrograma);
