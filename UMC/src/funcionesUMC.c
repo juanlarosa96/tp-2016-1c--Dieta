@@ -182,6 +182,7 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 					if (nodoPagAux->status == 'M') { //estaEnMemoria
 						frame = nodoPagAux->nroFrame;  //aplicarLRU para TLB
 					} else {
+						pthread_mutex_unlock(&mutexProcesos);
 						return -1;
 						//buscarEnSwap
 					}
@@ -518,7 +519,7 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 	t_nodo_lista_frames * frameAux;
 	int indiceProceso;
 
-	if (strncasecmp(algoritmo, "CLOCK", 5) == 0) {
+	if (strcmp(algoritmo, "CLOCK") == 0) {
 		indiceFrame = buscarVictimaClock(pid);
 	} else {
 		indiceFrame = buscarVictimaClockModificado(pid);
