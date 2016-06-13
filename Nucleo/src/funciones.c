@@ -128,9 +128,8 @@ void manejarCPU(void * socket) {
 
 void AgregarACola(t_pcbConConsola elemento, t_queue * cola) {
 	void * nuevoElemento = malloc(sizeof(t_pcbConConsola));
-	memcpy(&nuevoElemento, &elemento, sizeof(t_pcbConConsola));
-	queue_push(cola, &nuevoElemento);
-	return;
+	memcpy(nuevoElemento, &elemento, sizeof(t_pcbConConsola));
+	queue_push(cola, nuevoElemento);
 }
 
 t_pcbConConsola sacarPrimeroCola(t_queue * cola) {
