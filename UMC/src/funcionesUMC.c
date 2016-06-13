@@ -205,7 +205,7 @@ int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
 	} //fin while lista procesos
 	pthread_mutex_unlock(&mutexProcesos);
 
-	if(paginaEncontrada == 0){
+	if (paginaEncontrada == 0) {
 		return OVERFLOW;
 	}
 
@@ -245,7 +245,6 @@ void flushTLB() {
 
 	pthread_mutex_unlock(&mutexTLB);
 }
-
 
 void flushMemory() {
 	int i;
@@ -447,7 +446,7 @@ int buscarVictimaClockModificado(uint32_t pid) {
 			cantVueltas++;
 		} else if ((cantVueltas == 1) && (puntero == punteroInicial)) {
 			cantVueltas = 0;
-			}
+		}
 	}
 
 	pthread_mutex_unlock(&mutexFrames);
@@ -479,8 +478,6 @@ void modificarFrameEnListaPaginas(int indiceProceso, uint32_t idFrame,
 	pthread_mutex_unlock(&mutexProcesos);
 
 }
-
-
 
 void actualizarPaginaAReemplazar(int indiceProceso, int idFrame) {
 	t_nodo_lista_procesos * nodoProceso;
@@ -634,7 +631,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 	return 1; //Se logró cargar página en memoria
 }
 
-void recibirPaginaDeSwap(void * pagina){
+void recibirPaginaDeSwap(void * pagina) {
 	recibirTodo(socketSwap, pagina, size_frames);
 }
 
@@ -655,16 +652,15 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	}
 
 	pthread_mutex_lock(&mutexSwap);
-	send(socketSwap, &header, sizeof(int),0); //Informar a Swap de la finalización del programa
+	send(socketSwap, &header, sizeof(int), 0); //Informar a Swap de la finalización del programa
 	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
 	pthread_mutex_unlock(&mutexSwap);
-
 
 	log_info(logger, "Se finalizó programa pid %d", idPrograma);
 
 }
 
-void enviarBytesACPU(int socketCPU, void * data, int tamanio){
+void enviarBytesACPU(int socketCPU, void * data, int tamanio) {
 	send(socketCPU, data, tamanio, 0);
 }
 
@@ -703,27 +699,28 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 			return;
 		}
 
-	} else if(nroFrame == OVERFLOW){
+	} else if (nroFrame == OVERFLOW) {
 		finalizarPrograma(pid);
 		enviarAbortarProceso(socketCPU);
-		log_error(logger, "Pedido inválido del proceso pid %d. Fuera del espacio de direcciones.",pid);
+		log_error(logger,
+				"Pedido inválido del proceso pid %d. Fuera del espacio de direcciones.",
+				pid);
 		return;
-	}
-
-	if (entradasTLB > 0){
-		cargarEnTLB(pid, nroPagina, nroFrame);
 	}
 
 	data = lecturaMemoria(nroFrame, offset, tamanio);
 
+	if (entradasTLB > 0) {
+		cargarEnTLB(pid, nroPagina, nroFrame);
+	}
+
 	enviarPedidoMemoriaOK(socketCPU);
 	enviarBytesACPU(socketCPU, data, tamanio);
 
-	return;
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
-		void * buffer, uint32_t pid) {
+		void * buffer, uint32_t pid, int socketCPU) {
 
 	int nroFrame;
 
@@ -740,32 +737,42 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) {
-		//codigoPagina = pedirleASwapQueMeDeLaPagina(pid, nroPagina);
-		//recibirPagina(buffer)
-		void * bufferPagina;
 		int exito;
+		void * bufferPagina = malloc(size_frames);
+		pthread_mutex_lock(&mutexSwap);
+		pedirPaginaASwap(socketSwap, pid, nroPagina);
+		recibirPaginaDeSwap(bufferPagina);
+		pthread_mutex_unlock(&mutexSwap);
 		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
 		if (exito == -1) {
-			//avisar a Swap para matar proceso
-			//avisar a Nucleo para matar proceso
-			//avisar a CPU para matar proceso
+			enviarAbortarProceso(socketCPU);//Le avisa a CPU que finalice el programa
+			finalizarPrograma(pid); //En finalizarPrograma se avisa a Swap para que borre las páginas
 			log_error(logger,
 					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
 					pid);
-			pthread_exit(NULL);
+			return;
 		}
-	} else if (nroFrame == OVERFLOW){
 
+	} else if (nroFrame == OVERFLOW) {
+		enviarAbortarProceso(socketCPU);
+		finalizarPrograma(pid);
+		log_error(logger,
+				"Pedido inválido del proceso pid %d. Fuera del espacio de direcciones.",
+				pid);
+		return;
 	}
 
-	//nroFrame > 1
-	cargarEnTLB(pid, nroPagina, nroFrame);
 
 	escrituraMemoria(nroFrame, offset, tamanio, buffer);
 
-	printf("Almacenar Bytes \n");
-}
+	if (entradasTLB > 0) {
+		cargarEnTLB(pid, nroPagina, nroFrame);
+		actualizarBitUltimoAccesoTLB(pid, nroFrame);
+	}
 
+	enviarPedidoMemoriaOK(socketCPU);
+
+}
 
 void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * codigoPrograma, int socketNucleo) { //creo que está terminada
@@ -789,15 +796,14 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		char * pagina = malloc(size_frames);
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
-		for(j = 0; j < paginasCodigo; j++){ //Le mando pagina por pagina a Swap
-			if(largoPrograma >= size_frames){
-			memcpy(pagina, posicionAux, size_frames); //chequear si en la ultima pagina tira error
-			}
-			else{
-			memcpy(pagina, posicionAux, largoPrograma);
+		for (j = 0; j < paginasCodigo; j++) { //Le mando pagina por pagina a Swap
+			if (largoPrograma >= size_frames) {
+				memcpy(pagina, posicionAux, size_frames); //chequear si en la ultima pagina tira error
+			} else {
+				memcpy(pagina, posicionAux, largoPrograma);
 			}
 
-			send(socketSwap,pagina,size_frames,0);
+			send(socketSwap, pagina, size_frames, 0);
 			posicionAux += size_frames;
 			largoPrograma -= size_frames;
 		}
@@ -838,7 +844,6 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 }
 
-
 void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 
 	if (entradasTLB > 0) {
@@ -852,90 +857,99 @@ void cambiarRetardo(int nuevoRetardo) {
 	retardo = nuevoRetardo;
 }
 
-void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo){
-    int i=0;
-    t_nodo_lista_paginas*nodoAuxPagina;
-    printf("Numero de Pagina\tEstado\n");
-    fprintf(archivo,"Numero de Pagina\tEstado\n");
-    pthread_mutex_lock(&mutexProcesos);
-    while(i<list_size(nodoAux->lista_paginas)){
-        nodoAuxPagina=list_get(nodoAux->lista_paginas,i);
-        printf("%d               \t%c\n",nodoAuxPagina->nro_pagina,nodoAuxPagina->status);
-        fprintf(archivo,"%d               \t%c\n",nodoAuxPagina->nro_pagina,nodoAuxPagina->status);
-        i++;
-    }
-    pthread_mutex_unlock(&mutexProcesos);
+void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo) {
+	int i = 0;
+	t_nodo_lista_paginas*nodoAuxPagina;
+	printf("Numero de Pagina\tEstado\n");
+	fprintf(archivo, "Numero de Pagina\tEstado\n");
+	pthread_mutex_lock(&mutexProcesos);
+	while (i < list_size(nodoAux->lista_paginas)) {
+		nodoAuxPagina = list_get(nodoAux->lista_paginas, i);
+		printf("%d               \t%c\n", nodoAuxPagina->nro_pagina,
+				nodoAuxPagina->status);
+		fprintf(archivo, "%d               \t%c\n", nodoAuxPagina->nro_pagina,
+				nodoAuxPagina->status);
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
 }
 
-void dumpPIDAuxiliar(t_nodo_lista_procesos*nodoAux,FILE*archivo){
-    fprintf(archivo,"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
-    printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
-    printf("%d\t%d                            \t%d\n",nodoAux->pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
-    fprintf(archivo,"%d\t%d                            \t%d\n",nodoAux->pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
-    dumpEstructuraPaginas(nodoAux,archivo);
+void dumpPIDAuxiliar(t_nodo_lista_procesos*nodoAux, FILE*archivo) {
+	fprintf(archivo,
+			"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+	printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+	printf("%d\t%d                            \t%d\n", nodoAux->pid,
+			nodoAux->framesAsignados, nodoAux->cantPaginas);
+	fprintf(archivo, "%d\t%d                            \t%d\n", nodoAux->pid,
+			nodoAux->framesAsignados, nodoAux->cantPaginas);
+	dumpEstructuraPaginas(nodoAux, archivo);
 }
 
-void dumpTodosLosProcesos(){
-    FILE*archivo=fopen("dumpUMC.txt","w+");
-    int i=0;
-    t_nodo_lista_procesos*nodoAux;
-    pthread_mutex_lock(&mutexProcesos);
-    while(i<list_size(listaProcesos)){
-        nodoAux=list_get(listaProcesos,i);
-        dumpPIDAuxiliar(nodoAux,archivo);
-        i++;
-    }
-    pthread_mutex_unlock(&mutexProcesos);
+void dumpTodosLosProcesos() {
+	FILE*archivo = fopen("dumpUMC.txt", "w+");
+	int i = 0;
+	t_nodo_lista_procesos*nodoAux;
+	pthread_mutex_lock(&mutexProcesos);
+	while (i < list_size(listaProcesos)) {
+		nodoAux = list_get(listaProcesos, i);
+		dumpPIDAuxiliar(nodoAux, archivo);
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
 
-    printf("\nDump de Memoria Principal\n");
-    fprintf(archivo,"\nDump de Memoria Principal\n");
-    pthread_mutex_lock(&mutexMemoriaPrincipal);
-    hexdump(archivo,memoriaPrincipal, tamanioMemoria);
-    pthread_mutex_unlock(&mutexMemoriaPrincipal);
-    fclose(archivo);
+	printf("\nDump de Memoria Principal\n");
+	fprintf(archivo, "\nDump de Memoria Principal\n");
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
+	hexdump(archivo, memoriaPrincipal, tamanioMemoria);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	fclose(archivo);
 }
 
-void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo){
-    int i=0;
-    t_nodo_lista_paginas* nodoAuxPagina;
-    printf("\nDump memoria del PID:\n");
-    fprintf(archivo,"\nDump memoria del PID:\n");
-    pthread_mutex_lock(&mutexProcesos);
-    while(i<list_size(nodoAux->lista_paginas)){
-        nodoAuxPagina=list_get(nodoAux->lista_paginas,i);
-        if(nodoAuxPagina->status=='M'){
-            void*buffer=lecturaMemoria(nodoAuxPagina->nroFrame,0,size_frames);
-            hexdump(archivo,buffer,size_frames);
-            free(buffer);
-        }
-        i++;
-    }
-    pthread_mutex_unlock(&mutexProcesos);
+void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo) {
+	int i = 0;
+	t_nodo_lista_paginas* nodoAuxPagina;
+	printf("\nDump memoria del PID:\n");
+	fprintf(archivo, "\nDump memoria del PID:\n");
+	pthread_mutex_lock(&mutexProcesos);
+	while (i < list_size(nodoAux->lista_paginas)) {
+		nodoAuxPagina = list_get(nodoAux->lista_paginas, i);
+		if (nodoAuxPagina->status == 'M') {
+			void*buffer = lecturaMemoria(nodoAuxPagina->nroFrame, 0,
+					size_frames);
+			hexdump(archivo, buffer, size_frames);
+			free(buffer);
+		}
+		i++;
+	}
+	pthread_mutex_unlock(&mutexProcesos);
 }
 
-void dumpPID(uint32_t pid){
-    int indiceProceso = encontrarPosicionEnListaProcesos(pid);
+void dumpPID(uint32_t pid) {
+	int indiceProceso = encontrarPosicionEnListaProcesos(pid);
 
-    if(indiceProceso==-1){
-        printf("PID no valido\n");
-        return;
-    }
+	if (indiceProceso == -1) {
+		printf("PID no valido\n");
+		return;
+	}
 
-    FILE* reporte = fopen("dumpPID.txt","w+");
-    fprintf(reporte,"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
-    printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+	FILE* reporte = fopen("dumpPID.txt", "w+");
+	fprintf(reporte,
+			"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+	printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
 
-    pthread_mutex_lock(&mutexProcesos);
-    t_nodo_lista_procesos*nodoAux=list_get(listaProcesos,indiceProceso);
-    pthread_mutex_unlock(&mutexProcesos);
+	pthread_mutex_lock(&mutexProcesos);
+	t_nodo_lista_procesos*nodoAux = list_get(listaProcesos, indiceProceso);
+	pthread_mutex_unlock(&mutexProcesos);
 
-    printf("%d\t%d                            \t%d\n",pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
-    fprintf(reporte,"%d\t%d                            \t%d\n",pid,nodoAux->framesAsignados,nodoAux->cantPaginas);
+	printf("%d\t%d                            \t%d\n", pid,
+			nodoAux->framesAsignados, nodoAux->cantPaginas);
+	fprintf(reporte, "%d\t%d                            \t%d\n", pid,
+			nodoAux->framesAsignados, nodoAux->cantPaginas);
 
-    dumpEstructuraPaginas(nodoAux,reporte);
-    dumpMemoriaPID(nodoAux,reporte);
+	dumpEstructuraPaginas(nodoAux, reporte);
+	dumpMemoriaPID(nodoAux, reporte);
 
-    fclose(reporte);
+	fclose(reporte);
 
 }
 
@@ -1019,7 +1033,7 @@ void procesarOperacionesNucleo(int * conexion) {
 		switch (header) {
 
 		case 0:
-			log_info(logger, "Se desconectó Núcleo", texto);
+			log_info(logger, "Se desconectó Núcleo");
 			pthread_exit(NULL);
 
 		case iniciarPrograma:
@@ -1037,7 +1051,7 @@ void procesarOperacionesNucleo(int * conexion) {
 			finalizarPrograma(pid);
 			break;
 		default:
-			log_error(logger, "Hubo un problema de conexión con Núcleo", texto);
+			log_error(logger, "Hubo un problema de conexión con Núcleo");
 			pthread_exit(NULL);
 
 		}
@@ -1070,7 +1084,8 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		case solicitarBytes:
 
 			recibirSolicitudDeBytes(conexion, &nroPagina, &offset, &size);
-			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso, conexion);
+			solicitarBytesDeUnaPag(nroPagina, offset, size, idCambioProceso,
+					conexion);
 			break;
 
 		case almacenarBytes:
@@ -1079,7 +1094,7 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 			bufferPedido = malloc(size);
 			recibirBufferPedidoAlmacenarBytes(conexion, size, bufferPedido);
 			almacenarBytesEnUnaPag(nroPagina, offset, size, bufferPedido,
-					idNuevoProcesoActivo);
+					idNuevoProcesoActivo, conexion);
 			break;
 		case cambiarProcesoActivo:
 			recibirPID(conexion, &idNuevoProcesoActivo);
@@ -1087,7 +1102,9 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 			break;
 
 		default:
-			log_error(logger, "Hubo problema de conexion con CPU (socket nro %d)", conexion);
+			log_error(logger,
+					"Hubo problema de conexion con CPU (socket nro %d)",
+					conexion);
 			pthread_exit(NULL);
 
 			break;
