@@ -39,7 +39,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 		if(i < cantPaginasCodigo){
 
 		recibirTodo(cliente, pagina, sizePagina);
-		archivo[frameInicial] = *pagina;
+		memcpy(&(archivo[frameInicial]),pagina,sizePagina);
 		usleep(retardoAcceso*1000);
 
 		}
@@ -99,7 +99,7 @@ void enviarPaginas(int cliente,char*archivo){
 
 }
 
-void finalizarProgramaAnsisop(cliente){
+void finalizarProgramaAnsisop(int cliente){
 
 	uint32_t pID;
 	recibirTodo(cliente,&pID,sizeof(uint32_t));
