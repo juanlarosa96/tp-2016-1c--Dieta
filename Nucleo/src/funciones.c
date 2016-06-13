@@ -158,14 +158,16 @@ t_pcbBloqueado sacarPrimeroColaBloqueados(t_queue * cola) {
 
 t_pcbConConsola DevolverProcesoColaListos() {
 	pthread_mutex_lock(&mutexColaListos);
-	return (sacarPrimeroCola(cola_PCBListos));
+	t_pcbConConsola pcb = (sacarPrimeroCola(cola_PCBListos));
 	pthread_mutex_unlock(&mutexColaListos);
+	return pcb;
 }
 
 t_pcbConConsola DevolverProcesoColaFinalizados() {
 	pthread_mutex_lock(&mutexColaFinalizados);
-	return (sacarPrimeroCola(cola_PCBFinalizados));
+	t_pcbConConsola pcb = (sacarPrimeroCola(cola_PCBFinalizados));
 	pthread_mutex_unlock(&mutexColaFinalizados);
+	return pcb;
 }
 
 void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
