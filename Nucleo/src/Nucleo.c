@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
 		//return -1;
-		config = config_create("./Configuracion/config");
+		config = config_create("/home/utnso/Escritorio/TP/tp-2016-1c--Dieta/Nucleo/Configuracion/config");
 	} else {
 
 		config = config_create(argv[1]);
@@ -173,18 +173,17 @@ int main(int argc, char **argv) {
 						log_error(logger, "Consola desconectada", texto);
 						break;
 
-					case largoProgramaAnsisop:
+					case programaAnsisop:
 						;
 						int largoPrograma = recibirLargoProgramaAnsisop(i);
 						char *programa = malloc(largoPrograma);
-						if (recibirHeader(i) == programaAnsisop) {
 							recibirProgramaAnsisop(i, programa, largoPrograma);
 
 							t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
 							if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
 
-								printf("No se pudo reservar espacio para el programa");
+								printf("No se pudo reservar espacio para el programa\n");
 								free(nuevoPcb.indice_etiquetas.etiquetas);
 								free(nuevoPcb.indice_codigo.instrucciones);
 								list_destroy(nuevoPcb.indice_stack);
@@ -206,11 +205,6 @@ int main(int argc, char **argv) {
 								log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
 
 							}
-						} else {
-							close(i);
-							FD_CLR(i, &bolsaDeSockets);
-							log_error(logger, "La consola no envio un programa", texto);
-						}
 
 						break;
 

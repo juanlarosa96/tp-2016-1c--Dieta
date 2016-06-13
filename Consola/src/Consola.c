@@ -11,15 +11,15 @@ int main(int argc, char **argv) {
 		config = config_create("./Configuracion/config");
 	} else {
 
-		config = config_create(argv[1]);
+		config = config_create(argv[2]);
 	}
 
 	int PUERTO_NUCLEO = config_get_int_value(config, "PUERTO_NUCLEO");
 	char* IP_NUCLEO = config_get_string_value(config, "IP_NUCLEO");
 
-	char ruta[strlen(argv[2])];
+	char ruta[strlen(argv[1])+1];
 
-	strcpy(ruta, argv[2]); //Recibe ruta de programa ansisop
+	strcpy(ruta, argv[1]); //Recibe ruta de programa ansisop
 
 	//Creo log para la consola
 	t_log* logger;

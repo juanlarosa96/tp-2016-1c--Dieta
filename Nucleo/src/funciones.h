@@ -71,7 +71,7 @@ int tamanioPagina;
 char ** vectorDispositivos;
 char ** vectorRetardoDispositivos;
 pthread_mutex_t ** vectorMutexDispositivosIO;
-sem_t ** vectorSemaforosDispositivosIO;
+sem_t * vectorSemaforosDispositivosIO;
 t_queue ** vectorColasBloqueados;
 int cantidadQuantum;
 int retardoQuantum;
