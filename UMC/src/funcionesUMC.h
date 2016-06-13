@@ -18,18 +18,6 @@
 #include "variablesGlobalesUMC.h"
 #include "hexdump.h"
 
-/*-------OperatoriaUMC-------*/
-
-void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas, char * codigoPrograma, int socketNucleo);
-
-void* solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio, uint32_t pid);
-
-void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio, void * buffer, uint32_t pid);
-
-void finalizarPrograma(uint32_t idPrograma);
-
-void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo);
-
 /*----Hilos hijos del main de UMC----*/
 
 void procesarSolicitudOperacionCPU(int*);
