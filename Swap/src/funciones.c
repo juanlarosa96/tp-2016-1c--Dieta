@@ -69,7 +69,7 @@ void guardarPaginas(int cliente,char*archivo){
 
 		if (procesoAux->pID == pID ){
 			usleep(retardoAcceso*1000);
-			archivo[procesoAux->frameInicial + nroPagina] = *pagina;
+			memcpy(&(archivo[procesoAux->frameInicial + nroPagina]),pagina,sizePagina);
 			break;
 		}
 
