@@ -244,6 +244,8 @@ void flushTLB() {
 	}
 
 	pthread_mutex_unlock(&mutexTLB);
+
+	log_info(logger, "Se ejecutó flush TLB");
 }
 
 void flushMemory() {
@@ -257,6 +259,8 @@ void flushMemory() {
 		 (void*) destruirFrame);*/
 	}
 	pthread_mutex_unlock(&mutexFrames);
+
+	log_info(logger, "Se ejecutó flush memory");
 }
 
 void actualizarBitReferencia(uint32_t frame) {
@@ -553,6 +557,7 @@ void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
 	pthread_mutex_unlock(&mutexTLB);
 
 }
+
 void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 	t_entrada_tlb* aux;
 	int i = 0;
@@ -579,6 +584,7 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 	pthread_mutex_unlock(&mutexTLB);
 
 }
+
 int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 	t_nodo_lista_frames* aux;
 	t_nodo_lista_procesos * auxProceso;
@@ -717,6 +723,10 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	enviarPedidoMemoriaOK(socketCPU);
 	enviarBytesACPU(socketCPU, data, tamanio);
 
+	log_info(logger,
+			"Se enviaron a CPU %d bytes de la página %d, offset %d, del proceso %d.",
+			tamanio, nroPagina, offset, pid);
+
 }
 
 void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
@@ -745,7 +755,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		pthread_mutex_unlock(&mutexSwap);
 		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina);
 		if (exito == -1) {
-			enviarAbortarProceso(socketCPU);//Le avisa a CPU que finalice el programa
+			enviarAbortarProceso(socketCPU); //Le avisa a CPU que finalice el programa
 			finalizarPrograma(pid); //En finalizarPrograma se avisa a Swap para que borre las páginas
 			log_error(logger,
 					"No se puede cargar página en memoria del proceso pid %d. No hay frames disponibles.",
@@ -762,7 +772,6 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		return;
 	}
 
-
 	escrituraMemoria(nroFrame, offset, tamanio, buffer);
 
 	if (entradasTLB > 0) {
@@ -771,6 +780,9 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	}
 
 	enviarPedidoMemoriaOK(socketCPU);
+	log_info(logger,
+			"Se almacenaron %d bytes en la página %d, offset %d, del proceso %d.",
+			tamanio, nroPagina, offset, pid);
 
 }
 
@@ -851,6 +863,7 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 	}
 
 	(*idProcesoActivo) = idNuevoPrograma;
+
 }
 
 void cambiarRetardo(int nuevoRetardo) {
@@ -1077,7 +1090,7 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		switch (header) {
 		case 0:
 
-			log_info(logger, "Se desconectó CPU nro (socket nro %d)", conexion);
+			log_info(logger, "Se desconectó CPU (socket %d)", conexion);
 			pthread_exit(NULL);
 			break;
 
@@ -1099,11 +1112,13 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		case cambiarProcesoActivo:
 			recibirPID(conexion, &idNuevoProcesoActivo);
 			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
+			log_info(logger,
+					"Se cambió el proceso activo de una CPU (socket %d). PID proceso anterior: %d. PID nuevo proceso activo:%d",
+					conexion, idCambioProceso, idNuevoProcesoActivo);
 			break;
 
 		default:
-			log_error(logger,
-					"Hubo problema de conexion con CPU (socket nro %d)",
+			log_error(logger, "Hubo problema de conexion con CPU (socket %d)",
 					conexion);
 			pthread_exit(NULL);
 
