@@ -479,7 +479,27 @@ void modificarFrameEnListaPaginas(int indiceProceso, uint32_t idFrame,
 
 }
 
-void actualizarPaginaAReemplazar(int indiceProceso, int idFrame) {
+void enviarPaginaASwap(int nroPagina, uint32_t pid, void * pagina) {
+	int header = guardarPaginasEnSwap;
+	void * data = malloc(sizeof(int) * 2 + sizeof(uint32_t) + size_frames);
+	int offset = 0;
+	memcpy(data, &header, sizeof(int));
+	offset += sizeof(int);
+	memcpy(data + offset, &nroPagina, sizeof(int));
+	offset += sizeof(int);
+	memcpy(data + offset, &pid, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(data + offset, pagina, size_frames);
+	offset += size_frames;
+	pthread_mutex_lock(&mutexSwap);
+	send(socketSwap, data, offset, 0);
+	pthread_mutex_unlock(&mutexSwap);
+	free(pagina);
+	free(data);
+}
+
+void actualizarPaginaAReemplazar(int indiceProceso, int idFrame,
+		int bitModificado) {
 	t_nodo_lista_procesos * nodoProceso;
 	t_nodo_lista_paginas * nodoPagina;
 	int i = 0;
@@ -498,31 +518,17 @@ void actualizarPaginaAReemplazar(int indiceProceso, int idFrame) {
 		i++;
 	}
 	pthread_mutex_unlock(&mutexProcesos);
+	void * pagina = lecturaMemoria(idFrame, 0, size_frames);
+	if (bitModificado == 1) {
+		enviarPaginaASwap(nodoPagina->nro_pagina, nodoProceso->pid, pagina);
+	}
 
-}
-
-void enviarPaginaASwap(int socket, int nroPagina, uint32_t pid, void * pagina){
-	int header = guardarPaginasEnSwap;
-	void * data = malloc(sizeof(int)*2 + sizeof(uint32_t) + size_frames);
-	int offset = 0;
-	memcpy(data, &header, sizeof(int));
-	offset += sizeof(int);
-	memcpy(data + offset, &nroPagina, sizeof(int));
-	offset += sizeof(int);
-	memcpy(data + offset, &pid, sizeof(uint32_t));
-	offset += sizeof(uint32_t);
-	memcpy(data + offset, pagina, size_frames);
-	offset += size_frames;
-	pthread_mutex_lock(&mutexSwap);
-	send(socket, data, offset, 0);
-	pthread_mutex_unlock(&mutexSwap);
-	free(data);
 }
 
 void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 		void * codigoPagina) {
 	int indiceFrame;
-	int idFrame;
+	int idFrame, bitModificado;
 	t_nodo_lista_frames * frameAux;
 	int indiceProceso;
 
@@ -532,21 +538,17 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 		indiceFrame = buscarVictimaClockModificado(pid);
 	}
 
+	indiceProceso = encontrarPosicionEnListaProcesos(pid); //carajooo, modificar esto. ojo con los retardos!!
 
 	pthread_mutex_lock(&mutexFrames);
 	frameAux = list_get(listaFrames, indiceFrame);
 	idFrame = frameAux->nroFrame;
-	if (frameAux->bitModificado == 1) {
-		//enviarPaginaASwap(socketSwap,  codigoPagina); FIJARSE DONDE PONERLO. TERMINAR FUNCION.
-	}
+	bitModificado = frameAux->bitModificado;
 	pthread_mutex_unlock(&mutexFrames);
 
-	indiceProceso = encontrarPosicionEnListaProcesos(pid); //carajooo, modificar esto. ojo con los retardos!!
-
-	actualizarPaginaAReemplazar(indiceProceso, idFrame); //cambia status de pagina anterior de 'M' a 'S'
+	actualizarPaginaAReemplazar(indiceProceso, idFrame, bitModificado); //cambia status de pagina anterior de 'M' a 'S'
 
 	modificarFrameEnListaPaginas(indiceProceso, idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
-	//ESTA FUNCION RECORRE MIL MILLONES DE VECES LO MISMO, REFACTOR UR-GEN-TE
 
 	escrituraMemoria(idFrame, 0, size_frames, codigoPagina);
 }
@@ -653,25 +655,25 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 void recibirPaginaDeSwap(void * pagina) {
 	int bytesRecibidos;
 	bytesRecibidos = recibirTodo(socketSwap, pagina, size_frames);
-	if (bytesRecibidos == 1){
+	if (bytesRecibidos == 1) {
 		log_error(logger, "Se desconectó Swap. Abortando UMC.");
 		abort();
 	}
 }
 
-void enviarASwapFinalizarPrograma(uint32_t pid){
+void enviarASwapFinalizarPrograma(uint32_t pid) {
 	int header = finalizacionPrograma;
 	int error;
 	error = send(socketSwap, &header, sizeof(int), 0);
-	if (error == -1){
+	if (error == -1) {
 		log_error(logger, "Se desconectó Swap. Abortando UMC.");
-				abort();
+		abort();
 	}
 
 	error = send(socketSwap, &pid, sizeof(uint32_t), 0);
-	if (error == -1){
+	if (error == -1) {
 		log_error(logger, "Se desconectó Swap. Abortando UMC.");
-				abort();
+		abort();
 	}
 
 }
@@ -840,7 +842,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 	if (respuestaInicializacion == inicioProgramaExito) {
 		send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //envio ID a Swap
-		send(socketSwap, &paginasCodigo, sizeof(int),0); //Juan: Faltaba enviar cant pags codigo a Swap
+		send(socketSwap, &paginasCodigo, sizeof(int), 0); //Juan: Faltaba enviar cant pags codigo a Swap
 		char * pagina = malloc(size_frames);
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
