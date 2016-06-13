@@ -225,7 +225,7 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 
 
 
-	metadata_destruir(metadata);
+	free(metadata);
 
 	return nuevoPcb;
 }
@@ -284,42 +284,10 @@ void abortarProceso(t_pcbConConsola siguientePcb) {
 
 }
 
-
-void crearHilosEntradaSalida() {
-
-	int contador = 0, i;
-
-	while (vectorDispositivos[contador] != NULL) {
-		contador++;
-	}
-	vectorColasBloqueados = malloc(sizeof(t_queue *) * contador);
-	vectorMutexDispositivosIO = malloc(sizeof(pthread_mutex_t *) * contador);
-
-	for (i = 0; i < contador; i++) {
-		t_parametroThreadDispositivoIO * parametro = malloc(sizeof(t_parametroThreadDispositivoIO));
-		vectorColasBloqueados[i] = (t_queue *) list_create();
-		parametro->colaBloqueados = vectorColasBloqueados[i];
-		vectorMutexDispositivosIO[i] = malloc(sizeof(pthread_mutex_t *));
-		pthread_mutex_init(vectorMutexDispositivosIO[i], NULL);
-		parametro->mutex = vectorMutexDispositivosIO[i];
-		sprintf(vectorDispositivos[i], "%d", parametro->retardoDispositivo);
-		vectorSemaforosDispositivosIO[i] = malloc(sizeof(sem_t *));
-		sem_init(vectorSemaforosDispositivosIO[i],1,0);
-		parametro->semaforo = vectorSemaforosDispositivosIO[i];
-
-		pthread_t nuevoHilo;
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		pthread_create(&nuevoHilo, &attr, (void *) manejarIO, (void *) parametro);
-		pthread_attr_destroy(&attr);
-
-	}
-}
-
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 
 	while (1) {
+
 		t_pcbBloqueado pedidoDeIO;
 		sem_wait(datosHilo->semaforo);
 		pthread_mutex_lock(datosHilo->mutex);
@@ -344,9 +312,44 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		} else {
 			finalizarProceso(pedidoDeIO.pcb);
 		}
+
 	}
 
 }
+
+void crearHilosEntradaSalida() {
+
+	int contador = 0, i;
+
+	while (vectorDispositivos[contador] != NULL) {
+		contador++;
+	}
+	vectorColasBloqueados = malloc(sizeof(t_queue *) * contador);
+	vectorMutexDispositivosIO = malloc(sizeof(pthread_mutex_t *) * contador);
+	vectorSemaforosDispositivosIO = malloc(sizeof(sem_t)*contador);
+
+	for (i = 0; i < contador; i++) {
+		t_parametroThreadDispositivoIO * parametro = malloc(sizeof(t_parametroThreadDispositivoIO));
+		vectorColasBloqueados[i] = (t_queue *) list_create();
+		parametro->colaBloqueados = vectorColasBloqueados[i];
+		vectorMutexDispositivosIO[i] = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_init(vectorMutexDispositivosIO[i], NULL);
+		parametro->mutex = vectorMutexDispositivosIO[i];
+		parametro->retardoDispositivo = atoi(vectorRetardoDispositivos[i]);
+		sem_init(&(vectorSemaforosDispositivosIO[i]),1,0);
+		parametro->semaforo = &(vectorSemaforosDispositivosIO[i]);
+
+		pthread_t nuevoHilo;
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		pthread_create(&nuevoHilo, &attr, (void *) manejarIO, parametro);
+		pthread_attr_destroy(&attr);
+
+	}
+}
+
+
 
 void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo) {
 
@@ -385,7 +388,7 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 				pthread_mutex_lock(vectorMutexDispositivosIO[i]);
 				AgregarAProcesoColaBloqueados(vectorColasBloqueados[i], pcbBloqueado);
 				pthread_mutex_unlock(vectorMutexDispositivosIO[i]);
-				sem_post(vectorSemaforosDispositivosIO[i]);
+				sem_post(&(vectorSemaforosDispositivosIO[i]));
 				existeDispositivo = 1;
 			}
 
