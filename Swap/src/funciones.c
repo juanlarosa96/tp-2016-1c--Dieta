@@ -137,7 +137,7 @@ int chequearMemoriaDisponible(int cantPaginas,char*archivo) {
 
 	if(hayTotales){
 			if(hayContinuas){
-				return (i-1)-cantPaginas;
+				return i-cantPaginas;
 			} else{
 			return compactar(archivo);
 			}
