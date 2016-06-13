@@ -24,5 +24,4 @@ void procesarSolicitudOperacionCPU(int*);
 void procesarOperacionesNucleo(int*);
 void consolaUMC(void);
 
-
 #endif /* FUNCIONESUMC_H_ */
