@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 #include <commons/collections/list.h>
+#include <commons/log.h>
 #ifndef VARIABLESGLOBALES_H_
 #define VARIABLESGLOBALES_H_
 
@@ -14,5 +15,6 @@ int retardoCompactacion;
 int retardoAcceso;
 int *bitMap;
 t_list *listaProcesos;
+t_log* logger;
 
 #endif /* VARIABLESGLOBALES_H_ */
