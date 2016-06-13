@@ -840,6 +840,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 	if (respuestaInicializacion == inicioProgramaExito) {
 		send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //envio ID a Swap
+		send(socketSwap, &paginasCodigo, sizeof(int),0); //Juan: Faltaba enviar cant pags codigo a Swap
 		char * pagina = malloc(size_frames);
 		char * posicionAux = codigoPrograma; //CHEQUEAR ESTO DE LA POSICION AUXILIAR
 
