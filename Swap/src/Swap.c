@@ -87,11 +87,13 @@ int main(int argc, char *argv[]) {
 	int servidorSwap;
 	if (crearSocket(&servidorSwap)) {
 		printf("Error creando socket");
+		log_error(logger, "Se produjo un error al crear el socket");
 		return 1;
 	}
 
 	if (escucharEn(servidorSwap, puertoServidor)) {
 		printf("Error al conectar");
+		log_error(logger, "Se produjo un error al tratar de conectar con el socket");
 		return 1;
 	}
 
@@ -107,6 +109,7 @@ int main(int argc, char *argv[]) {
 
 	if (idRecibido != IDUMC) {
 		printf("ERROR NO SE CONECTO A UMC");
+		log_error(logger, "Se produjo un error al conectarse a UMC");
 		return -1;
 	}
 
@@ -122,15 +125,19 @@ int main(int argc, char *argv[]) {
 			break;
 		case inicializarProgramaSwap:
 			iniciarProgramaAnsisop(cliente, archivoSwap);
+			log_info(logger, "Se inicializo un nuevo programa");
 			break;
 		case guardarPaginasEnSwap:
 			guardarPaginas(cliente, archivoSwap);
+			log_info(logger, "Se produjo un pedido de almacenamiento de paginas");
 			break;
 		case pedidoPaginaASwap:
 			enviarPaginas(cliente, archivoSwap);
+			log_info(logger, "Se produjo un pedido de consulta de paginas");
 			break;
 		case finalizacionPrograma:
 			finalizarProgramaAnsisop(cliente);
+			log_info(logger, "Fin de programa");
 			break;
 		}
 
@@ -140,6 +147,7 @@ int main(int argc, char *argv[]) {
 
 	config_destroy(config);
 	close(fd);
+	log_destroy(logger);
 	return 0;
 }
 
