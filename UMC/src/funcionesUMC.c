@@ -87,18 +87,6 @@ int cantidadFramesDisponibles() {
 	return contador;
 }
 
-void inicializarPuntero(uint32_t pid, int posicionFrameLista) { //idFrame
-	int indice = 0;
-	t_nodo_lista_procesos* nodoAux;
-	indice = encontrarPosicionEnListaProcesos(pid);
-	pthread_mutex_lock(&mutexProcesos);
-	nodoAux = list_get(listaProcesos, indice);
-	nodoAux->punteroClock = posicionFrameLista;
-//list_replace_and_destroy_element(listaProcesos, indice, nodoAux, (void*) destruirProceso);
-	pthread_mutex_unlock(&mutexProcesos);
-
-}
-
 int buscarEnTLB(uint32_t pid, int nroPagina) {
 	int frame = -1;
 
@@ -109,7 +97,7 @@ int buscarEnTLB(uint32_t pid, int nroPagina) {
 	pthread_mutex_lock(&mutexTLB);
 	while (i < list_size(TLB) && acierto == 0) {
 		nodoAux = list_get(TLB, i);
-		if (nodoAux->pid == pid && nodoAux->nroPagina == (uint32_t) nroPagina) {
+		if ((nodoAux->pid == pid) && (nodoAux->nroPagina == (uint32_t) nroPagina)) {
 			frame = (int) nodoAux->nroFrame;
 			acierto = 1;
 		}
@@ -542,6 +530,7 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 	frameAux = list_get(listaFrames, indiceFrame);
 	idFrame = frameAux->nroFrame;
 	bitModificado = frameAux->bitModificado;
+	frameAux->bitModificado = 0;
 	pthread_mutex_unlock(&mutexFrames);
 
 	actualizarPaginaAReemplazar(indiceProceso, idFrame, bitModificado); //cambia status de pagina anterior de 'M' a 'S'
@@ -620,7 +609,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 		}
 		j++;
 	}
-	pthread_mutex_lock(&mutexProcesos);
+	pthread_mutex_unlock(&mutexProcesos);
 
 	if ((disponible == 0) && ((auxProceso->framesAsignados) == 0)) {
 		free(buffer);
@@ -881,7 +870,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	unNodo->pid = idPrograma;
 	unNodo->cantPaginas = paginasRequeridas;
 	unNodo->framesAsignados = 0;
-	unNodo->punteroClock = -1;
+	//unNodo->punteroClock = -1;
 	unNodo->lista_paginas = list_create();
 
 	for (i = 0; i < paginasRequeridas; i++) {
@@ -1157,10 +1146,11 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 			break;
 		case cambiarProcesoActivo:
 			recibirPID(conexion, &idNuevoProcesoActivo);
-			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
 			log_info(logger,
 					"Se cambió el proceso activo de una CPU (socket %d). PID proceso anterior: %d. PID nuevo proceso activo:%d",
 					conexion, idCambioProceso, idNuevoProcesoActivo);
+			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
+
 			break;
 
 		default:
