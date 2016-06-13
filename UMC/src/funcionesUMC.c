@@ -651,11 +651,32 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 }
 
 void recibirPaginaDeSwap(void * pagina) {
-	recibirTodo(socketSwap, pagina, size_frames);
+	int bytesRecibidos;
+	bytesRecibidos = recibirTodo(socketSwap, pagina, size_frames);
+	if (bytesRecibidos == 1){
+		log_error(logger, "Se desconectó Swap. Abortando UMC.");
+		abort();
+	}
+}
+
+void enviarASwapFinalizarPrograma(uint32_t pid){
+	int header = finalizacionPrograma;
+	int error;
+	error = send(socketSwap, &header, sizeof(int), 0);
+	if (error == -1){
+		log_error(logger, "Se desconectó Swap. Abortando UMC.");
+				abort();
+	}
+
+	error = send(socketSwap, &pid, sizeof(uint32_t), 0);
+	if (error == -1){
+		log_error(logger, "Se desconectó Swap. Abortando UMC.");
+				abort();
+	}
+
 }
 
 void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
-	int header = finalizacionPrograma;
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
 	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
@@ -671,8 +692,7 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	}
 
 	pthread_mutex_lock(&mutexSwap);
-	send(socketSwap, &header, sizeof(int), 0); //Informar a Swap de la finalización del programa
-	send(socketSwap, &idPrograma, sizeof(uint32_t), 0); //Abstraerlo en alguna funcion
+	enviarASwapFinalizarPrograma(idPrograma);
 	pthread_mutex_unlock(&mutexSwap);
 
 	log_info(logger, "Se finalizó programa pid %d", idPrograma);
@@ -681,6 +701,7 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 
 void enviarBytesACPU(int socketCPU, void * data, int tamanio) {
 	send(socketCPU, data, tamanio, 0);
+	free(data);
 }
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
@@ -701,7 +722,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	//TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
-	if (nroFrame == -1) {
+	if (nroFrame == -1) { //tengo que traer pagina de swap
 		int exito;
 		void * bufferPagina = malloc(size_frames);
 		pthread_mutex_lock(&mutexSwap);
@@ -731,6 +752,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	if (entradasTLB > 0) {
 		cargarEnTLB(pid, nroPagina, nroFrame);
+		actualizarBitUltimoAccesoTLB(pid, nroFrame);
 	}
 
 	enviarPedidoMemoriaOK(socketCPU);
@@ -1060,9 +1082,9 @@ void procesarOperacionesNucleo(int * conexion) {
 		switch (header) {
 
 		case 0:
-			log_info(logger, "Se desconectó Núcleo");
-			pthread_exit(NULL);
-
+			log_error(logger, "Se desconectó Núcleo");
+			abort();
+			break;
 		case iniciarPrograma:
 
 			recibirInicializacionPrograma(socketNucleo, &pid,
@@ -1079,7 +1101,7 @@ void procesarOperacionesNucleo(int * conexion) {
 			break;
 		default:
 			log_error(logger, "Hubo un problema de conexión con Núcleo");
-			pthread_exit(NULL);
+			abort();
 
 		}
 
