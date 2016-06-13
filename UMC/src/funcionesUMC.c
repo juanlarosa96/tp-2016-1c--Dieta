@@ -620,7 +620,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer) {
 		}
 		j++;
 	}
-	pthread_mutex_lock(&mutexProcesos);
+	pthread_mutex_unlock(&mutexProcesos);
 
 	if ((disponible == 0) && ((auxProceso->framesAsignados) == 0)) {
 		free(buffer);
