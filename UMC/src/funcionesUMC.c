@@ -681,6 +681,7 @@ void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 
 void enviarBytesACPU(int socketCPU, void * data, int tamanio) {
 	send(socketCPU, data, tamanio, 0);
+	free(data);
 }
 
 void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
@@ -701,7 +702,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	//TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
-	if (nroFrame == -1) {
+	if (nroFrame == -1) { //tengo que traer pagina de swap
 		int exito;
 		void * bufferPagina = malloc(size_frames);
 		pthread_mutex_lock(&mutexSwap);
@@ -731,6 +732,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	if (entradasTLB > 0) {
 		cargarEnTLB(pid, nroPagina, nroFrame);
+		actualizarBitUltimoAccesoTLB(pid, nroFrame);
 	}
 
 	enviarPedidoMemoriaOK(socketCPU);
@@ -1059,9 +1061,9 @@ void procesarOperacionesNucleo(int * conexion) {
 		switch (header) {
 
 		case 0:
-			log_info(logger, "Se desconectó Núcleo");
-			pthread_exit(NULL);
-
+			log_error(logger, "Se desconectó Núcleo");
+			abort();
+			break;
 		case iniciarPrograma:
 
 			recibirInicializacionPrograma(socketNucleo, &pid,
@@ -1078,7 +1080,7 @@ void procesarOperacionesNucleo(int * conexion) {
 			break;
 		default:
 			log_error(logger, "Hubo un problema de conexión con Núcleo");
-			pthread_exit(NULL);
+			abort();
 
 		}
 
