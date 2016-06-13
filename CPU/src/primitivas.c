@@ -41,7 +41,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
 
 	if(argumento >= 0 && argumento <= 9){
-		posicion = list_get(regPila->lista_argumentos, argumento);
+		memcpy(&posicion,list_get(regPila->lista_argumentos, argumento),sizeof(t_puntero));
 	}else {
 		int largoLista = list_size(regPila->lista_variables);
 		int i = 0;

@@ -16,9 +16,7 @@ t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb) {
 	int tamanio = instrucciones_serializado[pc].offset;
 	int numeroPagina = (instrucciones_serializado[pc].start) / tamanioPagina;
 	int offset = (instrucciones_serializado[pc].start) % tamanioPagina;
-	if (offset != 0) {
-		numeroPagina++;
-	}
+
 	posicionPagina.offset = offset;
 	posicionPagina.pagina = numeroPagina;
 	posicionPagina.size = tamanio;
@@ -28,9 +26,9 @@ t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb) {
 void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* lineaAnsisop) {
 	recibirTodo(socketUMC, lineaAnsisop, posicionPagina.size);
 }
-void pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina) {
+int pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina) {
 	t_posicion_memoria posicion = obtenerPosicionPagina(tamanioPagina, pcbActual);
-	enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *)lineaAnsisop, tamanioPagina);
+	return enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *)lineaAnsisop, tamanioPagina);
 }
 
 void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
@@ -55,7 +53,7 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 			offset = 0;
 			pagina++;
 		}
-		tamanio = bytesTotales;
+		tamanio = bytesTotales - posicion.offset;
 
 		if (tamanio != 0) {
 			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);

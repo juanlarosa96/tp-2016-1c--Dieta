@@ -14,6 +14,7 @@
 
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable, .AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
 		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar, .AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
+		.AnSISOP_finalizar = retornar,
 
 };
 
@@ -61,7 +62,6 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-
 	//creo socket umc
 	crearSocket(&socketUMC);
 
@@ -72,11 +72,11 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	//handshake
-	if (responderHandshake(socketNucleo, IDCPU, IDUMC)) {
+	if (responderHandshake(socketUMC, IDCPU, IDUMC)) {
 		log_error(logger, "Error en el handshake", texto);
 		return 1;
 	}
-	if (recibirHeader(socketNucleo) == tamanioDePagina) {
+	if (recibirHeader(socketUMC) == tamanioDePagina) {
 		tamanioPagina = recibirTamanioPagina(socketUMC);
 	} else {
 
@@ -84,8 +84,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	 //parser
-	 /*FILE* archivo;
+	//parser
+	/*FILE* archivo;
 	 archivo = fopen(ruta, "r");
 	 if (archivo == NULL) {
 	 puts("ERROR");
@@ -168,31 +168,30 @@ int main(int argc, char *argv[]) {
 
 			int unidadQuantum = 0;
 			sigoEjecutando = 1;
-			huboSaltoLinea=0;
+			huboSaltoLinea = 0;
 
 			while (unidadQuantum < quantumTotal && sigoEjecutando) {
 				t_intructions instruccion = pcbRecibido.indice_codigo.instrucciones[pcbRecibido.pc];
 				char lineaAnsisop[instruccion.offset + 1];
 
-				pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina);
-				lineaAnsisop[instruccion.offset + 1] = '\0';
-				int respuestaUMC = recibirHeader(socketUMC);
+				if (pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina)) {
+					sigoEjecutando = 0;
+					enviarAbortarProgramaNucleo(socketNucleo);
+				} else {
+					lineaAnsisop[instruccion.offset + 1] = '\0';
+					int respuestaUMC = recibirHeader(socketUMC);
 
-				if (respuestaUMC == pedidoMemoriaOK) {
 					analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
 					usleep(quantumRetardo * 1000);
 					unidadQuantum++;
 
-					if(!huboSaltoLinea){
+					if (!huboSaltoLinea) {
 						pcbRecibido.pc++;
-					}else{
-						huboSaltoLinea=0;
+					} else {
+						huboSaltoLinea = 0;
 					}
 					log_info(logger, "ejecuto linea", texto);
 
-				} else {
-					sigoEjecutando = 0;
-					enviarAbortarProgramaNucleo(socketNucleo);
 				}
 
 			}
