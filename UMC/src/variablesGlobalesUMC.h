@@ -30,6 +30,7 @@ t_log* logger;
 
 void * memoriaPrincipal;
 
+int cant_frames;
 int size_frames;
 int retardo;
 int socketSwap;

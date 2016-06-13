@@ -189,6 +189,7 @@ int main(int argc, char **argv) {
 								list_destroy(nuevoPcb.indice_stack);
 								enviarFinalizacionProgramaConsola(i);
 								FD_CLR(i, &bolsaDeSockets);
+								log_error(logger, "Espacio en memoria insuficiente", texto);
 
 							} else {
 								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));
@@ -256,7 +257,7 @@ int main(int argc, char **argv) {
 							list_add(listaFinalizacionesPendientes, socketProcesoFinalizado);
 							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
-
+						log_info(logger, "Programa finalizado", texto);
 						break;
 
 					default:
@@ -270,6 +271,7 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
+	log_destroy(logger);
 	return EXIT_SUCCESS;
 }
 
