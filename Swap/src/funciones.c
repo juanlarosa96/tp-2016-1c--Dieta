@@ -60,7 +60,7 @@ void guardarPaginas(int cliente,char*archivo){
 	recibirTodo(cliente,&pID,sizeof(uint32_t));
 
 	char *pagina = malloc(sizePagina);
-	recibirTodo(cliente,pagina,sizeof(sizePagina));
+	recibirTodo(cliente,pagina,sizePagina);
 
 	int i;
 	t_proceso *procesoAux;

@@ -244,8 +244,6 @@ void flushTLB() {
 	}
 
 	pthread_mutex_unlock(&mutexTLB);
-
-	log_info(logger, "Se ejecutó flush TLB");
 }
 
 void flushMemory() {
@@ -259,8 +257,6 @@ void flushMemory() {
 		 (void*) destruirFrame);*/
 	}
 	pthread_mutex_unlock(&mutexFrames);
-
-	log_info(logger, "Se ejecutó flush memory");
 }
 
 void actualizarBitReferencia(uint32_t frame) {
@@ -505,6 +501,24 @@ void actualizarPaginaAReemplazar(int indiceProceso, int idFrame) {
 
 }
 
+void enviarPaginaASwap(int socket, int nroPagina, uint32_t pid, void * pagina){
+	int header = guardarPaginasEnSwap;
+	void * data = malloc(sizeof(int)*2 + sizeof(uint32_t) + size_frames);
+	int offset = 0;
+	memcpy(data, &header, sizeof(int));
+	offset += sizeof(int);
+	memcpy(data + offset, &nroPagina, sizeof(int));
+	offset += sizeof(int);
+	memcpy(data + offset, &pid, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(data + offset, pagina, size_frames);
+	offset += size_frames;
+	pthread_mutex_lock(&mutexSwap);
+	send(socket, data, offset, 0);
+	pthread_mutex_unlock(&mutexSwap);
+	free(data);
+}
+
 void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 		void * codigoPagina) {
 	int indiceFrame;
@@ -514,26 +528,25 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 
 	if (strncasecmp(algoritmo, "CLOCK", 5) == 0) {
 		indiceFrame = buscarVictimaClock(pid);
-	} else if (strncasecmp(algoritmo, "CLOCK-M", 7) == 0) {
-		indiceFrame = buscarVictimaClockModificado(pid);
 	} else {
-		log_error(logger, "Algoritmo Desconocido. Abortando UMC");
-		abort();
+		indiceFrame = buscarVictimaClockModificado(pid);
 	}
+
 
 	pthread_mutex_lock(&mutexFrames);
 	frameAux = list_get(listaFrames, indiceFrame);
 	idFrame = frameAux->nroFrame;
 	if (frameAux->bitModificado == 1) {
-		//enviarPaginaASwap
+		//enviarPaginaASwap(socketSwap,  codigoPagina); FIJARSE DONDE PONERLO. TERMINAR FUNCION.
 	}
 	pthread_mutex_unlock(&mutexFrames);
 
-	indiceProceso = encontrarPosicionEnListaProcesos(pid);
+	indiceProceso = encontrarPosicionEnListaProcesos(pid); //carajooo, modificar esto. ojo con los retardos!!
 
 	actualizarPaginaAReemplazar(indiceProceso, idFrame); //cambia status de pagina anterior de 'M' a 'S'
 
 	modificarFrameEnListaPaginas(indiceProceso, idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
+	//ESTA FUNCION RECORRE MIL MILLONES DE VECES LO MISMO, REFACTOR UR-GEN-TE
 
 	escrituraMemoria(idFrame, 0, size_frames, codigoPagina);
 }
@@ -856,7 +869,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 
 }
 
-void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
+void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) { //ya tiene logger
 
 	if (entradasTLB > 0) {
 		limpiarEntradasTLB(*idProcesoActivo);
@@ -866,7 +879,7 @@ void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) {
 
 }
 
-void cambiarRetardo(int nuevoRetardo) {
+void cambiarRetardo(int nuevoRetardo) { //ya tiene logger
 	retardo = nuevoRetardo;
 }
 
