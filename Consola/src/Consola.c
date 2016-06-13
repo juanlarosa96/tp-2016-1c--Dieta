@@ -61,9 +61,9 @@ int main(int argc, char **argv) {
 	    }
 	    fclose(archivo);
 
-	    programaAnsisop[largoPrograma+1] = '\0';
+	    programaAnsisop[largoPrograma] = '\0';
 
-	enviarProgramaAnsisop(socketNucleo,programaAnsisop,largoPrograma);
+	enviarProgramaAnsisop(socketNucleo,programaAnsisop,largoPrograma+1);
 	log_info(logger, "Envió un mensaje a núcleo \n", texto);
 
 	pthread_t nuevoHilo;
