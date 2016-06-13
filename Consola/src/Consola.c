@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
 		largoMensaje = recibirLargoResultadoDeEjecucionAnsisop(socketNucleo);
 		char mensajeDevuelto[largoMensaje];
 		recibirResultadoDeEjecucionAnsisop(socketNucleo,mensajeDevuelto,largoMensaje);
+		log_info(logger, "Se recibio resultado de ejecucion", texto);
 		printf(mensajeDevuelto);
 		}
 

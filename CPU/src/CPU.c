@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	t_log* logger;
-	logger = log_create("Consola.log", "CONSOLA", 1, log_level_from_string("INFO"));
+	logger = log_create("CPU.log", "CPU", 1, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
@@ -188,6 +188,7 @@ int main(int argc, char *argv[]) {
 					}else{
 						huboSaltoLinea=0;
 					}
+					log_info(logger, "ejecuto linea", texto);
 
 				} else {
 					sigoEjecutando = 0;
@@ -197,6 +198,7 @@ int main(int argc, char *argv[]) {
 			}
 			if (huboEntradaSalida == 0) {
 				enviarPcb(socketNucleo, pcbRecibido);
+				log_info(logger, "Se produjo I/O", texto);
 			} else {
 				huboEntradaSalida = 0;
 			}
@@ -204,7 +206,7 @@ int main(int argc, char *argv[]) {
 		}
 
 	}
-
+	log_destroy(logger);
 	return 0;
 
 }
