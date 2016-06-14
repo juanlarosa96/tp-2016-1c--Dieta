@@ -89,11 +89,11 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 		return 0;
 }
 
-void manejadorSIGUSR1(int signal_num){
-	if (signal_num == SIGUSR1) {
 
-	signalApagado = 1;
-	​​
+void manejadorSIGUSR1(int signal_num){
+	if(signal_num == SIGUSR1){
+
+		signalApagado = 1;
 	}
 
 }

@@ -24,6 +24,7 @@
 #include <sockets.h>
 #include <protocolo.h>
 #include <signal.h>
+#include "variables_globales.h"
 
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
