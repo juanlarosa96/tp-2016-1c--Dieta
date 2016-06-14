@@ -51,41 +51,60 @@ void manejarCPU(void * socket) {
 				switch (respuesta) {
 
 				case finalizacionPrograma: //Fin programa
-					siguientePcb.pcb = recibirPcb(socketCpu);
-					finalizarProceso(siguientePcb);
-					break;
-
-				case abortarPrograma: //Fin programa por abortado
-					siguientePcb.pcb = recibirPcb(socketCpu);
-					abortarProceso(siguientePcb);
-					break;
-
-				case finDeQuantum: //Fin quantum
-
-					siguientePcb.pcb = recibirPcb(socketCpu);
-
-					int j, sizeLista = list_size(listaFinalizacionesPendientes);
-					int * socketEnLista;
-
-					pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-
-					for (j = 0; j < sizeLista; j++) {
-						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
-						if (siguientePcb.socketConsola == *socketEnLista) {
-							finalizarProceso(siguientePcb);
-							list_remove(listaFinalizacionesPendientes, j);
-
-							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
-
-							AgregarAProcesoColaFinalizados(siguientePcb);
-							cambioProceso = 1;
-							j = sizeLista;
-						}
-					}
-
-					if (!cambioProceso) {
-						AgregarAProcesoColaListos(siguientePcb);
+					if (recibirHeader(socketCpu) == headerPcb) {
+						siguientePcb.pcb = recibirPcb(socketCpu);
+						finalizarProceso(siguientePcb);
 						cambioProceso = 1;
+					} else {
+						log_error(logger, "El CPU no envio un Pcb", texto);
+						finalizarProceso(siguientePcb);
+						pthread_exit(NULL);
+					}
+					break;
+				case abortarPrograma:
+					//Fin programa por abortado
+					if (recibirHeader(socketCpu) == headerPcb) {
+						siguientePcb.pcb = recibirPcb(socketCpu);
+						abortarProceso(siguientePcb);
+						cambioProceso = 1;
+					} else {
+						log_error(logger, "El CPU no envio un Pcb", texto);
+						finalizarProceso(siguientePcb);
+						pthread_exit(NULL);
+					}
+					break;
+
+				case finDeQuantum:
+					//Fin quantum
+
+					if (recibirHeader(socketCpu) == headerPcb) {
+						siguientePcb.pcb = recibirPcb(socketCpu);
+
+						int j, sizeLista = list_size(listaFinalizacionesPendientes);
+						int * socketEnLista;
+
+						pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+
+						for (j = 0; j < sizeLista; j++) {
+							socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
+							if (siguientePcb.socketConsola == *socketEnLista) {
+								finalizarProceso(siguientePcb);
+								list_remove(listaFinalizacionesPendientes, j);
+								AgregarAProcesoColaFinalizados(siguientePcb);
+								cambioProceso = 1;
+								j = sizeLista;
+							}
+						}
+						pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+
+						if (!cambioProceso) {
+							AgregarAProcesoColaListos(siguientePcb);
+							cambioProceso = 1;
+						}
+					} else {
+						log_error(logger, "El CPU no envio un Pcb", texto);
+						finalizarProceso(siguientePcb);
+						pthread_exit(NULL);
 					}
 					break;
 
@@ -115,6 +134,7 @@ void manejarCPU(void * socket) {
 						char * nombre;
 						recibirEntradaSalida(socketCpu, &largo, &nombre, &tiempo);
 						ponerEnColaBloqueados(siguientePcb, nombre, largo, tiempo);
+						cambioProceso = 1;
 					}
 
 					break;
@@ -220,11 +240,9 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	registroPila->lista_variables = list_create();
 	registroPila->posicionUltimaVariable = nuevoPcb.paginas_codigo * tamanioPagina;
 
-	list_add(pilaInicial,(void *)registroPila);
+	list_add(pilaInicial, (void *) registroPila);
 
 	nuevoPcb.indice_stack = pilaInicial;
-
-
 
 	free(metadata);
 
@@ -295,7 +313,7 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
 		pthread_mutex_unlock(datosHilo->mutex);
 
-		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo*1000);
+		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
 		log_info(logger, "Programa pid %d termino IO", pedidoDeIO.pcb.pcb.pid);
 
 		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
@@ -327,7 +345,7 @@ void crearHilosEntradaSalida() {
 	}
 	vectorColasBloqueados = malloc(sizeof(t_queue *) * contador);
 	vectorMutexDispositivosIO = malloc(sizeof(pthread_mutex_t *) * contador);
-	vectorSemaforosDispositivosIO = malloc(sizeof(sem_t)*contador);
+	vectorSemaforosDispositivosIO = malloc(sizeof(sem_t) * contador);
 
 	for (i = 0; i < contador; i++) {
 		t_parametroThreadDispositivoIO * parametro = malloc(sizeof(t_parametroThreadDispositivoIO));
@@ -337,7 +355,7 @@ void crearHilosEntradaSalida() {
 		pthread_mutex_init(vectorMutexDispositivosIO[i], NULL);
 		parametro->mutex = vectorMutexDispositivosIO[i];
 		parametro->retardoDispositivo = atoi(vectorRetardoDispositivos[i]);
-		sem_init(&(vectorSemaforosDispositivosIO[i]),1,0);
+		sem_init(&(vectorSemaforosDispositivosIO[i]), 1, 0);
 		parametro->semaforo = &(vectorSemaforosDispositivosIO[i]);
 
 		pthread_t nuevoHilo;
@@ -349,8 +367,6 @@ void crearHilosEntradaSalida() {
 
 	}
 }
-
-
 
 void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo) {
 
