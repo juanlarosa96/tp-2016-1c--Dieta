@@ -694,11 +694,13 @@ void enviarASwapFinalizarPrograma(uint32_t pid) {
 void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
+	if(indiceListaProcesos >= 0){
 	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
 	liberarPaginas(indiceListaProcesos);
 	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
 			(void*) destruirProceso);
 	pthread_mutex_unlock(&mutexProcesos);
+	}
 
 	liberarFrames(idPrograma); //pongo ids en cero
 
