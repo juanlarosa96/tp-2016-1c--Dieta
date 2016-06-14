@@ -126,14 +126,14 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 
 }
 
-void wait(t_nombre_semaforo identificador_semaforo) {
+void parserWait(t_nombre_semaforo identificador_semaforo) {
 	/*
 	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
 	 */
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 }
 
-void signal(t_nombre_semaforo identificador_semaforo) {
+void parserSignal(t_nombre_semaforo identificador_semaforo) {
 	/*
 	 * el prog ansisop hace un signal de este semaforo
 	 */
