@@ -179,7 +179,6 @@ int main(int argc, char *argv[]) {
 					enviarAbortarProgramaNucleo(socketNucleo);
 				} else {
 					lineaAnsisop[instruccion.offset + 1] = '\0';
-					int respuestaUMC = recibirHeader(socketUMC);
 
 					analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
 					usleep(quantumRetardo * 1000);
