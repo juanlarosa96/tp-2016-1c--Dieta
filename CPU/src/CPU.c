@@ -194,13 +194,16 @@ int main(int argc, char *argv[]) {
 				}
 
 			}
-			if (huboEntradaSalida == 0) {
+			if (unidadQuantum == quantumTotal && sigoEjecutando) {
+				int finQuantum = finDeQuantum;
+				send(socketNucleo,&finQuantum,sizeof(int),0);
 				enviarPcb(socketNucleo, pcbRecibido);
-			} else {
-				log_info(logger, "Se produjo I/O", texto);
-				huboEntradaSalida = 0;
 			}
 			break;
+
+		default:
+			log_error(logger, "Se produjo error conectando con el Nucleo", texto);
+			signalApagado = 1;
 		}
 
 	}
