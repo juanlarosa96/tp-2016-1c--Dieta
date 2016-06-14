@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 		config = config_create(argv[1]);
 	}
 
-	int cant_frames = config_get_int_value(config, "MARCOS");
+	cant_frames = config_get_int_value(config, "MARCOS");
 	size_frames = config_get_int_value(config, "MARCO_SIZE");
 	entradasTLB = config_get_int_value(config, "ENTRADAS_TLB");
 	retardo = config_get_int_value(config, "RETARDO");
@@ -45,9 +45,24 @@ int main(int argc, char *argv[]) {
 	memset(memoriaPrincipal, 0, sizeof(tamanioMemoria));
 
 	//Inicializo listas compartidas
+	int i, j;
 	listaFrames = list_create();
-	listaProcesos = list_create();
+	for(i = 0; i < cant_frames; i++){
+		t_nodo_lista_frames * nodoFrame = malloc(sizeof(t_nodo_lista_frames));
+		nodoFrame->nroFrame = i;
+		nodoFrame->pid = 0;
+		nodoFrame->bitReferencia = 0;
+		nodoFrame->bitModificado = 0;
+		list_add(listaFrames, nodoFrame);
+	}
 	TLB = list_create();
+	for(j= 0; j < entradasTLB; j++){
+		t_entrada_tlb * entradaTLB = malloc(sizeof(t_entrada_tlb));
+		entradaTLB->pid = 0;
+		entradaTLB->ultAcceso = 0;
+		list_add(TLB, entradaTLB);
+	}
+	listaProcesos = list_create();
 
 	//Inicializo mutex
 	pthread_mutex_init(&mutexFrames, NULL);
