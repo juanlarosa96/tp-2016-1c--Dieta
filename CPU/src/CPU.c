@@ -172,13 +172,13 @@ int main(int argc, char *argv[]) {
 
 			while (unidadQuantum < quantumTotal && sigoEjecutando) {
 				t_intructions instruccion = pcbRecibido.indice_codigo.instrucciones[pcbRecibido.pc];
-				char lineaAnsisop[instruccion.offset + 1];
+				char lineaAnsisop[instruccion.offset];
 
 				if (pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina)) {
 					sigoEjecutando = 0;
 					enviarAbortarProgramaNucleo(socketNucleo);
 				} else {
-					lineaAnsisop[instruccion.offset + 1] = '\0';
+					lineaAnsisop[instruccion.offset] = '\0';
 
 					analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
 					usleep(quantumRetardo * 1000);
@@ -196,8 +196,8 @@ int main(int argc, char *argv[]) {
 			}
 			if (huboEntradaSalida == 0) {
 				enviarPcb(socketNucleo, pcbRecibido);
-				log_info(logger, "Se produjo I/O", texto);
 			} else {
+				log_info(logger, "Se produjo I/O", texto);
 				huboEntradaSalida = 0;
 			}
 			break;
