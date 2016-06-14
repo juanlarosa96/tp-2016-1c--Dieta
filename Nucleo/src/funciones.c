@@ -139,6 +139,11 @@ void manejarCPU(void * socket) {
 
 					break;
 
+				case finalizacionCPU:
+				desconectado = 1;
+				cambioProceso = 1;
+				log_info(logger,"CPU socket %d apagado",socketCpu);
+
 				}
 			}
 		}
