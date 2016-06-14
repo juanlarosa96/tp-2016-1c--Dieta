@@ -121,6 +121,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 	huboEntradaSalida = 1;
 	sigoEjecutando = 0;
 	enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
+
 }
 
 void wait(t_nombre_semaforo identificador_semaforo) {
@@ -156,6 +157,7 @@ void retornar(t_valor_variable retorno){
 	t_registro_pila* funcionDestino = popPila(pcbRecibido.indice_stack);
 	if(funcionDestino == NULL){
 		enviarFinalizacionProgramaNucleo(socketNucleo);
+		enviarPcb(socketNucleo,pcbRecibido);
 		sigoEjecutando = 0;
 	}else{
 		enviarPedidoAlmacenarBytes(socketUMC,funcionOrigen->variable_retorno.pagina,funcionOrigen->variable_retorno.offset,TAM_VAR,&retorno);
