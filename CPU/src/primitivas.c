@@ -195,13 +195,14 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	t_registro_pila * nuevoRegistroStack = malloc(sizeof(t_registro_pila));
 	t_registro_pila * registroStackAnterior = popPila(pcbRecibido.indice_stack);
 	nuevoRegistroStack->posicionUltimaVariable = registroStackAnterior->posicionUltimaVariable;
-	list_create(nuevoRegistroStack->lista_argumentos);
-	list_create(nuevoRegistroStack->lista_variables);
+	nuevoRegistroStack->lista_argumentos = list_create();
+	nuevoRegistroStack->lista_variables = list_create();
 	nuevoRegistroStack->variable_retorno.pagina = donde_retornar / tamanioPagina;
 	nuevoRegistroStack->variable_retorno.offset = donde_retornar % tamanioPagina;
 	nuevoRegistroStack->variable_retorno.size = TAM_VAR;
-	nuevoRegistroStack->direccion_retorno = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
-
+	nuevoRegistroStack->direccion_retorno = pcbRecibido.pc + 1;
+	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+	huboSaltoLinea = 1;
 	pushPila(pcbRecibido.indice_stack,registroStackAnterior);
 	pushPila(pcbRecibido.indice_stack,nuevoRegistroStack);
 }
