@@ -80,7 +80,7 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 			offset = 0;
 			pagina++;
 		}
-		tamanio = bytesTotales;
+		tamanio = bytesTotales - posicion.offset;
 
 		if (tamanio != 0) {
 			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *)buffer);
