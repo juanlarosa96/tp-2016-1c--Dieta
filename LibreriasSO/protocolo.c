@@ -148,11 +148,11 @@ void enviarPedidoAlmacenarBytes(int socketUMC, uint32_t nroPagina, uint32_t offs
 
 	memcpy(bufferPedido, &nroPagina, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(bufferPedido, &offset, sizeof(uint32_t));
+	memcpy(bufferPedido + cursorMemoria, &offset, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(bufferPedido, &size, sizeof(uint32_t));
+	memcpy(bufferPedido + cursorMemoria, &size, sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
-	memcpy(bufferPedido, bufferA, size);
+	memcpy(bufferPedido + cursorMemoria, bufferA, size);
 	cursorMemoria += size;
 	send(socketUMC, bufferPedido, cursorMemoria, 0);
 
@@ -334,6 +334,8 @@ t_pcb recibirPcb(int socketNucleo) {
 	for (i = 0; i < cantidadElementosStack; i++) {
 
 		t_registro_pila * elementoPila = malloc(sizeof(t_registro_pila));
+		elementoPila->lista_argumentos = list_create();
+		elementoPila->lista_variables = list_create();
 		int cantidadElementosLista;
 
 		recibirTodo(socketNucleo, &(elementoPila->direccion_retorno), largo32);
