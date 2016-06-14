@@ -23,6 +23,7 @@
 #include <structs.h>
 #include <sockets.h>
 #include <protocolo.h>
+#include <signal.h>
 
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
@@ -31,5 +32,6 @@ int pedirLineaAUMC(int socketUMC,char * lineaAnsisop, t_pcb pcbActual, int taman
 void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer);
 int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina);
 int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina);
-
+void manejadorSIGUSR1(int signal_num);
+void avisarANucleoFinalizacionDeCPU(int socketNucleo);
 #endif /* FUNCIONES_H_ */

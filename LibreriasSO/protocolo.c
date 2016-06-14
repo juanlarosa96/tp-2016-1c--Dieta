@@ -638,3 +638,9 @@ void enviarPedidoMemoriaOK(int socketCPU){
 	int header = pedidoMemoriaOK;
 	send(socketCPU, &header, sizeof(int), 0);
 }
+
+void enviarSenialDeApagadoDeCPU(int socketNucleo){
+	int header = finalizacionCPU;
+	send(socketNucleo, &header, sizeof(int),0);
+
+}

@@ -36,9 +36,10 @@ int main(int argc, char *argv[]) {
 
 		config = config_create(argv[1]);
 	}
-
+	char* id_cpu = string_itoa(getpid());
+	char* nombreLogger = string_from_format("CPU ID %d.log",id_cpu);
 	t_log* logger;
-	logger = log_create("CPU.log", "CPU", 1, log_level_from_string("INFO"));
+	logger = log_create(nombreLogger, "CPU", 1, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
@@ -83,62 +84,7 @@ int main(int argc, char *argv[]) {
 		log_error(logger, "Error recibiendo el tamaño de pagina", texto);
 		return 1;
 	}
-
-	//parser
-	/*FILE* archivo;
-	 archivo = fopen(ruta, "r");
-	 if (archivo == NULL) {
-	 puts("ERROR");
-	 }
-	 free(ruta);
-
-	 int largoLinea = 30;
-	 char *linea = (char *) malloc(sizeof(char) * largoLinea); //Buffer de linea
-
-	 char caracter = getc(archivo);
-	 int codigoValido = 0;	//Flag. Indica si esta dentro del begin-end
-
-	 while (caracter != EOF) {	//Lee linea por linea
-	 int contador = 0;
-
-	 while ((caracter != '\n') && (caracter != EOF)) {
-	 linea[contador] = caracter;
-	 contador++;
-	 caracter = getc(archivo);
-	 }
-
-	 linea[contador] = '\0';
-
-	 int comentario = 0;
-	 int i;
-	 for (i = 0; i < contador; i++) {
-	 if (linea[i] == '#') {
-	 comentario = 1;
-	 }
-	 }
-
-	 if (!comentario) { //Saltea lineas de comentario
-
-	 if (!strcmp(linea, "end")) {
-	 codigoValido = 0;
-	 }
-
-	 //Ejecutar parser con la Linea
-	 if (codigoValido) {
-	 printf("%s\n", linea);
-
-	 analizadorLinea(strdup(linea), &functions, &kernel_functions);
-	 }
-
-	 if (!strcmp(linea, "begin")) {
-	 codigoValido = 1;
-
-	 }
-	 }
-
-	 caracter = getc(archivo);
-	 }*/
-
+	signal(SIGUSR1, manejadorSIGUSR1);
 	signalApagado = 0;
 	int header;
 	int quantumTotal = 0, quantumRetardo = 0;
@@ -204,7 +150,11 @@ int main(int argc, char *argv[]) {
 		}
 
 	}
+	log_info(logger, "Se desconectó la CPU");
 	log_destroy(logger);
+	avisarANucleoFinalizacionDeCPU(socketNucleo);
+	close(socketNucleo);
+	close(socketUMC);
 	return 0;
 
 }
