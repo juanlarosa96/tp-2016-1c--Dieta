@@ -242,7 +242,7 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 	memcpy(buffer + cursorMemoria, &(pcb.indice_etiquetas.largoTotalEtiquetas), sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
 
-	memcpy(buffer + cursorMemoria, &(pcb.indice_etiquetas.etiquetas), pcb.indice_etiquetas.largoTotalEtiquetas);
+	memcpy(buffer + cursorMemoria, pcb.indice_etiquetas.etiquetas, pcb.indice_etiquetas.largoTotalEtiquetas);
 	cursorMemoria += pcb.indice_etiquetas.largoTotalEtiquetas;
 
 	cantidadElementosStack = list_size(pcb.indice_stack);
