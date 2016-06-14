@@ -73,6 +73,7 @@ t_valor_variable dereferenciar(t_puntero puntero) {
 	if(enviarPedidosDePosicionMemoria(socketUMC, posicionMemoria, (void *) & valorVariable, tamanioPagina)){
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
+		enviarPcb(socketNucleo,pcbRecibido);
 	}
 	return valorVariable;
 }
@@ -90,6 +91,7 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 	if(enviarAlmacenamientosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &variable, tamanioPagina)){
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
+		enviarPcb(socketNucleo,pcbRecibido);
 	}
 }
 int imprimir(t_valor_variable valor) {
@@ -164,6 +166,7 @@ void retornar(t_valor_variable retorno){
 		if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
 			enviarAbortarProgramaNucleo(socketNucleo);
 			sigoEjecutando = 0;
+			enviarPcb(socketNucleo,pcbRecibido);
 		}else{
 			pcbRecibido.pc = funcionOrigen->direccion_retorno;
 			pushPila(pcbRecibido.indice_stack,funcionDestino);
