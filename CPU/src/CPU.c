@@ -14,7 +14,7 @@
 
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable, .AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
 		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar, .AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
-		.AnSISOP_finalizar = retornar,
+		.AnSISOP_finalizar = retornar, .AnSISOP_llamarConRetorno = llamarConRetorno,
 
 };
 
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 
 		config = config_create(argv[1]);
 	}
-	char* id_cpu = string_itoa(getpid());
+	int id_cpu = getpid();
 	char* nombreLogger = string_from_format("CPU ID %d.log",id_cpu);
 	t_log* logger;
 	logger = log_create(nombreLogger, "CPU", 1, log_level_from_string("INFO"));
