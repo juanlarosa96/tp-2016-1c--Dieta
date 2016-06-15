@@ -38,7 +38,6 @@ int main(int argc, char *argv[]) {
 	}
 	int id_cpu = getpid();
 	char* nombreLogger = string_from_format("CPU ID %d.log",id_cpu);
-	t_log* logger;
 	logger = log_create(nombreLogger, "CPU", 1, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
@@ -111,6 +110,7 @@ int main(int argc, char *argv[]) {
 			pcbRecibido = recibirPcb(socketNucleo);
 
 			enviarCambioProcesoActivo(socketUMC, pcbRecibido.pid);
+			log_info(logger, "Nuevo proceso activo PID: %d", pcbRecibido.pid);
 
 			int unidadQuantum = 0;
 			sigoEjecutando = 1;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 
 				if (pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina)) {
 					sigoEjecutando = 0;
-					log_error(logger, "No se puede seguir ejecutando el programa %d. Fallo en la memoria.", pcbRecibido.pid);
+					log_error(logger, "No se puede seguir ejecutando el programa PID: %d. Fallo en la memoria.", pcbRecibido.pid);
 					enviarAbortarProgramaNucleo(socketNucleo);
 				} else {
 					lineaAnsisop[instruccion.offset] = '\0';
