@@ -530,7 +530,7 @@ void limpiarEntradaTLBPorFrame(uint32_t nroFrame){
 }
 
 void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
-		void * codigoPagina, uint32_t * idFrame) {
+		void * codigoPagina, int * idFrame) {
 	int indiceFrame;
 	int bitModificado;
 	t_nodo_lista_frames * frameAux;
@@ -607,7 +607,7 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 
 }
 
-int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, uint32_t * idFrame) {
+int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, int * idFrame) {
 	t_nodo_lista_frames* aux;
 	t_nodo_lista_procesos * auxProceso;
 	int i = 0, j = 0;
