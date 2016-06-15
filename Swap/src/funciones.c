@@ -39,7 +39,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 		if(i < cantPaginasCodigo){
 
 		recibirTodo(cliente, pagina, sizePagina);
-		memcpy(&(archivo[frameInicial]),pagina,sizePagina);
+		memcpy(&(archivo[frameInicial*sizePagina]),pagina,sizePagina);
 		usleep(retardoAcceso*1000);
 
 		}
@@ -69,7 +69,7 @@ void guardarPaginas(int cliente,char*archivo){
 
 		if (procesoAux->pID == pID ){
 			usleep(retardoAcceso*1000);
-			memcpy(&(archivo[procesoAux->frameInicial + nroPagina]),pagina,sizePagina);
+			memcpy(&(archivo[(procesoAux->frameInicial + nroPagina)*sizePagina]),pagina,sizePagina);
 			break;
 		}
 
@@ -90,7 +90,7 @@ void enviarPaginas(int cliente,char*archivo){
 
 			if (procesoAux->pID == pID ){
 				usleep(retardoAcceso*1000);
-				send(cliente,&(archivo[procesoAux->frameInicial + nroPagina]),sizePagina,0);
+				send(cliente,&(archivo[(procesoAux->frameInicial + nroPagina)*sizePagina]),sizePagina,0);
 				break;
 			}
 
@@ -161,7 +161,7 @@ int compactar(char*archivo){
 	int ultimoFrameLibre = 0;
 	for(i=0;i<cantidadDeFrames-1;i++){
 		if(bitMap[i]==0 && bitMap[i+1]==1){
-			archivo[i] = archivo[i+1];
+			archivo[i*sizePagina] = archivo[(i+1)*sizePagina];
 			bitMap[i]=1;
 			bitMap[i+1]=0;
 			i = ultimoFrameLibre -1;

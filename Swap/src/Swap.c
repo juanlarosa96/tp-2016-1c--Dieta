@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	};
 
-	char*archivoSwap = mmap((caddr_t) 0, sizePagina, PROT_READ | PROT_WRITE,
+	char*archivoSwap = mmap((caddr_t)  0, sizeTotal, PROT_READ | PROT_WRITE,
 	MAP_PRIVATE, fd, 0);
 
 	int i;
