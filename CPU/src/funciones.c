@@ -92,7 +92,7 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 
 void manejadorSIGUSR1(int signal_num){
 	if(signal_num == SIGUSR1){
-
+		log_info(logger, "Llegó la señal SIGUSR1.");
 		signalApagado = 1;
 	}
 
