@@ -124,6 +124,7 @@ int main(int argc, char *argv[]) {
 					sigoEjecutando = 0;
 					log_error(logger, "No se puede seguir ejecutando el programa PID: %d. Fallo en la memoria.", pcbRecibido.pid);
 					enviarAbortarProgramaNucleo(socketNucleo);
+					enviarPcb(socketNucleo,pcbRecibido);
 				} else {
 					lineaAnsisop[instruccion.offset] = '\0';
 
