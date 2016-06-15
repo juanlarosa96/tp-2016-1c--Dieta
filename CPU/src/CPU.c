@@ -155,6 +155,7 @@ int main(int argc, char *argv[]) {
 	}
 	log_info(logger, "Se desconectó la CPU");
 	log_destroy(logger);
+	config_destroy(config);
 	avisarANucleoFinalizacionDeCPU(socketNucleo);
 	close(socketNucleo);
 	close(socketUMC);
