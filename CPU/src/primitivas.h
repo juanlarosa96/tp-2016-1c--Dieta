@@ -37,5 +37,6 @@ void retornar(t_valor_variable retorno);
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar);
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable);
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor);
+void finalizar();
 
 #endif /* PRIMITIVAS_H_ */

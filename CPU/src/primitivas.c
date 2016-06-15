@@ -17,17 +17,17 @@ t_puntero definirVariable(t_nombre_variable variable) {
 	regPila->posicionUltimaVariable += TAM_VAR;
 
 	int aux = variable - '0';
-	if(aux>= 0 && aux <=9){
-		list_add(regPila->lista_argumentos,posicionVariable);
-	} else{
-		t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof (t_identificadorConPosicionMemoria));
+	if (aux >= 0 && aux <= 9) {
+		list_add(regPila->lista_argumentos, posicionVariable);
+	} else {
+		t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof(t_identificadorConPosicionMemoria));
 		nuevaVariable->identificador = variable;
 		nuevaVariable->posicionDeVariable = *posicionVariable;
-		list_add(regPila->lista_variables,nuevaVariable);
+		list_add(regPila->lista_variables, nuevaVariable);
 		free(posicionVariable);
 	}
 
-	pushPila(pcbRecibido.indice_stack,regPila);
+	pushPila(pcbRecibido.indice_stack, regPila);
 	return regPila->posicionUltimaVariable - TAM_VAR;
 
 }
@@ -40,22 +40,23 @@ t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 	int argumento = variable - '0';
 	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
 
-	if(argumento >= 0 && argumento <= 9){
-		memcpy(&posicion,list_get(regPila->lista_argumentos, argumento),sizeof(t_puntero));
-	}else {
+	if (argumento >= 0 && argumento <= 9) {
+		t_posicion_memoria * posicionArgumento = (t_posicion_memoria *) list_get(regPila->lista_argumentos, argumento);
+		posicion = posicionArgumento->pagina * tamanioPagina + posicionArgumento->offset;
+	} else {
 		int largoLista = list_size(regPila->lista_variables);
 		int i = 0;
 		t_identificadorConPosicionMemoria * elementoLista;
-		for(; i < largoLista; i++ ){
+		for (; i < largoLista; i++) {
 			elementoLista = list_get(regPila->lista_variables, i);
-			if(elementoLista->identificador == variable){
+			if (elementoLista->identificador == variable) {
 				posicion = elementoLista->posicionDeVariable.pagina * tamanioPagina + elementoLista->posicionDeVariable.offset;
 			}
 
 		}
 	}
 	printf("Obtengo posición variable\n");
-	pushPila(pcbRecibido.indice_stack,regPila);
+	pushPila(pcbRecibido.indice_stack, regPila);
 	return posicion;
 }
 t_valor_variable dereferenciar(t_puntero puntero) {
@@ -64,16 +65,16 @@ t_valor_variable dereferenciar(t_puntero puntero) {
 	 * me pasan directo el byte donde arranca la variable y tengo que transformar en pag y offset
 	 */
 	int valorVariable;
-	int numeroPagina = puntero/tamanioPagina;
-	int offset = puntero%tamanioPagina;
+	int numeroPagina = puntero / tamanioPagina;
+	int offset = puntero % tamanioPagina;
 	t_posicion_memoria posicionMemoria;
 	posicionMemoria.pagina = numeroPagina;
 	posicionMemoria.offset = offset;
 	posicionMemoria.size = TAM_VAR;
-	if(enviarPedidosDePosicionMemoria(socketUMC, posicionMemoria, (void *) & valorVariable, tamanioPagina)){
+	if (enviarPedidosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &valorVariable, tamanioPagina)) {
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
-		enviarPcb(socketNucleo,pcbRecibido);
+		enviarPcb(socketNucleo, pcbRecibido);
 	}
 	return valorVariable;
 }
@@ -82,16 +83,16 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 	 * me pasan el byte donde arranco a guardar y el valor
 	 * calculo pag offset y le pido a umc que lo guarde
 	 */
-	int numeroPagina = puntero/tamanioPagina;
-	int offset = puntero%tamanioPagina;
+	int numeroPagina = puntero / tamanioPagina;
+	int offset = puntero % tamanioPagina;
 	t_posicion_memoria posicionMemoria;
 	posicionMemoria.pagina = numeroPagina;
 	posicionMemoria.offset = offset;
 	posicionMemoria.size = TAM_VAR;
-	if(enviarAlmacenamientosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &variable, tamanioPagina)){
+	if (enviarAlmacenamientosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &variable, tamanioPagina)) {
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
-		enviarPcb(socketNucleo,pcbRecibido);
+		enviarPcb(socketNucleo, pcbRecibido);
 	}
 }
 int imprimir(t_valor_variable valor) {
@@ -140,15 +141,15 @@ void parserSignal(t_nombre_semaforo identificador_semaforo) {
 	enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 }
 
-void irAlLabel(t_nombre_etiqueta etiqueta){
+void irAlLabel(t_nombre_etiqueta etiqueta) {
 	/*
 	 * cambio el pc a la primera instruccion de la etiqueta
 	 */
-	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta, pcbRecibido.indice_etiquetas.etiquetas, pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 	huboSaltoLinea = 1;
 }
 
-void retornar(t_valor_variable retorno){
+void retornar(t_valor_variable retorno) {
 	/*
 	 * si stoy en main termino el proceso
 	 * si no:
@@ -157,30 +158,30 @@ void retornar(t_valor_variable retorno){
 	 */
 	t_registro_pila* funcionOrigen = popPila(pcbRecibido.indice_stack);
 	t_registro_pila* funcionDestino = popPila(pcbRecibido.indice_stack);
-	if(funcionDestino == NULL){
+	if (funcionDestino == NULL) {
 		enviarFinalizacionProgramaNucleo(socketNucleo);
-		enviarPcb(socketNucleo,pcbRecibido);
+		enviarPcb(socketNucleo, pcbRecibido);
 		sigoEjecutando = 0;
-	}else{
-		enviarPedidoAlmacenarBytes(socketUMC,funcionOrigen->variable_retorno.pagina,funcionOrigen->variable_retorno.offset,TAM_VAR,&retorno);
-		if(recibirHeader(socketUMC) == pedidoMemoriaFallo){
+	} else {
+		enviarPedidoAlmacenarBytes(socketUMC, funcionOrigen->variable_retorno.pagina, funcionOrigen->variable_retorno.offset, TAM_VAR, &retorno);
+		if (recibirHeader(socketUMC) == pedidoMemoriaFallo) {
 			enviarAbortarProgramaNucleo(socketNucleo);
 			sigoEjecutando = 0;
-			enviarPcb(socketNucleo,pcbRecibido);
-		}else{
+			enviarPcb(socketNucleo, pcbRecibido);
+		} else {
 			pcbRecibido.pc = funcionOrigen->direccion_retorno;
-			pushPila(pcbRecibido.indice_stack,funcionDestino);
+			pushPila(pcbRecibido.indice_stack, funcionDestino);
 			huboSaltoLinea = 1;
 
-			int sizeLista = list_size(funcionOrigen->lista_argumentos),i;
-			for(i = 0; i < sizeLista; i++){
-				free(list_remove(funcionOrigen->lista_argumentos,0));
-				}
+			int sizeLista = list_size(funcionOrigen->lista_argumentos), i;
+			for (i = 0; i < sizeLista; i++) {
+				free(list_remove(funcionOrigen->lista_argumentos, 0));
+			}
 			list_destroy(funcionOrigen->lista_argumentos);
 
 			sizeLista = list_size(funcionOrigen->lista_variables);
-			for(i = 0; i < sizeLista; i++){
-				free(list_remove(funcionOrigen->lista_variables,0));
+			for (i = 0; i < sizeLista; i++) {
+				free(list_remove(funcionOrigen->lista_variables, 0));
 			}
 			list_destroy(funcionOrigen->lista_variables);
 			free(funcionOrigen);
@@ -188,7 +189,7 @@ void retornar(t_valor_variable retorno){
 	}
 }
 
-void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar) {
 	/*
 	 * creo un nuevo regPila en indice stack
 	 */
@@ -201,13 +202,13 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	nuevoRegistroStack->variable_retorno.offset = donde_retornar % tamanioPagina;
 	nuevoRegistroStack->variable_retorno.size = TAM_VAR;
 	nuevoRegistroStack->direccion_retorno = pcbRecibido.pc + 1;
-	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta,pcbRecibido.indice_etiquetas.etiquetas,pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
+	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta, pcbRecibido.indice_etiquetas.etiquetas, pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 	huboSaltoLinea = 1;
-	pushPila(pcbRecibido.indice_stack,registroStackAnterior);
-	pushPila(pcbRecibido.indice_stack,nuevoRegistroStack);
+	pushPila(pcbRecibido.indice_stack, registroStackAnterior);
+	pushPila(pcbRecibido.indice_stack, nuevoRegistroStack);
 }
 
-t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
+t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	/*
 	 * le pido a nucleo el val de la var compartida
 	 */
@@ -216,7 +217,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	return valorVariable;
 }
 
-t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor) {
 	/*
 	 * le digo a nucleo que guarde el val de la var compartida
 	 */
@@ -224,4 +225,11 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	return valor;
 }
 
+void finalizar() {
+
+	enviarFinalizacionProgramaNucleo(socketNucleo);
+	sigoEjecutando = 0;
+	enviarPcb(socketNucleo, pcbRecibido);
+
+}
 
