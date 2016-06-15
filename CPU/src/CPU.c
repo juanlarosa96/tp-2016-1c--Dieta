@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
 
 				if (pedirLineaAUMC(socketUMC, lineaAnsisop, pcbRecibido, tamanioPagina)) {
 					sigoEjecutando = 0;
+					log_error(logger, "No se puede seguir ejecutando el programa %d. Fallo en la memoria.", pcbRecibido.pid);
 					enviarAbortarProgramaNucleo(socketNucleo);
 				} else {
 					lineaAnsisop[instruccion.offset] = '\0';
