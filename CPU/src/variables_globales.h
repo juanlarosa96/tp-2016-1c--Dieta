@@ -22,4 +22,6 @@ t_pcb pcbRecibido;
 int sigoEjecutando;
 int signalApagado;
 
+t_log * logger;
+
 #endif /* VARIABLES_GLOBALES_H_ */
