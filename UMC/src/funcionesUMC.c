@@ -964,7 +964,6 @@ void dumpTodosLosProcesos() {
 	}
 	pthread_mutex_unlock(&mutexProcesos);
 
-	printf("\nDump de Memoria Principal\n");
 	fprintf(archivo, "\nDump de Memoria Principal\n");
 	pthread_mutex_lock(&mutexMemoriaPrincipal);
 	hexdump(archivo, memoriaPrincipal, tamanioMemoria);
