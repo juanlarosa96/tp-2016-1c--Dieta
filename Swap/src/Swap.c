@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 		//	printf("Número incorrecto de parámetros\n");
 		//	return -1;
 		config = config_create(
-				"/home/utnso/TP/tp-2016-1c--Dieta/Swap/Configuracion/config");
+				"./Configuracion/config");
 	} else {
 		config = config_create(argv[1]);
 	}
