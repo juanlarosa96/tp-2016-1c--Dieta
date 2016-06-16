@@ -13,7 +13,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 	int cantPaginasTotal;
 	recibirTodo(cliente, &cantPaginasTotal, sizeof(int));
 
-	int frameInicial= chequearMemoriaDisponible(cantPaginasTotal,archivo);
+	int frameInicial = chequearMemoriaDisponible(cantPaginasTotal, archivo);
 	if (frameInicial == -1) {
 		avisarUMCFallo(cliente);
 		return 0;
@@ -31,94 +31,105 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 	proceso->frameInicial = frameInicial;
 	proceso->cantPaginas = cantPaginasTotal;
 
-	list_add(listaProcesos,proceso);
+	list_add(listaProcesos, proceso);
 	int i;
 	char *pagina = malloc(sizePagina);
 
 	for (i = 0; i < cantPaginasTotal; i++) {
-		if(i < cantPaginasCodigo){
+		if (i < cantPaginasCodigo) {
 
-		recibirTodo(cliente, pagina, sizePagina);
-		memcpy(&(archivo[frameInicial*sizePagina]),pagina,sizePagina);
-		usleep(retardoAcceso*1000);
+			recibirTodo(cliente, pagina, sizePagina);
+			memcpy(&(archivo[frameInicial * sizePagina]), pagina, sizePagina);
+			usleep(retardoAcceso * 1000);
 
 		}
 
 		bitMap[frameInicial] = 1;
-		frameInicial ++;
+		frameInicial++;
 	}
 	free(pagina);
+	log_info(logger, "Se inicializó un nuevo programa PID: %d", pid);
 	return 1;
 }
 
-void guardarPaginas(int cliente,char*archivo){
+void guardarPaginas(int cliente, char*archivo) {
 
 	int nroPagina;
-	recibirTodo(cliente,&nroPagina,sizeof(int));
+	recibirTodo(cliente, &nroPagina, sizeof(int));
 
 	uint32_t pID;
-	recibirTodo(cliente,&pID,sizeof(uint32_t));
+	recibirTodo(cliente, &pID, sizeof(uint32_t));
 
 	char *pagina = malloc(sizePagina);
-	recibirTodo(cliente,pagina,sizePagina);
+	recibirTodo(cliente, pagina, sizePagina);
 
 	int i;
 	t_proceso *procesoAux;
-	for(i = 0 ; i < list_size(listaProcesos) ; i++){
-		procesoAux = list_get(listaProcesos,i);
+	for (i = 0; i < list_size(listaProcesos); i++) {
+		procesoAux = list_get(listaProcesos, i);
 
-		if (procesoAux->pID == pID ){
-			usleep(retardoAcceso*1000);
-			memcpy(&(archivo[(procesoAux->frameInicial + nroPagina)*sizePagina]),pagina,sizePagina);
+		if (procesoAux->pID == pID) {
+			usleep(retardoAcceso * 1000);
+			memcpy(
+					&(archivo[(procesoAux->frameInicial + nroPagina)
+							* sizePagina]), pagina, sizePagina);
 			break;
 		}
 
 	}
+
+	log_info(logger, "Se almacenó página nro %d, del proceso con PID %d, a UMC",
+			nroPagina, pID);
 }
 
-void enviarPaginas(int cliente,char*archivo){
+void enviarPaginas(int cliente, char*archivo) {
 	uint32_t pID;
-	recibirTodo(cliente,&pID,sizeof(uint32_t));
+	recibirTodo(cliente, &pID, sizeof(uint32_t));
 
 	int nroPagina;
-	recibirTodo(cliente,&nroPagina,sizeof(int));
-
-	int i;
-		t_proceso *procesoAux;
-		for(i = 0 ; i < list_size(listaProcesos) ; i++){
-			procesoAux = list_get(listaProcesos,i);
-
-			if (procesoAux->pID == pID ){
-				usleep(retardoAcceso*1000);
-				send(cliente,&(archivo[(procesoAux->frameInicial + nroPagina)*sizePagina]),sizePagina,0);
-				break;
-			}
-
-		}
-
-
-}
-
-void finalizarProgramaAnsisop(int cliente){
-
-	uint32_t pID;
-	recibirTodo(cliente,&pID,sizeof(uint32_t));
+	recibirTodo(cliente, &nroPagina, sizeof(int));
 
 	int i;
 	t_proceso *procesoAux;
-	for(i = 0 ; i < list_size(listaProcesos) ; i++){
-	procesoAux = list_get(listaProcesos,i);
-	if (procesoAux->pID == pID ){
-		int a;
-		for(a=0;a<procesoAux->cantPaginas;a++){
-			bitMap[a+procesoAux->frameInicial]=0;
+	for (i = 0; i < list_size(listaProcesos); i++) {
+		procesoAux = list_get(listaProcesos, i);
+
+		if (procesoAux->pID == pID) {
+			usleep(retardoAcceso * 1000);
+			send(cliente,
+					&(archivo[(procesoAux->frameInicial + nroPagina)
+							* sizePagina]), sizePagina, 0);
+			break;
 		}
-	    free(list_remove(listaProcesos,i));
-				}
+
 	}
+	log_info(logger, "Se envió página nro %d, del proceso con PID %d, a UMC",
+			nroPagina, pID);
+
 }
 
-int chequearMemoriaDisponible(int cantPaginas,char*archivo) {
+void finalizarProgramaAnsisop(int cliente) {
+
+	uint32_t pID;
+	recibirTodo(cliente, &pID, sizeof(uint32_t));
+
+	int i;
+	t_proceso *procesoAux;
+	for (i = 0; i < list_size(listaProcesos); i++) {
+		procesoAux = list_get(listaProcesos, i);
+		if (procesoAux->pID == pID) {
+			int a;
+			for (a = 0; a < procesoAux->cantPaginas; a++) {
+				bitMap[a + procesoAux->frameInicial] = 0;
+			}
+			free(list_remove(listaProcesos, i));
+		}
+	}
+
+	log_info(logger, "Fin de programa PID: %d", pID);
+}
+
+int chequearMemoriaDisponible(int cantPaginas, char*archivo) {
 	int cantidadContinua, i, cantidadTotal;
 	cantidadContinua = i = cantidadTotal = 0;
 	int hayContinuas = 0, hayTotales = 0;
@@ -130,19 +141,23 @@ int chequearMemoriaDisponible(int cantPaginas,char*archivo) {
 		} else {
 			cantidadContinua = 0;
 		}
-		if (cantidadTotal == cantPaginas){hayTotales = 1;}
-		if (cantidadContinua == cantPaginas){hayContinuas = 1;}
+		if (cantidadTotal == cantPaginas) {
+			hayTotales = 1;
+		}
+		if (cantidadContinua == cantPaginas) {
+			hayContinuas = 1;
+		}
 		i++;
 	}
 
-	if(hayTotales){
-			if(hayContinuas){
-				return i-cantPaginas;
-			} else{
+	if (hayTotales) {
+		if (hayContinuas) {
+			return i - cantPaginas;
+		} else {
 			return compactar(archivo);
-			}
+		}
 	} else {
-	return -1;
+		return -1;
 	}
 }
 
@@ -156,21 +171,23 @@ void avisarUMCExito(int cliente) {
 	send(cliente, &header, sizeof(int), 0);
 }
 
-int compactar(char*archivo){
+int compactar(char*archivo) {
 	int i;
 	int ultimoFrameLibre = 0;
-	for(i=0;i<cantidadDeFrames-1;i++){
-		if(bitMap[i]==0 && bitMap[i+1]==1){
-			archivo[i*sizePagina] = archivo[(i+1)*sizePagina];
-			bitMap[i]=1;
-			bitMap[i+1]=0;
-			i = ultimoFrameLibre -1;
+	log_info(logger, "Comienzo de compactación.");
+	for (i = 0; i < cantidadDeFrames - 1; i++) {
+		if (bitMap[i] == 0 && bitMap[i + 1] == 1) {
+			archivo[i * sizePagina] = archivo[(i + 1) * sizePagina];
+			bitMap[i] = 1;
+			bitMap[i + 1] = 0;
+			i = ultimoFrameLibre - 1;
 		}
-		if(bitMap[i]==1){
+		if (bitMap[i] == 1) {
 			ultimoFrameLibre++;
 		}
 	}
-	usleep(retardoCompactacion*1000);
+	usleep(retardoCompactacion * 1000);
+	log_info(logger, "Fin compactación.");
 	return ultimoFrameLibre;
 }
 

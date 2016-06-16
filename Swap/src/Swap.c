@@ -57,11 +57,11 @@ int main(int argc, char *argv[]) {
 	strcat(comando, " count=1");
 
 	if (system(comando) != 0) {
-		printf("No se creo el archivo");
+		log_error(logger, "No se pudo crear el archivo.");
 		return -1;
 	}
 
-	printf("Se creo el archivo \n");
+	log_info(logger, "Se creó el archivo.");
 
 	char pathArchivo[50] = "./";
 	strcat(pathArchivo, nombre);
@@ -91,6 +91,8 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
+	log_info(logger, "Se estableció el socket de escucha correctamente");
+
 	if (escucharEn(servidorSwap, puertoServidor)) {
 		printf("Error al conectar");
 		log_error(logger, "Se produjo un error al tratar de conectar con el socket");
@@ -101,7 +103,6 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in direccionCliente;
 
 	int cliente = aceptarConexion(servidorSwap, &direccionCliente);
-	printf("Recibí una conexión en %d\n", cliente);
 
 //-------------------------------------------------------------------------
 	int idRecibido;
@@ -113,7 +114,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	printf("Se conectó UMC\n");
+	log_info(logger, "Se conectó UMC");
 
 	while (1) {
 		int header = recibirHeader(cliente);
@@ -125,19 +126,15 @@ int main(int argc, char *argv[]) {
 			break;
 		case inicializarProgramaSwap:
 			iniciarProgramaAnsisop(cliente, archivoSwap);
-			log_info(logger, "Se inicializo un nuevo programa");
 			break;
 		case guardarPaginasEnSwap:
 			guardarPaginas(cliente, archivoSwap);
-			log_info(logger, "Se produjo un pedido de almacenamiento de paginas");
 			break;
 		case pedidoPaginaASwap:
 			enviarPaginas(cliente, archivoSwap);
-			log_info(logger, "Se produjo un pedido de consulta de paginas");
 			break;
 		case finalizacionPrograma:
 			finalizarProgramaAnsisop(cliente);
-			log_info(logger, "Fin de programa");
 			break;
 		}
 
