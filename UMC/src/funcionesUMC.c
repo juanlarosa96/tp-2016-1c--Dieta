@@ -931,8 +931,7 @@ void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo) {
 	t_nodo_lista_paginas*nodoAuxPagina;
 	printf("Numero de Pagina\tEstado\n");
 	fprintf(archivo, "Numero de Pagina\tEstado\n");
-	pthread_mutex_lock(&mutexProcesos);
-	while (i < list_size(nodoAux->lista_paginas)) {
+	while (i < list_size(nodoAux->lista_paginas)) { //NO PONER MUTEX ACA
 		nodoAuxPagina = list_get(nodoAux->lista_paginas, i);
 		printf("%d               \t%c\n", nodoAuxPagina->nro_pagina,
 				nodoAuxPagina->status);
@@ -940,7 +939,6 @@ void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo) {
 				nodoAuxPagina->status);
 		i++;
 	}
-	pthread_mutex_unlock(&mutexProcesos);
 }
 
 void dumpPIDAuxiliar(t_nodo_lista_procesos*nodoAux, FILE*archivo) {
