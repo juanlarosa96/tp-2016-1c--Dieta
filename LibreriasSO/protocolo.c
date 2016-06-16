@@ -48,11 +48,14 @@ void enviarTamanioPagina(int socketDestino, int tamanioPagina) {
 
 }
 
-void recibirResultadoDeEjecucionAnsisop(int socketNucleo, char * mensaje, int largoMensaje) {
-	recibirTodo(socketNucleo, mensaje, largoMensaje);
+void recibirResultadoDeEjecucionAnsisop(int socketNucleo, char ** mensaje, int *largoMensaje) {
+	//recibirTodo(socketNucleo, mensaje, largoMensaje);
+	recibirTodo(socketNucleo, largoMensaje, sizeof(int));
+	*mensaje = malloc(*largoMensaje);
+	recibirTodo(socketNucleo, *mensaje, *largoMensaje);
 }
 
-int recibirLargoResultadoDeEjecucionAnsisop(int socketNucleo) {
+int recibirLargoResultadoDeEjecucionAnsisop(int socketNucleo) { //no se usa mas
 	int largoMensaje;
 	recibirTodo(socketNucleo, &largoMensaje, sizeof(int));
 	return largoMensaje;
@@ -60,9 +63,27 @@ int recibirLargoResultadoDeEjecucionAnsisop(int socketNucleo) {
 
 void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int largoMensaje) {
 	int header = resultadoEjecucion;
-	send(socketDestino, &header, sizeof(int), 0);
+/*	send(socketDestino, &header, sizeof(int), 0);
 	send(socketDestino, &largoMensaje, sizeof(int), 0);
-	send(socketDestino, mensaje, largoMensaje, 0);
+	send(socketDestino, mensaje, largoMensaje, 0);*/
+	void *data = malloc(sizeof(int) + strlen(mensaje) + 1 + sizeof(int)); //header + texto + largoTexto
+		int offset = 0, str_size = 0;
+
+		str_size = sizeof(int);
+		memcpy(data + offset, &header, str_size);
+		offset += str_size;
+
+		str_size = strlen(mensaje) + 1;
+		memcpy(data + offset, mensaje, str_size);
+		offset += str_size;
+
+		str_size = sizeof(int);
+		memcpy(data + offset, &largoMensaje, str_size);
+		offset += str_size;
+
+		send(socketDestino, data, offset, 0);
+
+		free(data);
 }
 
 int recibirRespuestaCPU(int socketCpu, int * respuesta) {
@@ -202,7 +223,7 @@ void recibirValorAImprimir(int socketOrigen, uint32_t *id_proceso, int *largoTex
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoTexto, sizeof(int));
 	*texto = malloc(*largoTexto);
-	recibirTodo(socketOrigen, texto, *largoTexto);
+	recibirTodo(socketOrigen, *texto, *largoTexto);
 
 }
 

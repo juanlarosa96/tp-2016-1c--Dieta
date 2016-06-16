@@ -76,10 +76,13 @@ int main(int argc, char **argv) {
 	while(1){
 		int header = recibirHeader(socketNucleo);
 		if (header == resultadoEjecucion) {
-		int largoMensaje;
+		/*int largoMensaje;
 		largoMensaje = recibirLargoResultadoDeEjecucionAnsisop(socketNucleo);
 		char mensajeDevuelto[largoMensaje];
-		recibirResultadoDeEjecucionAnsisop(socketNucleo,mensajeDevuelto,largoMensaje);
+		recibirResultadoDeEjecucionAnsisop(socketNucleo,mensajeDevuelto,largoMensaje);*/
+			int largoTexto;
+			char *mensajeDevuelto;
+			recibirResultadoDeEjecucionAnsisop(socketNucleo,&mensajeDevuelto, &largoTexto);
 		log_info(logger, "Se recibio resultado de ejecucion", texto);
 		printf(mensajeDevuelto);
 		}
