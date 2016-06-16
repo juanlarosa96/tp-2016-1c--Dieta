@@ -93,6 +93,7 @@ void manejarCPU(void * socket) {
 								AgregarAProcesoColaFinalizados(siguientePcb);
 								cambioProceso = 1;
 								j = sizeLista;
+								free(socketEnLista);
 							}
 						}
 						pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
@@ -281,7 +282,8 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
 			t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(listaConsolas, i);
 			AgregarAProcesoColaFinalizados(*pcbFinalizado);
-			free(pcbFinalizado);
+			free(pcbFinalizado);//Liberar Pcb
+			break;
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
