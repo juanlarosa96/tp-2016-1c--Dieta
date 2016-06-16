@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 	if (argc != 2) {
 		//printf("Número incorrecto de parámetros\n");
 		//return -1;
-		config = config_create("/home/utnso/Escritorio/TP/tp-2016-1c--Dieta/Nucleo/Configuracion/config");
+		config = config_create("./Configuracion/config");
 	} else {
 
 		config = config_create(argv[1]);
