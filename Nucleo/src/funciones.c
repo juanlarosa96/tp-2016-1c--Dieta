@@ -45,9 +45,10 @@ void manejarCPU(void * socket) {
 					//Se desconecto el CPU
 					finalizarProceso(siguientePcb);
 					desconectado = 1;
-					log_info(logger, "Se desconecto el CPU", texto);
+					log_info(logger, "Se desconectó el CPU socket %d", socketCpu);
 					pthread_exit(NULL);
 				}
+
 				switch (respuesta) {
 
 				case finalizacionPrograma: //Fin programa
@@ -60,6 +61,7 @@ void manejarCPU(void * socket) {
 						finalizarProceso(siguientePcb);
 						pthread_exit(NULL);
 					}
+					log_info(logger, "Finalizó programa PID: %d", siguientePcb.pcb.pid);
 					break;
 				case abortarPrograma:
 					//Fin programa por abortado
@@ -72,6 +74,7 @@ void manejarCPU(void * socket) {
 						finalizarProceso(siguientePcb);
 						pthread_exit(NULL);
 					}
+					log_info(logger, "CPU abortó programa PID:%d", siguientePcb.pcb.pid);
 					break;
 
 				case finDeQuantum:
@@ -107,6 +110,7 @@ void manejarCPU(void * socket) {
 						finalizarProceso(siguientePcb);
 						pthread_exit(NULL);
 					}
+					log_info(logger, "Quantum de CPU socket %d terminado", socketCpu);
 					break;
 
 				case primitivaImprimir:
@@ -122,9 +126,12 @@ void manejarCPU(void * socket) {
 						t_pcbConConsola * elemento = (t_pcbConConsola *) list_get(listaConsolas, i);
 						if (elemento->pcb.pid == pid) {
 							enviarResultadoDeEjecucionAnsisop(elemento->socketConsola, texto, largoTexto);
+							log_info(logger, "Se envió texto a imprimir, del proceso PID: %d a Consola (socket nro %d)", elemento->pcb.pid, elemento->socketConsola);
+							break;
 						}
 					}
 					pthread_mutex_unlock(&mutexListaConsolas);
+
 					break;
 
 				case headerEntradaSalida:
