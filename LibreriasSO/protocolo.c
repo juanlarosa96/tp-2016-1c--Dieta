@@ -73,12 +73,12 @@ void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int la
 		memcpy(data + offset, &header, str_size);
 		offset += str_size;
 
-		str_size = strlen(mensaje) + 1;
-		memcpy(data + offset, mensaje, str_size);
-		offset += str_size;
-
 		str_size = sizeof(int);
 		memcpy(data + offset, &largoMensaje, str_size);
+		offset += str_size;
+
+		str_size = strlen(mensaje) + 1;
+		memcpy(data + offset, mensaje, str_size);
 		offset += str_size;
 
 		send(socketDestino, data, offset, 0);
