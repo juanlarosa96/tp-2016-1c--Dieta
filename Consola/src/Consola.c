@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 			char *mensajeDevuelto;
 			recibirResultadoDeEjecucionAnsisop(socketNucleo,&mensajeDevuelto, &largoTexto);
 		log_info(logger, "Se recibio resultado de ejecucion", texto);
-		printf(mensajeDevuelto);
+		printf("Mensaje Recibido: %s \n", mensajeDevuelto);
 		}
 
 		if(header == finalizacionPrograma){
