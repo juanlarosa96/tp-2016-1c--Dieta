@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
 	//Creo log para el Núcleo
 
-	logger = log_create("Núcelo.log", "NUCLEO", 1, log_level_from_string("INFO"));
+	logger = log_create("Nucleo.log", "NUCLEO", 1, log_level_from_string("INFO"));
 
 	texto = "info";
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 	}
 
 	log_info(logger, "Se estableció correctamente el socket servidor", texto);
-	printf("Escuchando\n");
+	log_info(logger, "Escuchando nuevas conexiones");
 
 	pidPcb = 1;
 
@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
 
 					case IDCONSOLA:
 						FD_SET(nuevaConexion, &bolsaDeSockets);
-						log_info(logger, "Nueva consola conectada", texto);
+						log_info(logger, "Nueva consola conectada, socket %d", nuevaConexion);
 						//Maneja consola
 
 						break;
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 						;
 						close(i);
 						FD_CLR(i, &bolsaDeSockets);
-						log_error(logger, "Consola desconectada", texto);
+						log_error(logger, "Consola socket %d desconectada", i);
 						break;
 
 					case programaAnsisop:
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
 					default:
 						close(i);
 						FD_CLR(i, &bolsaDeSockets);
-						log_error(logger, "Consola desconectada", texto);
+						log_error(logger, "Consola socket %d desconectada", i);
 						break;
 
 					}
