@@ -211,8 +211,10 @@ int main(int argc, char **argv) {
 
 					case finalizacionPrograma:
 						;
-						int j, sizeCola = queue_size(cola_PCBListos), sizeColaBloqueados, encontrado = 0;
+						int j, sizeCola, sizeColaBloqueados, encontrado = 0;
 						//Busco pcb en cola de procesos listos
+						pthread_mutex_lock(&mutexColaListos);
+						sizeCola = queue_size(cola_PCBListos);
 						for (j = 0; j < sizeCola; j++) {
 
 							t_pcbConConsola * elementoAux = (t_pcbConConsola *) queue_pop(cola_PCBListos);
@@ -220,11 +222,12 @@ int main(int argc, char **argv) {
 							if (elementoAux->socketConsola == i) {
 								finalizarProceso(*elementoAux);
 								encontrado = 1;
+								//Liberar elementoAux
 							} else {
 								queue_push(cola_PCBListos, (void *) elementoAux);
 							}
 						}
-
+						pthread_mutex_unlock(&mutexColaListos);
 						int contador = 0, k;
 						while (vectorDispositivos[contador] != NULL) {
 							contador++;
@@ -232,8 +235,8 @@ int main(int argc, char **argv) {
 						//Busco pcb en colas de procesos bloqueados
 						for (k = 0; k < contador; k++) {
 
-							sizeColaBloqueados = queue_size(vectorColasBloqueados[k]);
 							pthread_mutex_lock(vectorMutexDispositivosIO[k]);
+							sizeColaBloqueados = queue_size(vectorColasBloqueados[k]);
 
 							for (j = 0; j < sizeColaBloqueados; j++) {
 
