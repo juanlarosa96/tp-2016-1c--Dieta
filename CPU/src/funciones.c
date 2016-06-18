@@ -28,78 +28,91 @@ void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char*
 }
 int pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina) {
 	t_posicion_memoria posicion = obtenerPosicionPagina(tamanioPagina, pcbActual);
-	return enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *)lineaAnsisop, tamanioPagina);
+	return enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *) lineaAnsisop, tamanioPagina);
 }
 
 void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
 	recibirTodo(socketUMC, buffer, largoPedido);
 }
 
-int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
+int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size;
-		int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
+	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size, multiplesPedidos = 0;
 
-		if (posicion.size + offset > tamanioPagina) {
-			tamanio = tamanioPagina - offset;
+	if (posicion.size + offset > tamanioPagina) {
+		tamanio = tamanioPagina - offset;
+		multiplesPedidos = 1;
+	}
+
+	while (bytesTotales >= tamanioPagina) {
+		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
+		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
+			return 1;
+		recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
+		bytesTotales -= tamanio;
+		bytesRecibidos += tamanio;
+		tamanio = tamanioPagina;
+		offset = 0;
+		pagina++;
+	}
+
+	if (multiplesPedidos) {
+			tamanio = bytesTotales;
+		} else {
+			tamanio = bytesTotales - posicion.offset;
 		}
 
-		while (bytesTotales >= tamanioPagina) {
-			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
-			recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
-			bytesTotales -= tamanio;
-			bytesRecibidos += tamanio;
-			tamanio = tamanioPagina;
-			offset = 0;
-			pagina++;
-		}
-		tamanio = bytesTotales - posicion.offset;
-
-		if (tamanio != 0) {
-			enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
-			recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
-		}
-		return 0;
+	if (tamanio != 0) {
+		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
+		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
+			return 1;
+		recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
+	}
+	return 0;
 }
 
-int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina){
+int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size;
-		int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size;
+	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size, multiplesPedidos = 0;
 
-		if (posicion.size + offset > tamanioPagina) {
-			tamanio = tamanioPagina - offset;
-		}
+	if (posicion.size + offset > tamanioPagina) {
+		tamanio = tamanioPagina - offset;
+		multiplesPedidos = 1;
+	}
 
-		while (bytesTotales >= tamanioPagina) {
-			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *)buffer);
-			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
-			bytesTotales -= tamanio;
-			bytesEnviados += tamanio;
-			tamanio = tamanioPagina;
-			offset = 0;
-			pagina++;
-		}
+	while (bytesTotales >= tamanioPagina) {
+		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *) buffer + bytesEnviados);
+		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
+			return 1;
+		bytesTotales -= tamanio;
+		bytesEnviados += tamanio;
+		tamanio = tamanioPagina;
+		offset = 0;
+		pagina++;
+	}
+	if (multiplesPedidos) {
+		tamanio = bytesTotales;
+	} else {
 		tamanio = bytesTotales - posicion.offset;
+	}
 
-		if (tamanio != 0) {
-			enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *)buffer);
-			if(recibirHeader(socketUMC) == pedidoMemoriaFallo) return 1;
-		}
-		return 0;
+	if (tamanio != 0) {
+		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *) buffer + bytesEnviados);
+		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
+			return 1;
+	}
+	return 0;
 }
 
-
-void manejadorSIGUSR1(int signal_num){
-	if(signal_num == SIGUSR1){
+void manejadorSIGUSR1(int signal_num) {
+	if (signal_num == SIGUSR1) {
 		log_info(logger, "Llegó la señal SIGUSR1.");
 		signalApagado = 1;
 	}
 
 }
 
-void avisarANucleoFinalizacionDeCPU(int socketNucleo){
+void avisarANucleoFinalizacionDeCPU(int socketNucleo) {
 	enviarSenialDeApagadoDeCPU(socketNucleo);
-
 
 }
