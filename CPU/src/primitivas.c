@@ -163,8 +163,7 @@ void retornar(t_valor_variable retorno) {
 		enviarPcb(socketNucleo, pcbRecibido);
 		sigoEjecutando = 0;
 	} else {
-		enviarPedidoAlmacenarBytes(socketUMC, funcionOrigen->variable_retorno.pagina, funcionOrigen->variable_retorno.offset, TAM_VAR, &retorno);
-		if (recibirHeader(socketUMC) == pedidoMemoriaFallo) {
+		if (enviarAlmacenamientosDePosicionMemoria(socketUMC, funcionOrigen->variable_retorno, &retorno,tamanioPagina)){
 			enviarAbortarProgramaNucleo(socketNucleo);
 			sigoEjecutando = 0;
 			enviarPcb(socketNucleo, pcbRecibido);
