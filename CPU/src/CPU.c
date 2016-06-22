@@ -18,16 +18,9 @@ AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable, .AnS
 
 };
 
-AnSISOP_kernel kernel_functions = { };
+AnSISOP_kernel kernel_functions = { .AnSISOP_wait = parserWait, .AnSISOP_signal = parserSignal};
 
 int main(int argc, char *argv[]) {
-	//Recibe el archivo de config por parametro
-	/*if (argc != 2) {
-	 printf("Número incorrecto de parámetros\n");
-	 return -1;
-	 }
-
-	 t_config* config = config_create(argv[1]);*/
 
 	t_config* config;
 	if (argc != 2) {
@@ -97,12 +90,13 @@ int main(int argc, char *argv[]) {
 		case quantumSleep:
 
 			quantumRetardo = recibirCantidadQuantum(socketNucleo);
+			/* loggear cuanto es el quantumSleep*/
 
 			break;
 
 		case quantumUnidades:
 			quantumTotal = recibirCantidadQuantum(socketNucleo);
-
+			/* loggear cuanto es el quantumSleep*/
 			break;
 
 		case headerPcb:
@@ -127,24 +121,24 @@ int main(int argc, char *argv[]) {
 					enviarPcb(socketNucleo,pcbRecibido);
 				} else {
 					lineaAnsisop[instruccion.offset] = '\0';
-
+					log_info(logger, "Ejecuto la siguiente linea Ansisop %s", lineaAnsisop);
 					analizadorLinea(strdup(lineaAnsisop), &functions, &kernel_functions);
 					usleep(quantumRetardo * 1000);
 					unidadQuantum++;
+					log_info(logger, "Se ejecuto quantum %d", unidadQuantum);
 
 					if (!huboSaltoLinea) {
 						pcbRecibido.pc++;
 					} else {
 						huboSaltoLinea = 0;
 					}
-					log_info(logger, "ejecuto linea", texto);
-
 				}
 
 			}
 			if (unidadQuantum == quantumTotal && sigoEjecutando) {
 				int finQuantum = finDeQuantum;
 				send(socketNucleo,&finQuantum,sizeof(int),0);
+				log_info(logger, "Fin de quantum");
 				enviarPcb(socketNucleo, pcbRecibido);
 			}
 			break;
@@ -164,6 +158,3 @@ int main(int argc, char *argv[]) {
 	return 0;
 
 }
-//primitivas
-//puedo pasar esto a otro archivo
-
