@@ -184,21 +184,22 @@ int main(int argc, char **argv) {
 							if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
 
 								printf("No se pudo reservar espacio para el programa\n");
-								free(nuevoPcb.indice_etiquetas.etiquetas);
-								free(nuevoPcb.indice_codigo.instrucciones);
-								list_destroy(nuevoPcb.indice_stack);
+								destruirPcb(nuevoPcb);
 								enviarFinalizacionProgramaConsola(i);
 								FD_CLR(i, &bolsaDeSockets);
 								log_error(logger, "Espacio en memoria insuficiente", texto);
 
 							} else {
-								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));
-								pcbListo->pcb = nuevoPcb;
-								pcbListo->socketConsola = i;
-								AgregarAProcesoColaListos(*pcbListo);
+								t_pidConConsola *pidConConsola = malloc(sizeof(t_pidConConsola));
+								pidConConsola->pid = nuevoPcb.pid;
+								pidConConsola->socketConsola = i;
+								t_pcbConConsola pcbListo;
+								pcbListo.pcb = nuevoPcb;
+								pcbListo.socketConsola = i;
+								AgregarAProcesoColaListos(pcbListo);
 
 								pthread_mutex_lock(&mutexListaConsolas);
-								list_add(listaConsolas, (void *) pcbListo);
+								list_add(listaConsolas, (void *) pidConConsola);
 								pthread_mutex_unlock(&mutexListaConsolas);
 
 								free(programa);
@@ -222,7 +223,7 @@ int main(int argc, char **argv) {
 							if (elementoAux->socketConsola == i) {
 								finalizarProceso(*elementoAux);
 								encontrado = 1;
-								//Liberar elementoAux
+								free(elementoAux);
 							} else {
 								queue_push(cola_PCBListos, (void *) elementoAux);
 							}
@@ -245,6 +246,7 @@ int main(int argc, char **argv) {
 								if (elementoAux->pcb.socketConsola == i) {
 									finalizarProceso(elementoAux->pcb);
 									encontrado = 1;
+									free(elementoAux);
 								} else {
 									queue_push(cola_PCBListos, (void *) elementoAux);
 								}
