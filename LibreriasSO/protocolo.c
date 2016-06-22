@@ -528,7 +528,7 @@ void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemafo
 	offset += str_size;
 
 	str_size = strlen(nombreSemaforo) + 1;
-	memcpy(data + offset, &nombreSemaforo, str_size);
+	memcpy(data + offset, nombreSemaforo, str_size);
 	offset += str_size;
 
 	send(socketNucleo, data, offset, 0);
@@ -540,7 +540,8 @@ void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemafo
 void recibirWait(int socketOrigen, uint32_t *id_proceso, int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoNombreSemaforo, sizeof(int));
-	recibirTodo(socketOrigen, nombreSemaforo, *largoNombreSemaforo);
+	*nombreSemaforo = malloc(*largoNombreSemaforo);
+	recibirTodo(socketOrigen, *nombreSemaforo, *largoNombreSemaforo);
 }
 
 void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo) {
@@ -562,7 +563,7 @@ void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSema
 	offset += str_size;
 
 	str_size = strlen(nombreSemaforo) + 1;
-	memcpy(data + offset, &nombreSemaforo, str_size);
+	memcpy(data + offset, nombreSemaforo, str_size);
 	offset += str_size;
 
 	send(socketNucleo, data, offset, 0);
@@ -574,7 +575,8 @@ void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSema
 void recibirSignal(int socketOrigen, uint32_t *id_proceso, int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo) {
 	recibirTodo(socketOrigen, id_proceso, sizeof(uint32_t));
 	recibirTodo(socketOrigen, largoNombreSemaforo, sizeof(int));
-	recibirTodo(socketOrigen, nombreSemaforo, *largoNombreSemaforo);
+	*nombreSemaforo = malloc(*largoNombreSemaforo);
+	recibirTodo(socketOrigen, *nombreSemaforo, *largoNombreSemaforo);
 }
 
 int recibirCantidadQuantum(int socketOrigen) {
@@ -664,4 +666,8 @@ void enviarSenialDeApagadoDeCPU(int socketNucleo){
 	int header = finalizacionCPU;
 	send(socketNucleo, &header, sizeof(int),0);
 
+}
+
+void enviarRespuestaSemaforo(int socketCpu, int respuesta){
+	send(socketCpu,&respuesta, sizeof(int),0);
 }

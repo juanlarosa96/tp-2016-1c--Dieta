@@ -45,7 +45,9 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	quantumUnidades = 26,
 	pedidoVariableCompartida = 27,
 	asignacionVariableCompartida = 28,
-	finalizacionCPU = 29
+	finalizacionCPU = 29,
+	headerBloquear = 30,
+	headerSeguir = 31
 };
 int recibirHeader(int socketOrigen);
 void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo);
@@ -110,5 +112,7 @@ void enviarPedidoMemoriaOK(int socketCPU);
 
 //header: 29
 void enviarSenialDeApagadoDeCPU(int socketNucleo);
+
+void enviarRespuestaSemaforo(int socketCpu, int respuesta);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
