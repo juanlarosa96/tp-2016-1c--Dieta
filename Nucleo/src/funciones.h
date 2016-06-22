@@ -78,6 +78,13 @@ char ** vectorRetardoDispositivos;
 pthread_mutex_t ** vectorMutexDispositivosIO;
 sem_t * vectorSemaforosDispositivosIO;
 t_queue ** vectorColasBloqueados;
+pthread_mutex_t ** vectorMutexVariablesCompartidas;
+char ** vectorVariablesCompartidas;
+uint32_t * vectorValoresVariablesCompartidas;
+pthread_mutex_t ** vectorMutexSemaforosAnsisop;
+t_queue ** vectorColasSemaforosAnsisop;
+char ** vectorSemaforosAnsisop;
+uint32_t * vectorValoresSemaforosAnsisop;
 int cantidadQuantum;
 int retardoQuantum;
 

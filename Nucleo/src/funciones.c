@@ -155,6 +155,63 @@ void manejarCPU(void * socket) {
 					cambioProceso = 1;
 					log_info(logger, "CPU socket %d apagado", socketCpu);
 
+					break;
+
+				case headerSignal:
+					;
+					int largoNombre, contador = 0;
+					uint32_t id;
+					char * nombre;
+					recibirSignal(socketCpu, &id, &largoNombre, &nombre);
+
+					while (vectorSemaforosAnsisop[contador] != NULL) {
+
+						if (!strcmp(vectorSemaforosAnsisop[contador], nombre)) {
+							pthread_mutex_lock(vectorMutexSemaforosAnsisop[contador]);
+							vectorValoresSemaforosAnsisop[contador]++;
+
+							if (queue_size(vectorColasSemaforosAnsisop[contador])) {
+								t_pcbConConsola *pcbPop = (t_pcbConConsola *) queue_pop(vectorColasSemaforosAnsisop[contador]);
+								AgregarAProcesoColaListos(*pcbPop);
+								free(pcbPop);
+							}
+							pthread_mutex_unlock(vectorMutexSemaforosAnsisop[contador]);
+						}
+					}
+					break;
+
+				case headerWait:
+					;
+					int largoNombreWait, contadorWait = 0;
+					uint32_t idProceso;
+					char * nombreWait;
+					int bloqueado = 0;
+					recibirWait(socketCpu, &idProceso, &largoNombreWait, &nombreWait);
+
+					while (vectorSemaforosAnsisop[contador] != NULL) {
+						if (!strcmp(vectorSemaforosAnsisop[contador], nombre)) {
+							pthread_mutex_lock(vectorMutexSemaforosAnsisop[contador]);
+							vectorValoresSemaforosAnsisop[contador]--;
+
+							if (vectorValoresSemaforosAnsisop[contador] < 0) {
+								enviarRespuestaSemaforo(socketCpu, headerBloquear);
+								t_pcbConConsola * pcbABloquear = malloc(sizeof(t_pcbConConsola));
+								pcbABloquear->pcb = recibirPcb(socketCpu);
+								pcbABloquear->socketConsola = siguientePcb.socketConsola;
+								queue_push(vectorColasSemaforosAnsisop[contador], pcbABloquear);
+								bloqueado = 1;
+							}
+							pthread_mutex_unlock(vectorMutexSemaforosAnsisop[contador]);
+						}
+					}
+					if (!bloqueado) {
+						enviarRespuestaSemaforo(socketCpu, headerSeguir);
+					}
+					break;
+
+				case pedidoVariableCompartida:
+					//Falta funcion para recibir, y el enviar envia char en vez de string, hay que correjirlo
+					break;
 				}
 			}
 		}
@@ -299,7 +356,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 	log_info(logger, "Se finalizó programa pid %d", siguientePcb.pcb.pid);
 
 	pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-	int cantElementos = list_size(listaFinalizacionesPendientes), i;
+	int cantElementos = list_size(listaFinalizacionesPendientes);
 	int * socketBusqueda;
 	for (i = 0; i < cantElementos; i++) {
 
@@ -334,19 +391,19 @@ void abortarProceso(t_pcbConConsola siguientePcb) {
 	log_info(logger, "Se abortó programa pid %d", siguientePcb.pcb.pid);
 
 	pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-		int cantElementos = list_size(listaFinalizacionesPendientes), i;
-		int * socketBusqueda;
-		for (i = 0; i < cantElementos; i++) {
+	int cantElementos = list_size(listaFinalizacionesPendientes);
+	int * socketBusqueda;
+	for (i = 0; i < cantElementos; i++) {
 
-			socketBusqueda = (int *) list_get(listaFinalizacionesPendientes, i);
+		socketBusqueda = (int *) list_get(listaFinalizacionesPendientes, i);
 
-			if (*socketBusqueda == siguientePcb.socketConsola) {
+		if (*socketBusqueda == siguientePcb.socketConsola) {
 
-				free(list_remove(listaFinalizacionesPendientes, i));
-			}
-
+			free(list_remove(listaFinalizacionesPendientes, i));
 		}
-		pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+
+	}
+	pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 
 	destruirPcb(siguientePcb.pcb);
 }
