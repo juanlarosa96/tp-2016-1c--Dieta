@@ -8,7 +8,6 @@
 #include "primitivas.h"
 
 t_puntero definirVariable(t_nombre_variable variable) {
-
 	t_posicion_memoria * posicionVariable = malloc(sizeof(t_posicion_memoria));
 	t_registro_pila *regPila = popPila(pcbRecibido.indice_stack);
 	posicionVariable->pagina = regPila->posicionUltimaVariable / tamanioPagina;
@@ -28,6 +27,7 @@ t_puntero definirVariable(t_nombre_variable variable) {
 	}
 
 	pushPila(pcbRecibido.indice_stack, regPila);
+	log_info(logger, "Se definio la variable %c", variable);
 	return regPila->posicionUltimaVariable - TAM_VAR;
 
 }
