@@ -92,6 +92,11 @@ int main(int argc, char **argv) {
 			log_info(logger, "Programa finalizado", texto);
 			return EXIT_SUCCESS;
 
+			if(header <= 0){
+				log_error(logger, "Se desconecto el Nucleo");
+				return EXIT_SUCCESS;
+			}
+
 		}
 
 	}
