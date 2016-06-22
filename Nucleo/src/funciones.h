@@ -38,6 +38,11 @@ sem_t semaforoColaListos;
 
 
 typedef struct {
+	int pid;
+	int socketConsola;
+}t_pidConConsola;
+
+typedef struct {
 	t_pcb pcb;
 	int socketConsola;
 }t_pcbConConsola;
@@ -104,4 +109,6 @@ void AgregarAProcesoColaFinalizados(t_pcbConConsola elemento);
 void crearHilosEntradaSalida();
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo);
 void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo);
+void destruirPcb(t_pcb pcb);
+void destruirRegistroStack(t_registro_pila * registro);
 #endif /* FUNCIONES_H_ */

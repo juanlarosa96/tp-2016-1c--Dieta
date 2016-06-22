@@ -54,6 +54,7 @@ void manejarCPU(void * socket) {
 
 				case finalizacionPrograma: //Fin programa
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 						finalizarProceso(siguientePcb);
 						cambioProceso = 1;
@@ -66,6 +67,7 @@ void manejarCPU(void * socket) {
 				case abortarPrograma:
 					//Fin programa por abortado
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 						abortarProceso(siguientePcb);
 						cambioProceso = 1;
@@ -80,6 +82,7 @@ void manejarCPU(void * socket) {
 					//Fin quantum
 
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 
 						int j, sizeLista = list_size(
@@ -126,14 +129,14 @@ void manejarCPU(void * socket) {
 
 					pthread_mutex_lock(&mutexListaConsolas);
 					for (i = 0; i < listSize; i++) {
-						t_pcbConConsola * elemento =
-								(t_pcbConConsola *) list_get(listaConsolas, i);
-						if (elemento->pcb.pid == pid) {
+						t_pidConConsola * elemento =
+								(t_pidConConsola *) list_get(listaConsolas, i);
+						if (elemento->pid == pid) {
 							enviarResultadoDeEjecucionAnsisop(
 									elemento->socketConsola, texto, largoTexto);
 							log_info(logger,
 									"Se envió texto a imprimir, del proceso PID: %d a Consola (socket nro %d)",
-									elemento->pcb.pid, elemento->socketConsola);
+									elemento->pid, elemento->socketConsola);
 							break;
 						}
 					}
@@ -143,6 +146,7 @@ void manejarCPU(void * socket) {
 
 				case headerEntradaSalida:
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 
 						int largo, tiempo;
@@ -298,18 +302,18 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 	pthread_mutex_lock(&mutexListaConsolas);
 	int largoLista = list_size(listaConsolas), i;
 	for (i = 0; i < largoLista; i++) {
-		t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(
+		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(
 				listaConsolas, i);
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-			t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(
+			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(
 					listaConsolas, i);
-			AgregarAProcesoColaFinalizados(*pcbFinalizado);
 			free(pcbFinalizado); //Liberar Pcb
 			break;
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
 	log_info(logger, "Se finalizó programa pid %d", siguientePcb.pcb.pid);
+	destruirPcb(siguientePcb.pcb);
 
 }
 
@@ -320,18 +324,17 @@ void abortarProceso(t_pcbConConsola siguientePcb) {
 	pthread_mutex_lock(&mutexListaConsolas);
 	int largoLista = list_size(listaConsolas), i;
 	for (i = 0; i < largoLista; i++) {
-		t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(
+		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(
 				listaConsolas, i);
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-			t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(
+			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(
 					listaConsolas, i);
-			AgregarAProcesoColaFinalizados(*pcbFinalizado);
 			free(pcbFinalizado);
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
 	log_info(logger, "Se abortó programa pid %d", siguientePcb.pcb.pid);
-
+	destruirPcb(siguientePcb.pcb);
 }
 
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
@@ -455,4 +458,15 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre,
 
 	}
 
+}
+
+void destruirPcb(t_pcb pcb){
+	free(pcb.indice_codigo.instrucciones);
+	free(pcb.indice_etiquetas.etiquetas);
+	list_destroy_and_destroy_elements(pcb.indice_stack, (void *)destruirRegistroStack);
+}
+
+void destruirRegistroStack(t_registro_pila * registro){
+	list_destroy_and_destroy_elements(registro->lista_argumentos,free);
+	list_destroy_and_destroy_elements(registro->lista_variables,free);
 }
