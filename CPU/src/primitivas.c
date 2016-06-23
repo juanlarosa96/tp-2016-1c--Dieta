@@ -95,6 +95,8 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 		sigoEjecutando = 0;
 		log_error(logger, "Stackoverflow en %d", puntero);
 		enviarPcb(socketNucleo, pcbRecibido);
+	} else {
+		log_info(logger, "Asigno variable %c en la posicion %d", variable, puntero);
 	}
 }
 int imprimir(t_valor_variable valor) {
@@ -104,6 +106,7 @@ int imprimir(t_valor_variable valor) {
 	//falta definir logger
 	char* texto = string_itoa(valor);
 	int largoTexto = strlen(texto);
+	log_info(logger, "Envio a imprimir %d", valor);
 	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
 	free(texto);
 	return largoTexto;
@@ -113,6 +116,7 @@ int imprimirTexto(char* texto) {
 	 * mismo que imprimir
 	 */
 	//falta definir logger
+	log_info(logger, "Envio a imprimir %s", texto);
 	enviarValorAImprimir(socketNucleo, pcbRecibido.pid, texto);
 	int largoTexto = strlen(texto);
 	return largoTexto;
@@ -155,6 +159,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta) {
 	 */
 	pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta, pcbRecibido.indice_etiquetas.etiquetas, pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 	huboSaltoLinea = 1;
+	log_info(logger, "Hubo salto de linea a la etiqueta %s", etiqueta);
 }
 
 void retornar(t_valor_variable retorno) {
