@@ -30,17 +30,30 @@ int main(int argc, char **argv) {
 	int a = 0;
 
 	while (vectorSemaforosAnsisop[a] != NULL) {
+		a++;
+	}
+	vectorValoresSemaforosAnsisop = malloc(sizeof(uint32_t) * a);
+	vectorMutexSemaforosAnsisop = malloc(sizeof(pthread_mutex_t *) * a);
+	vectorColasSemaforosAnsisop = malloc(sizeof(t_queue*) * a);
+
+	a = 0;
+	while (vectorSemaforosAnsisop[a] != NULL) {
 		vectorValoresSemaforosAnsisop[a] = atoi(valoresIniciales[a]);
 		vectorMutexSemaforosAnsisop[a] = malloc(sizeof(pthread_mutex_t));
 		pthread_mutex_init(vectorMutexSemaforosAnsisop[a], NULL);
 		vectorColasSemaforosAnsisop[a] = queue_create();
+
+		a++;
+	}
+	vectorVariablesCompartidas = config_get_array_value(config, "SHARED_VARS");
+	a = 0;
+	while (vectorVariablesCompartidas[a] != NULL) {
 		a++;
 	}
 
-	vectorVariablesCompartidas = config_get_array_value(config, "SHARED_VARS");
-
+	vectorValoresVariablesCompartidas = malloc(sizeof(uint32_t)*a);
+	vectorMutexVariablesCompartidas = malloc(sizeof(pthread_mutex_t*)*a);
 	a = 0;
-
 	while (vectorVariablesCompartidas[a] != NULL) {
 		vectorValoresVariablesCompartidas[a] = 0;
 		vectorMutexVariablesCompartidas[a] = malloc(sizeof(pthread_mutex_t));

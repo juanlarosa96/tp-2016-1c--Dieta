@@ -188,12 +188,12 @@ void manejarCPU(void * socket) {
 					int bloqueado = 0;
 					recibirWait(socketCpu, &idProceso, &largoNombreWait, &nombreWait);
 
-					while (vectorSemaforosAnsisop[contador] != NULL) {
+					while (vectorSemaforosAnsisop[contadorWait] != NULL) {
 						if (!strcmp(vectorSemaforosAnsisop[contador], nombre)) {
-							pthread_mutex_lock(vectorMutexSemaforosAnsisop[contador]);
-							vectorValoresSemaforosAnsisop[contador]--;
+							pthread_mutex_lock(vectorMutexSemaforosAnsisop[contadorWait]);
+							vectorValoresSemaforosAnsisop[contadorWait]--;
 
-							if (vectorValoresSemaforosAnsisop[contador] < 0) {
+							if (vectorValoresSemaforosAnsisop[contadorWait] < 0) {
 								enviarRespuestaSemaforo(socketCpu, headerBloquear);
 								t_pcbConConsola * pcbABloquear = malloc(sizeof(t_pcbConConsola));
 								pcbABloquear->pcb = recibirPcb(socketCpu);
@@ -201,7 +201,7 @@ void manejarCPU(void * socket) {
 								queue_push(vectorColasSemaforosAnsisop[contador], pcbABloquear);
 								bloqueado = 1;
 							}
-							pthread_mutex_unlock(vectorMutexSemaforosAnsisop[contador]);
+							pthread_mutex_unlock(vectorMutexSemaforosAnsisop[contadorWait]);
 						}
 					}
 					if (!bloqueado) {
