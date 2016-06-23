@@ -134,6 +134,14 @@ void parserWait(t_nombre_semaforo identificador_semaforo) {
 	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
 	 */
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
+	if(recibirHeader(socketNucleo)){
+		sigoEjecutando = 0;
+		enviarPcb(socketNucleo, pcb);
+	}
+	/*
+		 * recibirHeader para ver si sigo ejecutando o no
+		 * si no sigo ejecutando mando el pcb a nucleo
+		 */
 }
 
 void parserSignal(t_nombre_semaforo identificador_semaforo) {
