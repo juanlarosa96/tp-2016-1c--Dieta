@@ -29,7 +29,6 @@ t_puntero definirVariable(t_nombre_variable variable) {
 	pushPila(pcbRecibido.indice_stack, regPila);
 	log_info(logger, "Se definio la variable %c", variable);
 	return regPila->posicionUltimaVariable - TAM_VAR;
-
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
@@ -52,11 +51,10 @@ t_puntero obtenerPosicionVariable(t_nombre_variable variable) {
 			if (elementoLista->identificador == variable) {
 				posicion = elementoLista->posicionDeVariable.pagina * tamanioPagina + elementoLista->posicionDeVariable.offset;
 			}
-
 		}
 	}
-	printf("Obtengo posición variable\n");
 	pushPila(pcbRecibido.indice_stack, regPila);
+	log_info(logger, "La posicion de la variable %c es %d", variable, posicion);
 	return posicion;
 }
 t_valor_variable dereferenciar(t_puntero puntero) {
@@ -74,7 +72,10 @@ t_valor_variable dereferenciar(t_puntero puntero) {
 	if (enviarPedidosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &valorVariable, tamanioPagina)) {
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
+		log_error(logger, "Direccion de memoria invalida");
 		enviarPcb(socketNucleo, pcbRecibido);
+	} else {
+		log_info(logger, "Se derreferencio la dir %d y vale %d", puntero, valorVariable);
 	}
 	return valorVariable;
 }
@@ -92,6 +93,7 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 	if (enviarAlmacenamientosDePosicionMemoria(socketUMC, posicionMemoria, (void *) &variable, tamanioPagina)) {
 		enviarAbortarProgramaNucleo(socketNucleo);
 		sigoEjecutando = 0;
+		log_error(logger, "Stackoverflow en %d", puntero);
 		enviarPcb(socketNucleo, pcbRecibido);
 	}
 }
