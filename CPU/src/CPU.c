@@ -90,13 +90,12 @@ int main(int argc, char *argv[]) {
 		case quantumSleep:
 
 			quantumRetardo = recibirCantidadQuantum(socketNucleo);
-			/* loggear cuanto es el quantumSleep*/
-
+			log_info(logger, "El quantum sleep es de %d", quantumRetardo);
 			break;
 
 		case quantumUnidades:
 			quantumTotal = recibirCantidadQuantum(socketNucleo);
-			/* loggear cuanto es el quantumSleep*/
+			log_info(logger, "El quantum es %d", quantumTotal);
 			break;
 
 		case headerPcb:
