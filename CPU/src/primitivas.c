@@ -125,23 +125,21 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 	 */
 	huboEntradaSalida = 1;
 	sigoEjecutando = 0;
+	log_info(logger, "Envio io al dispositivo %s por %d unidades de tiempo", dispositivo, tiempo);
 	enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
-
 }
 
 void parserWait(t_nombre_semaforo identificador_semaforo) {
 	/*
 	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
 	 */
+	log_info(logger, "Envio wait semaforo %c", identificador_semaforo);
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 	if(recibirHeader(socketNucleo)){
 		sigoEjecutando = 0;
-		enviarPcb(socketNucleo, pcb);
+		log_error(logger, "Bloqueado por wait");
+		enviarPcb(socketNucleo, pcbRecibido);
 	}
-	/*
-		 * recibirHeader para ver si sigo ejecutando o no
-		 * si no sigo ejecutando mando el pcb a nucleo
-		 */
 }
 
 void parserSignal(t_nombre_semaforo identificador_semaforo) {
