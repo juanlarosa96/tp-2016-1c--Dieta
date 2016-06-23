@@ -45,8 +45,7 @@ void manejarCPU(void * socket) {
 					//Se desconecto el CPU
 					finalizarProceso(siguientePcb);
 					desconectado = 1;
-					log_info(logger, "Se desconectó el CPU socket %d",
-							socketCpu);
+					log_info(logger, "Se desconectó el CPU socket %d", socketCpu);
 					pthread_exit(NULL);
 				}
 
@@ -54,6 +53,7 @@ void manejarCPU(void * socket) {
 
 				case finalizacionPrograma: //Fin programa
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 						finalizarProceso(siguientePcb);
 						cambioProceso = 1;
@@ -66,6 +66,7 @@ void manejarCPU(void * socket) {
 				case abortarPrograma:
 					//Fin programa por abortado
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 						abortarProceso(siguientePcb);
 						cambioProceso = 1;
@@ -80,17 +81,16 @@ void manejarCPU(void * socket) {
 					//Fin quantum
 
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 
-						int j, sizeLista = list_size(
-								listaFinalizacionesPendientes);
+						int j, sizeLista = list_size(listaFinalizacionesPendientes);
 						int * socketEnLista;
 
 						pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
 
 						for (j = 0; j < sizeLista; j++) {
-							socketEnLista = (int *) list_get(
-									listaFinalizacionesPendientes, j);
+							socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
 							if (siguientePcb.socketConsola == *socketEnLista) {
 								finalizarProceso(siguientePcb);
 								list_remove(listaFinalizacionesPendientes, j);
@@ -100,8 +100,7 @@ void manejarCPU(void * socket) {
 								free(socketEnLista);
 							}
 						}
-						pthread_mutex_unlock(
-								&mutexListaFinalizacionesPendientes);
+						pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 
 						if (!cambioProceso) {
 							AgregarAProcesoColaListos(siguientePcb);
@@ -112,8 +111,7 @@ void manejarCPU(void * socket) {
 						finalizarProceso(siguientePcb);
 						pthread_exit(NULL);
 					}
-					log_info(logger, "Quantum de CPU socket %d terminado",
-							socketCpu);
+					log_info(logger, "Quantum de CPU socket %d terminado", socketCpu);
 					break;
 
 				case primitivaImprimir:
@@ -126,14 +124,11 @@ void manejarCPU(void * socket) {
 
 					pthread_mutex_lock(&mutexListaConsolas);
 					for (i = 0; i < listSize; i++) {
-						t_pcbConConsola * elemento =
-								(t_pcbConConsola *) list_get(listaConsolas, i);
-						if (elemento->pcb.pid == pid) {
-							enviarResultadoDeEjecucionAnsisop(
-									elemento->socketConsola, texto, largoTexto);
-							log_info(logger,
-									"Se envió texto a imprimir, del proceso PID: %d a Consola (socket nro %d)",
-									elemento->pcb.pid, elemento->socketConsola);
+						t_pidConConsola * elemento = (t_pidConConsola *) list_get(listaConsolas, i);
+						if (elemento->pid == pid) {
+							enviarResultadoDeEjecucionAnsisop(elemento->socketConsola, texto, largoTexto);
+							log_info(logger, "Se envió texto a imprimir, del proceso PID: %d a Consola (socket nro %d)", elemento->pid,
+									elemento->socketConsola);
 							break;
 						}
 					}
@@ -143,14 +138,13 @@ void manejarCPU(void * socket) {
 
 				case headerEntradaSalida:
 					if (recibirHeader(socketCpu) == headerPcb) {
+						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
 
 						int largo, tiempo;
 						char * nombre;
-						recibirEntradaSalida(socketCpu, &largo, &nombre,
-								&tiempo);
-						ponerEnColaBloqueados(siguientePcb, nombre, largo,
-								tiempo);
+						recibirEntradaSalida(socketCpu, &largo, &nombre, &tiempo);
+						ponerEnColaBloqueados(siguientePcb, nombre, largo, tiempo);
 						cambioProceso = 1;
 					}
 
@@ -161,6 +155,63 @@ void manejarCPU(void * socket) {
 					cambioProceso = 1;
 					log_info(logger, "CPU socket %d apagado", socketCpu);
 
+					break;
+
+				case headerSignal:
+					;
+					int largoNombre, contador = 0;
+					uint32_t id;
+					char * nombre;
+					recibirSignal(socketCpu, &id, &largoNombre, &nombre);
+
+					while (vectorSemaforosAnsisop[contador] != NULL) {
+
+						if (!strcmp(vectorSemaforosAnsisop[contador], nombre)) {
+							pthread_mutex_lock(vectorMutexSemaforosAnsisop[contador]);
+							vectorValoresSemaforosAnsisop[contador]++;
+
+							if (queue_size(vectorColasSemaforosAnsisop[contador])) {
+								t_pcbConConsola *pcbPop = (t_pcbConConsola *) queue_pop(vectorColasSemaforosAnsisop[contador]);
+								AgregarAProcesoColaListos(*pcbPop);
+								free(pcbPop);
+							}
+							pthread_mutex_unlock(vectorMutexSemaforosAnsisop[contador]);
+						}
+					}
+					break;
+
+				case headerWait:
+					;
+					int largoNombreWait, contadorWait = 0;
+					uint32_t idProceso;
+					char * nombreWait;
+					int bloqueado = 0;
+					recibirWait(socketCpu, &idProceso, &largoNombreWait, &nombreWait);
+
+					while (vectorSemaforosAnsisop[contadorWait] != NULL) {
+						if (!strcmp(vectorSemaforosAnsisop[contador], nombre)) {
+							pthread_mutex_lock(vectorMutexSemaforosAnsisop[contadorWait]);
+							vectorValoresSemaforosAnsisop[contadorWait]--;
+
+							if (vectorValoresSemaforosAnsisop[contadorWait] < 0) {
+								enviarRespuestaSemaforo(socketCpu, headerBloquear);
+								t_pcbConConsola * pcbABloquear = malloc(sizeof(t_pcbConConsola));
+								pcbABloquear->pcb = recibirPcb(socketCpu);
+								pcbABloquear->socketConsola = siguientePcb.socketConsola;
+								queue_push(vectorColasSemaforosAnsisop[contador], pcbABloquear);
+								bloqueado = 1;
+							}
+							pthread_mutex_unlock(vectorMutexSemaforosAnsisop[contadorWait]);
+						}
+					}
+					if (!bloqueado) {
+						enviarRespuestaSemaforo(socketCpu, headerSeguir);
+					}
+					break;
+
+				case pedidoVariableCompartida:
+					//Falta funcion para recibir, y el enviar envia char en vez de string, hay que correjirlo
+					break;
 				}
 			}
 		}
@@ -250,8 +301,7 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 
 	nuevoPcb.indice_codigo.instrucciones = metadata->instrucciones_serializado;
 	nuevoPcb.indice_codigo.cantidadInstrucciones = metadata->instrucciones_size;
-	nuevoPcb.indice_codigo.numeroInstruccionInicio =
-			metadata->instruccion_inicio;
+	nuevoPcb.indice_codigo.numeroInstruccionInicio = metadata->instruccion_inicio;
 
 	nuevoPcb.paginas_codigo = calcularPaginasCodigo(largoPrograma);
 
@@ -261,8 +311,7 @@ t_pcb crearPcb(char * programa, int largoPrograma) {
 	t_registro_pila * registroPila = malloc(sizeof(t_registro_pila));
 	registroPila->lista_argumentos = list_create();
 	registroPila->lista_variables = list_create();
-	registroPila->posicionUltimaVariable = nuevoPcb.paginas_codigo
-			* tamanioPagina;
+	registroPila->posicionUltimaVariable = nuevoPcb.paginas_codigo * tamanioPagina;
 
 	list_add(pilaInicial, (void *) registroPila);
 
@@ -283,10 +332,8 @@ int calcularPaginasCodigo(int largoPrograma) {
 
 }
 
-int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma,
-		char * programa, uint32_t paginasStack) {
-	enviarInicializacionPrograma(clienteUMC, nuevoPcb.pid, largoPrograma,
-			programa, nuevoPcb.paginas_codigo + paginasStack);
+int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * programa, uint32_t paginasStack) {
+	enviarInicializacionPrograma(clienteUMC, nuevoPcb.pid, largoPrograma, programa, nuevoPcb.paginas_codigo + paginasStack);
 	return recibirRespuestaInicializacion(clienteUMC);
 
 }
@@ -298,18 +345,32 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 	pthread_mutex_lock(&mutexListaConsolas);
 	int largoLista = list_size(listaConsolas), i;
 	for (i = 0; i < largoLista; i++) {
-		t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(
-				listaConsolas, i);
+		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(listaConsolas, i);
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-			t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(
-					listaConsolas, i);
-			AgregarAProcesoColaFinalizados(*pcbFinalizado);
+			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
 			free(pcbFinalizado); //Liberar Pcb
 			break;
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
 	log_info(logger, "Se finalizó programa pid %d", siguientePcb.pcb.pid);
+
+	pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+	int cantElementos = list_size(listaFinalizacionesPendientes);
+	int * socketBusqueda;
+	for (i = 0; i < cantElementos; i++) {
+
+		socketBusqueda = (int *) list_get(listaFinalizacionesPendientes, i);
+
+		if (*socketBusqueda == siguientePcb.socketConsola) {
+
+			free(list_remove(listaFinalizacionesPendientes, i));
+		}
+
+	}
+	pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+
+	destruirPcb(siguientePcb.pcb);
 
 }
 
@@ -320,18 +381,31 @@ void abortarProceso(t_pcbConConsola siguientePcb) {
 	pthread_mutex_lock(&mutexListaConsolas);
 	int largoLista = list_size(listaConsolas), i;
 	for (i = 0; i < largoLista; i++) {
-		t_pcbConConsola * pcbBusqueda = (t_pcbConConsola *) list_get(
-				listaConsolas, i);
+		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(listaConsolas, i);
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-			t_pcbConConsola * pcbFinalizado = (t_pcbConConsola *) list_remove(
-					listaConsolas, i);
-			AgregarAProcesoColaFinalizados(*pcbFinalizado);
+			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
 			free(pcbFinalizado);
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
 	log_info(logger, "Se abortó programa pid %d", siguientePcb.pcb.pid);
 
+	pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+	int cantElementos = list_size(listaFinalizacionesPendientes);
+	int * socketBusqueda;
+	for (i = 0; i < cantElementos; i++) {
+
+		socketBusqueda = (int *) list_get(listaFinalizacionesPendientes, i);
+
+		if (*socketBusqueda == siguientePcb.socketConsola) {
+
+			free(list_remove(listaFinalizacionesPendientes, i));
+		}
+
+	}
+	pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+
+	destruirPcb(siguientePcb.pcb);
 }
 
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
@@ -344,13 +418,10 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		pedidoDeIO = sacarPrimeroColaBloqueados(datosHilo->colaBloqueados);
 		pthread_mutex_unlock(datosHilo->mutex);
 
-		usleep(
-				pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo
-						* 1000);
+		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
 		log_info(logger, "Programa pid %d termino IO", pedidoDeIO.pcb.pcb.pid);
 
-		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado =
-				-1, i;
+		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
 
 		for (i = 0; i < sizeLista; i++) {
 
@@ -382,8 +453,7 @@ void crearHilosEntradaSalida() {
 	vectorSemaforosDispositivosIO = malloc(sizeof(sem_t) * contador);
 
 	for (i = 0; i < contador; i++) {
-		t_parametroThreadDispositivoIO * parametro = malloc(
-				sizeof(t_parametroThreadDispositivoIO));
+		t_parametroThreadDispositivoIO * parametro = malloc(sizeof(t_parametroThreadDispositivoIO));
 		vectorColasBloqueados[i] = (t_queue *) list_create();
 		parametro->colaBloqueados = vectorColasBloqueados[i];
 		vectorMutexDispositivosIO[i] = malloc(sizeof(pthread_mutex_t));
@@ -403,8 +473,7 @@ void crearHilosEntradaSalida() {
 	}
 }
 
-void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre,
-		int largo, int tiempo) {
+void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int largo, int tiempo) {
 
 	int j, sizeLista = list_size(listaFinalizacionesPendientes), encontrado = 0;
 	int * socketEnLista;
@@ -439,8 +508,7 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre,
 
 			if (!strcmp(vectorDispositivos[i], nombre)) {
 				pthread_mutex_lock(vectorMutexDispositivosIO[i]);
-				AgregarAProcesoColaBloqueados(vectorColasBloqueados[i],
-						pcbBloqueado);
+				AgregarAProcesoColaBloqueados(vectorColasBloqueados[i], pcbBloqueado);
 				pthread_mutex_unlock(vectorMutexDispositivosIO[i]);
 				sem_post(&(vectorSemaforosDispositivosIO[i]));
 				existeDispositivo = 1;
@@ -448,11 +516,20 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre,
 
 		}
 		if (!existeDispositivo) {
-			log_error(logger,
-					"No existe el dispositivo solicitado por el proceso pid %d",
-					pcbBloqueado.pcb.pcb.pid);
+			log_error(logger, "No existe el dispositivo solicitado por el proceso pid %d", pcbBloqueado.pcb.pcb.pid);
 		}
 
 	}
 
+}
+
+void destruirPcb(t_pcb pcb) {
+	free(pcb.indice_codigo.instrucciones);
+	free(pcb.indice_etiquetas.etiquetas);
+	list_destroy_and_destroy_elements(pcb.indice_stack, (void *) destruirRegistroStack);
+}
+
+void destruirRegistroStack(t_registro_pila * registro) {
+	list_destroy_and_destroy_elements(registro->lista_argumentos, free);
+	list_destroy_and_destroy_elements(registro->lista_variables, free);
 }

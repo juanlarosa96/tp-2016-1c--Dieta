@@ -24,8 +24,44 @@ int main(int argc, char **argv) {
 
 	crearHilosEntradaSalida();
 
-	sem_init(&semaforoColaListos,1,0);
+	vectorSemaforosAnsisop = config_get_array_value(config, "SEM_ID");
+	char ** valoresIniciales = config_get_array_value(config, "SEM_INIT");
 
+	int a = 0;
+
+	while (vectorSemaforosAnsisop[a] != NULL) {
+		a++;
+	}
+	vectorValoresSemaforosAnsisop = malloc(sizeof(uint32_t) * a);
+	vectorMutexSemaforosAnsisop = malloc(sizeof(pthread_mutex_t *) * a);
+	vectorColasSemaforosAnsisop = malloc(sizeof(t_queue*) * a);
+
+	a = 0;
+	while (vectorSemaforosAnsisop[a] != NULL) {
+		vectorValoresSemaforosAnsisop[a] = atoi(valoresIniciales[a]);
+		vectorMutexSemaforosAnsisop[a] = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_init(vectorMutexSemaforosAnsisop[a], NULL);
+		vectorColasSemaforosAnsisop[a] = queue_create();
+
+		a++;
+	}
+	vectorVariablesCompartidas = config_get_array_value(config, "SHARED_VARS");
+	a = 0;
+	while (vectorVariablesCompartidas[a] != NULL) {
+		a++;
+	}
+
+	vectorValoresVariablesCompartidas = malloc(sizeof(uint32_t)*a);
+	vectorMutexVariablesCompartidas = malloc(sizeof(pthread_mutex_t*)*a);
+	a = 0;
+	while (vectorVariablesCompartidas[a] != NULL) {
+		vectorValoresVariablesCompartidas[a] = 0;
+		vectorMutexVariablesCompartidas[a] = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_init(vectorMutexVariablesCompartidas[a], NULL);
+		a++;
+	}
+
+	sem_init(&semaforoColaListos, 1, 0);
 
 	//Creo log para el Núcleo
 
@@ -177,35 +213,36 @@ int main(int argc, char **argv) {
 						;
 						int largoPrograma = recibirLargoProgramaAnsisop(i);
 						char *programa = malloc(largoPrograma);
-							recibirProgramaAnsisop(i, programa, largoPrograma);
+						recibirProgramaAnsisop(i, programa, largoPrograma);
 
-							t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
+						t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-							if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
+						if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
 
-								printf("No se pudo reservar espacio para el programa\n");
-								free(nuevoPcb.indice_etiquetas.etiquetas);
-								free(nuevoPcb.indice_codigo.instrucciones);
-								list_destroy(nuevoPcb.indice_stack);
-								enviarFinalizacionProgramaConsola(i);
-								FD_CLR(i, &bolsaDeSockets);
-								log_error(logger, "Espacio en memoria insuficiente", texto);
+							printf("No se pudo reservar espacio para el programa\n");
+							destruirPcb(nuevoPcb);
+							enviarFinalizacionProgramaConsola(i);
+							FD_CLR(i, &bolsaDeSockets);
+							log_error(logger, "Espacio en memoria insuficiente", texto);
 
-							} else {
-								t_pcbConConsola *pcbListo = malloc(sizeof(t_pcbConConsola));
-								pcbListo->pcb = nuevoPcb;
-								pcbListo->socketConsola = i;
-								AgregarAProcesoColaListos(*pcbListo);
+						} else {
+							t_pidConConsola *pidConConsola = malloc(sizeof(t_pidConConsola));
+							pidConConsola->pid = nuevoPcb.pid;
+							pidConConsola->socketConsola = i;
+							t_pcbConConsola pcbListo;
+							pcbListo.pcb = nuevoPcb;
+							pcbListo.socketConsola = i;
+							AgregarAProcesoColaListos(pcbListo);
 
-								pthread_mutex_lock(&mutexListaConsolas);
-								list_add(listaConsolas, (void *) pcbListo);
-								pthread_mutex_unlock(&mutexListaConsolas);
+							pthread_mutex_lock(&mutexListaConsolas);
+							list_add(listaConsolas, (void *) pidConConsola);
+							pthread_mutex_unlock(&mutexListaConsolas);
 
-								free(programa);
+							free(programa);
 
-								log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
+							log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
 
-							}
+						}
 
 						break;
 
@@ -222,7 +259,7 @@ int main(int argc, char **argv) {
 							if (elementoAux->socketConsola == i) {
 								finalizarProceso(*elementoAux);
 								encontrado = 1;
-								//Liberar elementoAux
+								free(elementoAux);
 							} else {
 								queue_push(cola_PCBListos, (void *) elementoAux);
 							}
@@ -245,8 +282,9 @@ int main(int argc, char **argv) {
 								if (elementoAux->pcb.socketConsola == i) {
 									finalizarProceso(elementoAux->pcb);
 									encontrado = 1;
+									free(elementoAux);
 								} else {
-									queue_push(cola_PCBListos, (void *) elementoAux);
+									queue_push(vectorColasBloqueados[k], (void *) elementoAux);
 								}
 							}
 							pthread_mutex_unlock(vectorMutexDispositivosIO[k]);
@@ -260,7 +298,6 @@ int main(int argc, char **argv) {
 							list_add(listaFinalizacionesPendientes, socketProcesoFinalizado);
 							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
-						log_info(logger, "Programa finalizado", texto);
 						break;
 
 					default:
