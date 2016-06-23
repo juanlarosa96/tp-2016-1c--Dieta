@@ -137,7 +137,7 @@ void parserWait(t_nombre_semaforo identificador_semaforo) {
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 	if(recibirHeader(socketNucleo)){
 		sigoEjecutando = 0;
-		log_error(logger, "Bloqueado por wait");
+		log_info(logger, "Bloqueado por wait");
 		enviarPcb(socketNucleo, pcbRecibido);
 	}
 }
