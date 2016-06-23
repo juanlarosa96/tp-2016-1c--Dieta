@@ -226,6 +226,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	 */
 	t_valor_variable valorVariable;
 	pedirCompartidaNucleo(socketNucleo, variable, &valorVariable);
+	log_info(logger, "Pido valor variable compartida %c y es %d", variable, valorVariable);
 	return valorVariable;
 }
 
@@ -234,14 +235,14 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	 * le digo a nucleo que guarde el val de la var compartida
 	 */
 	asignarCompartidaNucleo(socketNucleo, variable, valor);
+	log_info(logger, "Asigno valor %d a la variable compartida %d",valor, variable);
 	return valor;
 }
 
 void finalizar() {
-
 	enviarFinalizacionProgramaNucleo(socketNucleo);
 	sigoEjecutando = 0;
+	log_info(logger, "Finalizo proceso con pid %d", pcbRecibido.pid);
 	enviarPcb(socketNucleo, pcbRecibido);
-
 }
 
