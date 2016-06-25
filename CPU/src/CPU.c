@@ -15,7 +15,7 @@
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable, .AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
 		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar, .AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
 		.AnSISOP_retornar = retornar, .AnSISOP_llamarConRetorno = llamarConRetorno, .AnSISOP_finalizar = finalizar,
-
+		.AnSISOP_entradaSalida = entradaSalida, .AnSISOP_irAlLabel = irAlLabel
 };
 
 AnSISOP_kernel kernel_functions = { .AnSISOP_wait = parserWait, .AnSISOP_signal = parserSignal};
