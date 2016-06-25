@@ -11,7 +11,8 @@ void interpreteComandos(int * socketNucleo) {
 	free(socketNucleo);
 
 	while (1) {
-		char comando[100];
+		char * comando = malloc(20);
+		printf("Ingrese comando: ");
 		scanf("%s", comando);
 		if (!strcmp(comando, "KILL")) {
 			int header = finalizacionPrograma;
