@@ -96,7 +96,7 @@ void asignar(t_puntero puntero, t_valor_variable variable) {
 		log_error(logger, "Stackoverflow en %d", puntero);
 		enviarPcb(socketNucleo, pcbRecibido);
 	} else {
-		log_info(logger, "Asigno variable %c en la posicion %d", variable, puntero);
+		log_info(logger, "Asigno valor %d en la posicion %d", variable, puntero);
 	}
 }
 int imprimir(t_valor_variable valor) {
@@ -130,6 +130,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 	huboEntradaSalida = 1;
 	sigoEjecutando = 0;
 	log_info(logger, "Envio io al dispositivo %s por %d unidades de tiempo", dispositivo, tiempo);
+	pcbRecibido.pc++;
 	enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
 }
 
