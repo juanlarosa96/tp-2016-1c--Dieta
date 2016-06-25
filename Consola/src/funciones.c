@@ -7,13 +7,16 @@
 #include "funciones.h"
 
 void interpreteComandos(int * socketNucleo) {
+	int conexion = *socketNucleo;
+	free(socketNucleo);
 
 	while (1) {
 		char comando[100];
 		scanf("%s", comando);
 		if (!strcmp(comando, "KILL")) {
 			int header = finalizacionPrograma;
-			send((*socketNucleo), &header, sizeof(int), 0);
+			send(conexion, &header, sizeof(int), 0);
+			log_info(logger, "Se envió comando de finalización programa a Núcleo");
 			pthread_exit(NULL);
 		}
 	}
