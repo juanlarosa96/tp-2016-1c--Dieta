@@ -150,7 +150,11 @@ int main(int argc, char **argv) {
 	FD_SET(inotify, &bolsaDeSockets);
 
 	int fdmax;        // maximum file descriptor number
-	fdmax = listener;
+	if (listener > inotify) {
+		fdmax = listener;
+	} else {
+		fdmax = inotify;
+	}
 	int i;
 
 	while (1) {
@@ -219,169 +223,163 @@ int main(int argc, char **argv) {
 				} else if (i == inotify) {
 					//ARREGLAR ESTOOO
 					/*char buffer[sizeof(struct inotify_event) + 100];
-					read(i, buffer, sizeof(struct inotify_event) + 100);
-					struct inotify_event *event =
-							(struct inotify_event *) &buffer[0];
-					t_config* cfgAux;
-					if (event->mask & IN_CLOSE_WRITE) {
-						cfgAux = config_create(event->name); CREO QUE ACA FALTA VERIFICAR QUE NO SEA NULL
-						if (quantum
-								!= config_get_int_value(cfgAux, "QUANTUM")) {
-							quantum = config_get_int_value(cfgAux, "QUANTUM");
-							printf("El Quantum se actualizo a: %d\n",
-									(int) quantum);
-						}
-						pthread_mutex_lock(&mutexQsleep);
-						if (qSleep
-								!= config_get_int_value(cfgAux,
-										"QUANTUM_SLEEP")) {
-							qSleep = config_get_int_value(cfgAux,
-									"QUANTUM_SLEEP");
-							printf("El Quantum Sleep se actualizo a: %d\n",
-									(int) qSleep);
-						}
-						pthread_mutex_unlock(&mutexQsleep);
-						config_destroy(cfgAux);*/
+					 read(i, buffer, sizeof(struct inotify_event) + 100);
+					 struct inotify_event *event =
+					 (struct inotify_event *) &buffer[0];
+					 t_config* cfgAux;
+					 if (event->mask & IN_CLOSE_WRITE) {
+					 cfgAux = config_create(event->name); CREO QUE ACA FALTA VERIFICAR QUE NO SEA NULL
+					 if (quantum
+					 != config_get_int_value(cfgAux, "QUANTUM")) {
+					 quantum = config_get_int_value(cfgAux, "QUANTUM");
+					 printf("El Quantum se actualizo a: %d\n",
+					 (int) quantum);
+					 }
+					 pthread_mutex_lock(&mutexQsleep);
+					 if (qSleep
+					 != config_get_int_value(cfgAux,
+					 "QUANTUM_SLEEP")) {
+					 qSleep = config_get_int_value(cfgAux,
+					 "QUANTUM_SLEEP");
+					 printf("El Quantum Sleep se actualizo a: %d\n",
+					 (int) qSleep);
+					 }
+					 pthread_mutex_unlock(&mutexQsleep);
+					 config_destroy(cfgAux);*/
 
-					} else {
-						int header = recibirHeader(i);
+				} else {
+					int header = recibirHeader(i);
 
-						switch (header) {
+					switch (header) {
 
-						case 0:
-							;
-							close(i);
+					case 0:
+						;
+						close(i);
+						FD_CLR(i, &bolsaDeSockets);
+						log_error(logger, "Consola socket %d desconectada", i);
+						break;
+
+					case programaAnsisop:
+						;
+						int largoPrograma = recibirLargoProgramaAnsisop(i);
+						char *programa = malloc(largoPrograma);
+						recibirProgramaAnsisop(i, programa, largoPrograma);
+
+						t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
+
+						if (iniciarUnPrograma(clienteUMC, nuevoPcb,
+								largoPrograma, programa, PAGINAS_STACK)
+								== inicioProgramaError) {
+
+							printf(
+									"No se pudo reservar espacio para el programa\n");
+							destruirPcb(nuevoPcb);
+							enviarFinalizacionProgramaConsola(i);
 							FD_CLR(i, &bolsaDeSockets);
-							log_error(logger, "Consola socket %d desconectada",
-									i);
-							break;
+							log_error(logger, "Espacio en memoria insuficiente",
+									texto);
 
-						case programaAnsisop:
-							;
-							int largoPrograma = recibirLargoProgramaAnsisop(i);
-							char *programa = malloc(largoPrograma);
-							recibirProgramaAnsisop(i, programa, largoPrograma);
+						} else {
+							t_pidConConsola *pidConConsola = malloc(
+									sizeof(t_pidConConsola));
+							pidConConsola->pid = nuevoPcb.pid;
+							pidConConsola->socketConsola = i;
+							t_pcbConConsola pcbListo;
+							pcbListo.pcb = nuevoPcb;
+							pcbListo.socketConsola = i;
+							AgregarAProcesoColaListos(pcbListo);
 
-							t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
+							pthread_mutex_lock(&mutexListaConsolas);
+							list_add(listaConsolas, (void *) pidConConsola);
+							pthread_mutex_unlock(&mutexListaConsolas);
 
-							if (iniciarUnPrograma(clienteUMC, nuevoPcb,
-									largoPrograma, programa, PAGINAS_STACK)
-									== inicioProgramaError) {
+							free(programa);
 
-								printf(
-										"No se pudo reservar espacio para el programa\n");
-								destruirPcb(nuevoPcb);
-								enviarFinalizacionProgramaConsola(i);
-								FD_CLR(i, &bolsaDeSockets);
-								log_error(logger,
-										"Espacio en memoria insuficiente",
-										texto);
+							log_info(logger, "Se inicio programa pid %d",
+									nuevoPcb.pid);
 
+						}
+
+						break;
+
+					case finalizacionPrograma:
+						;
+						int j, sizeCola, sizeColaBloqueados, encontrado = 0;
+						//Busco pcb en cola de procesos listos
+						pthread_mutex_lock(&mutexColaListos);
+						sizeCola = queue_size(cola_PCBListos);
+						for (j = 0; j < sizeCola; j++) {
+
+							t_pcbConConsola * elementoAux =
+									(t_pcbConConsola *) queue_pop(
+											cola_PCBListos);
+
+							if (elementoAux->socketConsola == i) {
+								finalizarProceso(*elementoAux);
+								encontrado = 1;
+								free(elementoAux);
 							} else {
-								t_pidConConsola *pidConConsola = malloc(
-										sizeof(t_pidConConsola));
-								pidConConsola->pid = nuevoPcb.pid;
-								pidConConsola->socketConsola = i;
-								t_pcbConConsola pcbListo;
-								pcbListo.pcb = nuevoPcb;
-								pcbListo.socketConsola = i;
-								AgregarAProcesoColaListos(pcbListo);
-
-								pthread_mutex_lock(&mutexListaConsolas);
-								list_add(listaConsolas, (void *) pidConConsola);
-								pthread_mutex_unlock(&mutexListaConsolas);
-
-								free(programa);
-
-								log_info(logger, "Se inicio programa pid %d",
-										nuevoPcb.pid);
-
+								queue_push(cola_PCBListos,
+										(void *) elementoAux);
 							}
+						}
+						pthread_mutex_unlock(&mutexColaListos);
+						int contador = 0, k;
+						while (vectorDispositivos[contador] != NULL) {
+							contador++;
+						}
+						//Busco pcb en colas de procesos bloqueados
+						for (k = 0; k < contador; k++) {
 
-							break;
+							pthread_mutex_lock(vectorMutexDispositivosIO[k]);
+							sizeColaBloqueados = queue_size(
+									vectorColasBloqueados[k]);
 
-						case finalizacionPrograma:
-							;
-							int j, sizeCola, sizeColaBloqueados, encontrado = 0;
-							//Busco pcb en cola de procesos listos
-							pthread_mutex_lock(&mutexColaListos);
-							sizeCola = queue_size(cola_PCBListos);
-							for (j = 0; j < sizeCola; j++) {
+							for (j = 0; j < sizeColaBloqueados; j++) {
 
-								t_pcbConConsola * elementoAux =
-										(t_pcbConConsola *) queue_pop(
-												cola_PCBListos);
+								t_pcbBloqueado * elementoAux =
+										(t_pcbBloqueado*) queue_pop(
+												vectorColasBloqueados[k]);
 
-								if (elementoAux->socketConsola == i) {
-									finalizarProceso(*elementoAux);
+								if (elementoAux->pcb.socketConsola == i) {
+									finalizarProceso(elementoAux->pcb);
 									encontrado = 1;
 									free(elementoAux);
 								} else {
-									queue_push(cola_PCBListos,
+									queue_push(vectorColasBloqueados[k],
 											(void *) elementoAux);
 								}
 							}
-							pthread_mutex_unlock(&mutexColaListos);
-							int contador = 0, k;
-							while (vectorDispositivos[contador] != NULL) {
-								contador++;
-							}
-							//Busco pcb en colas de procesos bloqueados
-							for (k = 0; k < contador; k++) {
-
-								pthread_mutex_lock(
-										vectorMutexDispositivosIO[k]);
-								sizeColaBloqueados = queue_size(
-										vectorColasBloqueados[k]);
-
-								for (j = 0; j < sizeColaBloqueados; j++) {
-
-									t_pcbBloqueado * elementoAux =
-											(t_pcbBloqueado*) queue_pop(
-													vectorColasBloqueados[k]);
-
-									if (elementoAux->pcb.socketConsola == i) {
-										finalizarProceso(elementoAux->pcb);
-										encontrado = 1;
-										free(elementoAux);
-									} else {
-										queue_push(vectorColasBloqueados[k],
-												(void *) elementoAux);
-									}
-								}
-								pthread_mutex_unlock(
-										vectorMutexDispositivosIO[k]);
-							}
-
-							if (!encontrado) {
-								int * socketProcesoFinalizado = malloc(
-										sizeof(int));
-								*socketProcesoFinalizado = i;
-
-								pthread_mutex_lock(
-										&mutexListaFinalizacionesPendientes);
-								list_add(listaFinalizacionesPendientes,
-										socketProcesoFinalizado);
-								pthread_mutex_unlock(
-										&mutexListaFinalizacionesPendientes);
-							}
-							break;
-
-						default:
-							close(i);
-							FD_CLR(i, &bolsaDeSockets);
-							log_info(logger, "Consola socket %d desconectada",
-									i);
-							break;
-
+							pthread_mutex_unlock(vectorMutexDispositivosIO[k]);
 						}
+
+						if (!encontrado) {
+							int * socketProcesoFinalizado = malloc(sizeof(int));
+							*socketProcesoFinalizado = i;
+
+							pthread_mutex_lock(
+									&mutexListaFinalizacionesPendientes);
+							list_add(listaFinalizacionesPendientes,
+									socketProcesoFinalizado);
+							pthread_mutex_unlock(
+									&mutexListaFinalizacionesPendientes);
+						}
+						break;
+
+					default:
+						close(i);
+						FD_CLR(i, &bolsaDeSockets);
+						log_info(logger, "Consola socket %d desconectada", i);
+						break;
+
 					}
 				}
 			}
 		}
-		log_destroy(logger);
-		return EXIT_SUCCESS;
 	}
+	log_destroy(logger);
+	return EXIT_SUCCESS;
+}
 
 //servidor para consola y cpu
 //cliente de umc
