@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
 		a++;
 	}
 
-	vectorValoresVariablesCompartidas = malloc(sizeof(uint32_t)*a);
-	vectorMutexVariablesCompartidas = malloc(sizeof(pthread_mutex_t*)*a);
+	vectorValoresVariablesCompartidas = malloc(sizeof(uint32_t) * a);
+	vectorMutexVariablesCompartidas = malloc(sizeof(pthread_mutex_t*) * a);
 	a = 0;
 	while (vectorVariablesCompartidas[a] != NULL) {
 		vectorValoresVariablesCompartidas[a] = 0;
@@ -65,13 +65,22 @@ int main(int argc, char **argv) {
 
 	//Creo log para el Núcleo
 
-	logger = log_create("Nucleo.log", "NUCLEO", 1, log_level_from_string("INFO"));
+	logger = log_create("Nucleo.log", "NUCLEO", 1,
+			log_level_from_string("INFO"));
 
 	texto = "info";
 
+	//Inicializacion notify
+	int inotify = inotify_init();
+	if (inotify < 0) {
+		log_error(logger, "Error inicializando inotify");
+	}
+	int watch_descriptor = inotify_add_watch(inotify, argv[1], IN_CLOSE_WRITE);
+
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
-		log_error(logger, "Se produjo un error creando el socket de UMC", texto);
+		log_error(logger, "Se produjo un error creando el socket de UMC",
+				texto);
 		return 1;
 	}
 	if (conectarA(clienteUMC, IP_UMC, PUERTO_UMC)) {
@@ -89,7 +98,9 @@ int main(int argc, char **argv) {
 		tamanioPagina = recibirTamanioPagina(clienteUMC);
 	} else {
 		printf("Error recibiendo tamanio pagina");
-		log_error(logger, "Se produjo un error recibiendo el tamanio de pagina de la UMC", texto);
+		log_error(logger,
+				"Se produjo un error recibiendo el tamanio de pagina de la UMC",
+				texto);
 		return 1;
 
 	}
@@ -103,7 +114,8 @@ int main(int argc, char **argv) {
 	}
 	if (escucharEn(servidorNucleo, PUERTO_SERVIDOR)) {
 		printf("Error al conectar");
-		log_error(logger, "Se produjo un error creando el socket servidor", texto);
+		log_error(logger, "Se produjo un error creando el socket servidor",
+				texto);
 		return 1;
 	}
 
@@ -135,6 +147,7 @@ int main(int argc, char **argv) {
 	FD_ZERO(&bolsaAuxiliar);
 
 	FD_SET(listener, &bolsaDeSockets);
+	FD_SET(inotify, &bolsaDeSockets);
 
 	int fdmax;        // maximum file descriptor number
 	fdmax = listener;
@@ -155,7 +168,8 @@ int main(int argc, char **argv) {
 					// handle new connections
 					//Espera hasta que el hilo haya guardado el valor que se le paso como parametro
 					//antes de sobreEscribir la variable nuevaConexion
-					nuevaConexion = aceptarConexion(servidorNucleo, &direccionCliente);
+					nuevaConexion = aceptarConexion(servidorNucleo,
+							&direccionCliente);
 
 					if (nuevaConexion > fdmax) {
 						fdmax = nuevaConexion;
@@ -172,7 +186,8 @@ int main(int argc, char **argv) {
 
 					case IDCONSOLA:
 						FD_SET(nuevaConexion, &bolsaDeSockets);
-						log_info(logger, "Nueva consola conectada, socket %d", nuevaConexion);
+						log_info(logger, "Nueva consola conectada, socket %d",
+								nuevaConexion);
 						//Maneja consola
 
 						break;
@@ -181,10 +196,12 @@ int main(int argc, char **argv) {
 						pthread_t nuevoHilo;
 						pthread_attr_t attr;
 						pthread_attr_init(&attr);
-						pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+						pthread_attr_setdetachstate(&attr,
+						PTHREAD_CREATE_DETACHED);
 						int * socketConexionParaThread = malloc(sizeof(int));
 						*socketConexionParaThread = nuevaConexion;
-						pthread_create(&nuevoHilo, &attr, (void *) manejarCPU, (void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
+						pthread_create(&nuevoHilo, &attr, (void *) manejarCPU,
+								(void *) socketConexionParaThread); //Creo hilo que maneje el nuevo CPU
 
 						pthread_attr_destroy(&attr);
 
@@ -193,127 +210,178 @@ int main(int argc, char **argv) {
 						break;
 					default:
 						close(nuevaConexion);
-						log_error(logger, "Error en el handshake. Conexion inesperada", texto);
+						log_error(logger,
+								"Error en el handshake. Conexion inesperada",
+								texto);
 						break;
 					}
 
-				} else {
-					int header = recibirHeader(i);
+				} else if (i == inotify) {
+					//ARREGLAR ESTOOO
+					/*char buffer[sizeof(struct inotify_event) + 100];
+					read(i, buffer, sizeof(struct inotify_event) + 100);
+					struct inotify_event *event =
+							(struct inotify_event *) &buffer[0];
+					t_config* cfgAux;
+					if (event->mask & IN_CLOSE_WRITE) {
+						cfgAux = config_create(event->name); CREO QUE ACA FALTA VERIFICAR QUE NO SEA NULL
+						if (quantum
+								!= config_get_int_value(cfgAux, "QUANTUM")) {
+							quantum = config_get_int_value(cfgAux, "QUANTUM");
+							printf("El Quantum se actualizo a: %d\n",
+									(int) quantum);
+						}
+						pthread_mutex_lock(&mutexQsleep);
+						if (qSleep
+								!= config_get_int_value(cfgAux,
+										"QUANTUM_SLEEP")) {
+							qSleep = config_get_int_value(cfgAux,
+									"QUANTUM_SLEEP");
+							printf("El Quantum Sleep se actualizo a: %d\n",
+									(int) qSleep);
+						}
+						pthread_mutex_unlock(&mutexQsleep);
+						config_destroy(cfgAux);*/
 
-					switch (header) {
+					} else {
+						int header = recibirHeader(i);
 
-					case 0:
-						;
-						close(i);
-						FD_CLR(i, &bolsaDeSockets);
-						log_error(logger, "Consola socket %d desconectada", i);
-						break;
+						switch (header) {
 
-					case programaAnsisop:
-						;
-						int largoPrograma = recibirLargoProgramaAnsisop(i);
-						char *programa = malloc(largoPrograma);
-						recibirProgramaAnsisop(i, programa, largoPrograma);
-
-						t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
-
-						if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
-
-							printf("No se pudo reservar espacio para el programa\n");
-							destruirPcb(nuevoPcb);
-							enviarFinalizacionProgramaConsola(i);
+						case 0:
+							;
+							close(i);
 							FD_CLR(i, &bolsaDeSockets);
-							log_error(logger, "Espacio en memoria insuficiente", texto);
+							log_error(logger, "Consola socket %d desconectada",
+									i);
+							break;
 
-						} else {
-							t_pidConConsola *pidConConsola = malloc(sizeof(t_pidConConsola));
-							pidConConsola->pid = nuevoPcb.pid;
-							pidConConsola->socketConsola = i;
-							t_pcbConConsola pcbListo;
-							pcbListo.pcb = nuevoPcb;
-							pcbListo.socketConsola = i;
-							AgregarAProcesoColaListos(pcbListo);
+						case programaAnsisop:
+							;
+							int largoPrograma = recibirLargoProgramaAnsisop(i);
+							char *programa = malloc(largoPrograma);
+							recibirProgramaAnsisop(i, programa, largoPrograma);
 
-							pthread_mutex_lock(&mutexListaConsolas);
-							list_add(listaConsolas, (void *) pidConConsola);
-							pthread_mutex_unlock(&mutexListaConsolas);
+							t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-							free(programa);
+							if (iniciarUnPrograma(clienteUMC, nuevoPcb,
+									largoPrograma, programa, PAGINAS_STACK)
+									== inicioProgramaError) {
 
-							log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
+								printf(
+										"No se pudo reservar espacio para el programa\n");
+								destruirPcb(nuevoPcb);
+								enviarFinalizacionProgramaConsola(i);
+								FD_CLR(i, &bolsaDeSockets);
+								log_error(logger,
+										"Espacio en memoria insuficiente",
+										texto);
 
-						}
-
-						break;
-
-					case finalizacionPrograma:
-						;
-						int j, sizeCola, sizeColaBloqueados, encontrado = 0;
-						//Busco pcb en cola de procesos listos
-						pthread_mutex_lock(&mutexColaListos);
-						sizeCola = queue_size(cola_PCBListos);
-						for (j = 0; j < sizeCola; j++) {
-
-							t_pcbConConsola * elementoAux = (t_pcbConConsola *) queue_pop(cola_PCBListos);
-
-							if (elementoAux->socketConsola == i) {
-								finalizarProceso(*elementoAux);
-								encontrado = 1;
-								free(elementoAux);
 							} else {
-								queue_push(cola_PCBListos, (void *) elementoAux);
+								t_pidConConsola *pidConConsola = malloc(
+										sizeof(t_pidConConsola));
+								pidConConsola->pid = nuevoPcb.pid;
+								pidConConsola->socketConsola = i;
+								t_pcbConConsola pcbListo;
+								pcbListo.pcb = nuevoPcb;
+								pcbListo.socketConsola = i;
+								AgregarAProcesoColaListos(pcbListo);
+
+								pthread_mutex_lock(&mutexListaConsolas);
+								list_add(listaConsolas, (void *) pidConConsola);
+								pthread_mutex_unlock(&mutexListaConsolas);
+
+								free(programa);
+
+								log_info(logger, "Se inicio programa pid %d",
+										nuevoPcb.pid);
+
 							}
-						}
-						pthread_mutex_unlock(&mutexColaListos);
-						int contador = 0, k;
-						while (vectorDispositivos[contador] != NULL) {
-							contador++;
-						}
-						//Busco pcb en colas de procesos bloqueados
-						for (k = 0; k < contador; k++) {
 
-							pthread_mutex_lock(vectorMutexDispositivosIO[k]);
-							sizeColaBloqueados = queue_size(vectorColasBloqueados[k]);
+							break;
 
-							for (j = 0; j < sizeColaBloqueados; j++) {
+						case finalizacionPrograma:
+							;
+							int j, sizeCola, sizeColaBloqueados, encontrado = 0;
+							//Busco pcb en cola de procesos listos
+							pthread_mutex_lock(&mutexColaListos);
+							sizeCola = queue_size(cola_PCBListos);
+							for (j = 0; j < sizeCola; j++) {
 
-								t_pcbBloqueado * elementoAux = (t_pcbBloqueado*) queue_pop(vectorColasBloqueados[k]);
+								t_pcbConConsola * elementoAux =
+										(t_pcbConConsola *) queue_pop(
+												cola_PCBListos);
 
-								if (elementoAux->pcb.socketConsola == i) {
-									finalizarProceso(elementoAux->pcb);
+								if (elementoAux->socketConsola == i) {
+									finalizarProceso(*elementoAux);
 									encontrado = 1;
 									free(elementoAux);
 								} else {
-									queue_push(vectorColasBloqueados[k], (void *) elementoAux);
+									queue_push(cola_PCBListos,
+											(void *) elementoAux);
 								}
 							}
-							pthread_mutex_unlock(vectorMutexDispositivosIO[k]);
+							pthread_mutex_unlock(&mutexColaListos);
+							int contador = 0, k;
+							while (vectorDispositivos[contador] != NULL) {
+								contador++;
+							}
+							//Busco pcb en colas de procesos bloqueados
+							for (k = 0; k < contador; k++) {
+
+								pthread_mutex_lock(
+										vectorMutexDispositivosIO[k]);
+								sizeColaBloqueados = queue_size(
+										vectorColasBloqueados[k]);
+
+								for (j = 0; j < sizeColaBloqueados; j++) {
+
+									t_pcbBloqueado * elementoAux =
+											(t_pcbBloqueado*) queue_pop(
+													vectorColasBloqueados[k]);
+
+									if (elementoAux->pcb.socketConsola == i) {
+										finalizarProceso(elementoAux->pcb);
+										encontrado = 1;
+										free(elementoAux);
+									} else {
+										queue_push(vectorColasBloqueados[k],
+												(void *) elementoAux);
+									}
+								}
+								pthread_mutex_unlock(
+										vectorMutexDispositivosIO[k]);
+							}
+
+							if (!encontrado) {
+								int * socketProcesoFinalizado = malloc(
+										sizeof(int));
+								*socketProcesoFinalizado = i;
+
+								pthread_mutex_lock(
+										&mutexListaFinalizacionesPendientes);
+								list_add(listaFinalizacionesPendientes,
+										socketProcesoFinalizado);
+								pthread_mutex_unlock(
+										&mutexListaFinalizacionesPendientes);
+							}
+							break;
+
+						default:
+							close(i);
+							FD_CLR(i, &bolsaDeSockets);
+							log_info(logger, "Consola socket %d desconectada",
+									i);
+							break;
+
 						}
-
-						if (!encontrado) {
-							int * socketProcesoFinalizado = malloc(sizeof(int));
-							*socketProcesoFinalizado = i;
-
-							pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-							list_add(listaFinalizacionesPendientes, socketProcesoFinalizado);
-							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
-						}
-						break;
-
-					default:
-						close(i);
-						FD_CLR(i, &bolsaDeSockets);
-						log_error(logger, "Consola socket %d desconectada", i);
-						break;
-
 					}
 				}
 			}
 		}
+		log_destroy(logger);
+		return EXIT_SUCCESS;
 	}
-	log_destroy(logger);
-	return EXIT_SUCCESS;
-}
 
 //servidor para consola y cpu
 //cliente de umc
