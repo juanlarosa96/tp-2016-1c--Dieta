@@ -55,6 +55,7 @@ void manejarCPU(void * socket) {
 					if (recibirHeader(socketCpu) == headerPcb) {
 						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
+						log_info(logger, "Se finalizo el proceso pid %d", siguientePcb.pcb.pid);
 						finalizarProceso(siguientePcb);
 						cambioProceso = 1;
 					} else {
@@ -68,6 +69,7 @@ void manejarCPU(void * socket) {
 					if (recibirHeader(socketCpu) == headerPcb) {
 						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
+						log_info(logger, "Se aborto el proceso pid %d", siguientePcb.pcb.pid);
 						abortarProceso(siguientePcb);
 						cambioProceso = 1;
 					} else {
@@ -83,7 +85,7 @@ void manejarCPU(void * socket) {
 					if (recibirHeader(socketCpu) == headerPcb) {
 						destruirPcb(siguientePcb.pcb);
 						siguientePcb.pcb = recibirPcb(socketCpu);
-
+						log_info(logger, "Fin de quantum de proceso pid %d", siguientePcb.pcb.pid);
 						int j, sizeLista = list_size(listaFinalizacionesPendientes);
 						int * socketEnLista;
 
@@ -221,6 +223,7 @@ void manejarCPU(void * socket) {
 							pthread_mutex_lock(vectorMutexVariablesCompartidas[contadorPedidoCompartida]);
 							enviarValorVariableCompartida(socketCpu, vectorValoresVariablesCompartidas[contadorPedidoCompartida]);
 							pthread_mutex_unlock(vectorMutexVariablesCompartidas[contadorPedidoCompartida]);
+							log_info(logger, "Se envio valor variable compartida %s al proceso pid %d",vectorVariablesCompartidas[contadorPedidoCompartida] ,siguientePcb.pcb.pid);
 						}
 					}
 					break;
@@ -236,6 +239,7 @@ void manejarCPU(void * socket) {
 							pthread_mutex_lock(vectorMutexVariablesCompartidas[contadorPedidoCompartida]);
 							vectorValoresVariablesCompartidas[contadorAsignacionCompartida] = valorVariableCompartida;
 							pthread_mutex_unlock(vectorMutexVariablesCompartidas[contadorAsignacionCompartida]);
+							log_info(logger, "Se asigno valor %d a la variable compartida %s por pedido del proceso pid %d", valorVariableCompartida,vectorVariablesCompartidas[contadorPedidoCompartida] ,siguientePcb.pcb.pid);
 						}
 					}
 					break;
@@ -294,6 +298,7 @@ void AgregarAProcesoColaListos(t_pcbConConsola elemento) {
 	pthread_mutex_lock(&mutexColaListos);
 	AgregarACola(elemento, cola_PCBListos);
 	pthread_mutex_unlock(&mutexColaListos);
+	log_info(logger, "Se puso en cola listos al proceso pid %d", elemento.pcb.pid);
 	sem_post(&semaforoColaListos);
 }
 
@@ -536,6 +541,7 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 			if (!strcmp(vectorDispositivos[i], nombre)) {
 				pthread_mutex_lock(vectorMutexDispositivosIO[i]);
 				AgregarAProcesoColaBloqueados(vectorColasBloqueados[i], pcbBloqueado);
+				log_info(logger, "Se puso en cola bloqueados de dispositivo %s al proceso pid %d", vectorDispositivos[i], siguientePcb.pcb.pid);
 				pthread_mutex_unlock(vectorMutexDispositivosIO[i]);
 				sem_post(&(vectorSemaforosDispositivosIO[i]));
 				existeDispositivo = 1;
