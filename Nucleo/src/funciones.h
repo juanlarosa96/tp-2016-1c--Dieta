@@ -10,6 +10,7 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/inotify.h>
 #include "commons/log.h"
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
