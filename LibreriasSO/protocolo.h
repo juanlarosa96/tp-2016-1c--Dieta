@@ -105,7 +105,7 @@ void enviarSleepQuantum(int socketCPU, int  sleep);
 void enviarFinalizacionProgramaNucleo(int socketNucleo);
 void enviarAbortarProgramaNucleo(int socketNucleo);
 void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariable);
-void asignarCompartidaNucleo(int socketNucleo, char variable, int valor);
+void asignarCompartidaNucleo(int socketNucleo, char * variable, int valor);
 void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina); //check tipo ultimo parametro
 void enviarAbortarProceso(int socketCPU);
 void enviarPedidoMemoriaOK(int socketCPU);
@@ -114,5 +114,9 @@ void enviarPedidoMemoriaOK(int socketCPU);
 void enviarSenialDeApagadoDeCPU(int socketNucleo);
 
 void enviarRespuestaSemaforo(int socketCpu, int respuesta);
+
+void recibirVariableCompartidaConValor(int socketCPU, char ** nombre, int * valor);
+void recibirVariableCompartida(int socketCPU, char ** nombre);
+void enviarValorVariableCompartida(int socketCpu, int valor);
 
 #endif /* LIBRERIASSOENWORSKPACE_PROTOCOLO_H_ */
