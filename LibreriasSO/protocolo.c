@@ -625,13 +625,14 @@ void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariabl
 	recibirTodo(socketNucleo, (void *) punteroVariable, sizeof(int));
 }
 
-void asignarCompartidaNucleo(int socketNucleo, char variable, int valor){
-	int header = asignacionVariableCompartida;
-	void * data = malloc(sizeof(int) *2 + sizeof(char));
+void asignarCompartidaNucleo(int socketNucleo, char * variable, int valor){
+	int header = asignacionVariableCompartida, largo = strlen(variable) + 1;
+	void * data = malloc(sizeof(int) *3 + largo);
 	memcpy(data, &header, sizeof(int));
-	memcpy(data + sizeof(int), &variable, sizeof(char));
-	memcpy(data + sizeof(int) + sizeof(char), &valor, sizeof(int));
-	send(socketNucleo, data, sizeof(int)*2 +sizeof(char), 0);
+	memcpy(data + sizeof(int), &largo, sizeof(int));
+	memcpy(data + 2*sizeof(int), variable, largo);
+	memcpy(data + 2*sizeof(int) + largo, &valor, sizeof(int));
+	send(socketNucleo, data, sizeof(int)*3 +largo, 0);
 	free(data);
 }
 
@@ -668,4 +669,23 @@ void enviarSenialDeApagadoDeCPU(int socketNucleo){
 
 void enviarRespuestaSemaforo(int socketCpu, int respuesta){
 	send(socketCpu,&respuesta, sizeof(int),0);
+}
+
+void recibirVariableCompartidaConValor(int socketCPU, char ** nombre, int * valor){
+	int largo;
+	recibirTodo(socketCPU, &largo, sizeof(int));
+	*nombre = malloc(largo);
+	recibirTodo(socketCPU, *nombre, largo);
+	recibirTodo(socketCPU,valor,sizeof(int));
+}
+
+void recibirVariableCompartida(int socketCPU, char ** nombre){
+	int largo;
+	recibirTodo(socketCPU, &largo, sizeof(int));
+	*nombre = malloc(largo);
+	recibirTodo(socketCPU, *nombre, largo);
+}
+
+void enviarValorVariableCompartida(int socketCpu, int valor){
+	send(socketCpu, &valor, sizeof(int),0);
 }

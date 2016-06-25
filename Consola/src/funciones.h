@@ -25,7 +25,7 @@
 #include <sockets.h>
 #include <pthread.h>
 
-
+t_log* logger;
 void interpreteComandos(int * socketNucleo);
 
 #endif /* FUNCIONES_H_ */

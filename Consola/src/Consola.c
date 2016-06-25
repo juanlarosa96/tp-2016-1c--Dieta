@@ -22,7 +22,6 @@ int main(int argc, char **argv) {
 	strcpy(ruta, argv[1]); //Recibe ruta de programa ansisop
 
 	//Creo log para la consola
-	t_log* logger;
 	logger = log_create("Consola.log", "CONSOLA", 1,
 			log_level_from_string("INFO"));
 	char *texto;
@@ -72,6 +71,7 @@ int main(int argc, char **argv) {
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	pthread_create(&nuevoHilo, &attr, (void *) &interpreteComandos, (void *) &socketNucleo);
 	pthread_attr_destroy(&attr);
+	log_info(logger, "Se creó hilo de intérprete de comandos");
 
 	while(1){
 		int header = recibirHeader(socketNucleo);
@@ -83,8 +83,8 @@ int main(int argc, char **argv) {
 			int largoTexto;
 			char *mensajeDevuelto;
 			recibirResultadoDeEjecucionAnsisop(socketNucleo,&mensajeDevuelto, &largoTexto);
-		log_info(logger, "Se recibio resultado de ejecucion", texto);
-		printf("Mensaje Recibido: %s \n", mensajeDevuelto);
+		log_info(logger, "Se recibio resultado de ejecucion");
+		log_info(logger, "Mensaje Recibido: %s \n", mensajeDevuelto);
 		}
 
 		if(header == finalizacionPrograma){
