@@ -210,7 +210,34 @@ void manejarCPU(void * socket) {
 					break;
 
 				case pedidoVariableCompartida:
-					//Falta funcion para recibir, y el enviar envia char en vez de string, hay que correjirlo
+					;
+					char * nombrePedidoCompartida;
+					int contadorPedidoCompartida = 0;
+					recibirVariableCompartida(socketCpu, &nombrePedidoCompartida);
+
+					while(vectorVariablesCompartidas[contadorPedidoCompartida] != NULL){
+
+						if(!strcmp(vectorVariablesCompartidas[contadorPedidoCompartida], nombrePedidoCompartida)){
+							pthread_mutex_lock(vectorMutexVariablesCompartidas[contadorPedidoCompartida]);
+							enviarValorVariableCompartida(socketCpu, vectorValoresVariablesCompartidas[contadorPedidoCompartida]);
+							pthread_mutex_unlock(vectorMutexVariablesCompartidas[contadorPedidoCompartida]);
+						}
+					}
+					break;
+
+				case asignacionVariableCompartida:
+					;
+					char * nombreAsignacionCompartida;
+					int contadorAsignacionCompartida = 0, valorVariableCompartida;
+					recibirVariableCompartidaConValor(socketCpu, &nombreAsignacionCompartida, &valorVariableCompartida);
+
+					while(vectorVariablesCompartidas[contadorPedidoCompartida] != NULL){
+						if(!strcmp(vectorVariablesCompartidas[contadorAsignacionCompartida], nombreAsignacionCompartida)){
+							pthread_mutex_lock(vectorMutexVariablesCompartidas[contadorPedidoCompartida]);
+							vectorValoresVariablesCompartidas[contadorAsignacionCompartida] = valorVariableCompartida;
+							pthread_mutex_unlock(vectorMutexVariablesCompartidas[contadorAsignacionCompartida]);
+						}
+					}
 					break;
 				}
 			}
