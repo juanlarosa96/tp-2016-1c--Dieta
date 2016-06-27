@@ -47,7 +47,8 @@ enum headers { //Constantes que identifican los headers de los mensajes
 	asignacionVariableCompartida = 28,
 	finalizacionCPU = 29,
 	headerBloquear = 30,
-	headerSeguir = 31
+	headerSeguir = 31,
+	CPUListo = 32
 };
 int recibirHeader(int socketOrigen);
 void enviarProgramaAnsisop(int socketDestino, char * codigo, int largoCodigo);
@@ -104,7 +105,7 @@ void enviarUnidadesQuantum(int socketCPU, int  unidades);
 void enviarSleepQuantum(int socketCPU, int  sleep);
 void enviarFinalizacionProgramaNucleo(int socketNucleo);
 void enviarAbortarProgramaNucleo(int socketNucleo);
-void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariable);
+void pedirCompartidaNucleo(int socketNucleo, char * variable, int * punteroVariable);
 void asignarCompartidaNucleo(int socketNucleo, char * variable, int valor);
 void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina); //check tipo ultimo parametro
 void enviarAbortarProceso(int socketCPU);
@@ -112,6 +113,7 @@ void enviarPedidoMemoriaOK(int socketCPU);
 
 //header: 29
 void enviarSenialDeApagadoDeCPU(int socketNucleo);
+void avisarANucleoCPUListo(int socketNucleo);
 
 void enviarRespuestaSemaforo(int socketCpu, int respuesta);
 

@@ -272,7 +272,7 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 
 	for (i = 0; i < cantidadElementosStack; i++) {
 
-		t_registro_pila * registro = popPila(pcb.indice_stack);
+		t_registro_pila * registro = list_get(pcb.indice_stack, list_size(pcb.indice_stack)-i-1);
 		memcpy(buffer + cursorMemoria, &(registro->direccion_retorno), sizeof(uint32_t));
 		cursorMemoria += sizeof(uint32_t);
 
@@ -283,7 +283,7 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 
 		for (j = 0; j < cantidadeElementosLista; j++) {
 
-			t_posicion_memoria * elementoLista = (t_posicion_memoria *) list_remove(registro->lista_argumentos, 0);
+			t_posicion_memoria * elementoLista = (t_posicion_memoria *) list_get(registro->lista_argumentos, j);
 
 			memcpy(buffer + cursorMemoria, &(elementoLista->pagina), sizeof(uint32_t));
 			cursorMemoria += sizeof(uint32_t);
@@ -299,7 +299,7 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 
 		for (j = 0; j < cantidadeElementosLista; j++) {
 
-			t_identificadorConPosicionMemoria* elementoLista = (t_identificadorConPosicionMemoria *) list_remove(registro->lista_variables, 0);
+			t_identificadorConPosicionMemoria* elementoLista = (t_identificadorConPosicionMemoria *) list_get(registro->lista_variables, j);
 
 			memcpy(buffer + cursorMemoria, &(elementoLista->identificador), sizeof(char));
 			cursorMemoria += sizeof(char);
@@ -615,12 +615,13 @@ void enviarAbortarProgramaNucleo(int socketNucleo) {
 	send(socketNucleo, &header, sizeof(int), 0);
 }
 
-void pedirCompartidaNucleo(int socketNucleo, char variable, int * punteroVariable){
-	int header = pedidoVariableCompartida;
-	void * data = malloc(sizeof(int) + sizeof(char));
+void pedirCompartidaNucleo(int socketNucleo, char * variable, int * punteroVariable){
+	int header = pedidoVariableCompartida, largo = strlen(variable) + 1;
+	void * data = malloc(sizeof(int)*2 + largo);
 	memcpy(data, &header, sizeof(int));
-	memcpy(data + sizeof(int), &variable, sizeof(char));
-	send(socketNucleo, data, sizeof(int)+sizeof(char), 0);
+	memcpy(data + sizeof(int), &largo, sizeof(int));
+	memcpy(data + sizeof(int)*2, variable, largo);
+	send(socketNucleo, data, sizeof(int)*2+largo, 0);
 	free(data);
 	recibirTodo(socketNucleo, (void *) punteroVariable, sizeof(int));
 }
@@ -664,7 +665,11 @@ void enviarPedidoMemoriaOK(int socketCPU){
 void enviarSenialDeApagadoDeCPU(int socketNucleo){
 	int header = finalizacionCPU;
 	send(socketNucleo, &header, sizeof(int),0);
+}
 
+void avisarANucleoCPUListo(int socketNucleo){
+	int header = CPUListo;
+	send(socketNucleo, &header, sizeof(int),0);
 }
 
 void enviarRespuestaSemaforo(int socketCpu, int respuesta){
