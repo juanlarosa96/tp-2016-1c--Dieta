@@ -85,7 +85,7 @@ uint32_t * vectorValoresVariablesCompartidas;
 pthread_mutex_t ** vectorMutexSemaforosAnsisop;
 t_queue ** vectorColasSemaforosAnsisop;
 char ** vectorSemaforosAnsisop;
-uint32_t * vectorValoresSemaforosAnsisop;
+int * vectorValoresSemaforosAnsisop;
 int cantidadQuantum;
 int retardoQuantum;
 
