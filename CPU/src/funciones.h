@@ -25,6 +25,8 @@
 #include <protocolo.h>
 #include <signal.h>
 #include "variables_globales.h"
+#include <pthread.h>
+
 
 
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
@@ -35,4 +37,7 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina);
 void manejadorSIGUSR1(int signal_num);
 void avisarANucleoFinalizacionDeCPU(int socketNucleo);
+void hiloSignalYHeader();
+
+
 #endif /* FUNCIONES_H_ */

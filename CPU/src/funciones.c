@@ -57,10 +57,10 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 	}
 
 	if (multiplesPedidos) {
-			tamanio = bytesTotales;
-		} else {
-			tamanio = bytesTotales - posicion.offset;
-		}
+		tamanio = bytesTotales;
+	} else {
+		tamanio = bytesTotales - posicion.offset;
+	}
 
 	if (tamanio != 0) {
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
@@ -108,11 +108,21 @@ void manejadorSIGUSR1(int signal_num) {
 	if (signal_num == SIGUSR1) {
 		log_info(logger, "Llegó la señal SIGUSR1.");
 		signalApagado = 1;
+		sem_post(&semComenzarQuantum);
 	}
 
 }
 
 void avisarANucleoFinalizacionDeCPU(int socketNucleo) {
 	enviarSenialDeApagadoDeCPU(socketNucleo);
+
+}
+
+void hiloSignalYHeader() {
+	while (1) {
+		sem_wait(&semRecibirHeader);
+		header = recibirHeader(socketNucleo);
+		sem_post(&semComenzarQuantum);
+	}
 
 }
