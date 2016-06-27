@@ -27,7 +27,7 @@ t_puntero definirVariable(t_nombre_variable variable) {
 	}
 
 	pushPila(pcbRecibido.indice_stack, regPila);
-	log_info(logger, "Se definio la variable %c", variable);
+	log_info(logger, "Se definio la variable %c en la posicion ", variable, regPila->posicionUltimaVariable - TAM_VAR);
 	return regPila->posicionUltimaVariable - TAM_VAR;
 }
 
@@ -138,11 +138,13 @@ void parserWait(t_nombre_semaforo identificador_semaforo) {
 	/*
 	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
 	 */
-	log_info(logger, "Envio wait semaforo %c", identificador_semaforo);
+	identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
+	log_info(logger, "Envio wait semaforo %s", identificador_semaforo);
 	enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
-	if(recibirHeader(socketNucleo)){
+	if(recibirHeader(socketNucleo) == headerBloquear){
 		sigoEjecutando = 0;
 		log_info(logger, "Bloqueado por wait");
+		pcbRecibido.pc++;
 		enviarPcb(socketNucleo, pcbRecibido);
 	}
 }
@@ -151,6 +153,8 @@ void parserSignal(t_nombre_semaforo identificador_semaforo) {
 	/*
 	 * el prog ansisop hace un signal de este semaforo
 	 */
+	identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
+	log_info(logger, "Envio signal semaforo %s", identificador_semaforo);
 	enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 }
 
@@ -227,7 +231,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	 */
 	t_valor_variable valorVariable;
 	pedirCompartidaNucleo(socketNucleo, variable, &valorVariable);
-	log_info(logger, "Pido valor variable compartida %c y es %d", variable, valorVariable);
+	log_info(logger, "Pido valor variable compartida %s y es %d", variable, valorVariable);
 	return valorVariable;
 }
 
@@ -236,7 +240,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	 * le digo a nucleo que guarde el val de la var compartida
 	 */
 	asignarCompartidaNucleo(socketNucleo, variable, valor);
-	log_info(logger, "Asigno valor %d a la variable compartida %d",valor, variable);
+	log_info(logger, "Asigno valor %d a la variable compartida %s",valor, variable);
 	return valor;
 }
 
