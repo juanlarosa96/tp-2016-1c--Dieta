@@ -78,17 +78,13 @@ int main(int argc, char **argv) {
 			char *mensajeDevuelto;
 			recibirResultadoDeEjecucionAnsisop(socketNucleo, &mensajeDevuelto, &largoTexto);
 			log_info(logger, "Se recibio resultado de ejecucion");
-			log_info(logger, "Mensaje Recibido: %s \n", mensajeDevuelto);
-		}
-
-		if (header == finalizacionPrograma) {
+			log_info(logger, "Mensaje Recibido: %s", mensajeDevuelto);
+		} else if (header == finalizacionPrograma) {
 			close(socketNucleo);
 			log_info(logger, "Programa finalizado", texto);
 			return EXIT_SUCCESS;
 
-		}
-
-		if (header <= 0) {
+		} else {
 			log_error(logger, "Se desconecto el Nucleo");
 			return EXIT_SUCCESS;
 		}
