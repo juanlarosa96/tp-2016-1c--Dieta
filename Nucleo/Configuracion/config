@@ -7,5 +7,5 @@ PAGINAS_STACK=2
 IO_ID=[Disco, Impresora, Scanner]
 IO_SLEEP=[1000, 2000, 1000]
 SEM_ID=[SEM1, SEM2, SEM3]
-SEM_INIT=[0, 0, 5]
-SHARED_VARS=[!Global, !UnaVar, !tiempo3]
+SEM_INIT=[1, 0, 5]
+SHARED_VARS=[Global, UnaVar, tiempo3]
