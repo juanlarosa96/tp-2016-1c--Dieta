@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
 						;
 						close(i);
 						FD_CLR(i, &bolsaDeSockets);
-						log_error(logger, "Consola socket %d desconectada", i);
+						log_info(logger, "Consola socket %d desconectada", i);
 						break;
 
 					case programaAnsisop:
@@ -287,17 +287,12 @@ int main(int argc, char **argv) {
 							t_pcbConConsola pcbListo;
 							pcbListo.pcb = nuevoPcb;
 							pcbListo.socketConsola = i;
+							log_info(logger, "Se inicio programa pid %d", nuevoPcb.pid);
 							AgregarAProcesoColaListos(pcbListo);
-
 							pthread_mutex_lock(&mutexListaConsolas);
 							list_add(listaConsolas, (void *) pidConConsola);
 							pthread_mutex_unlock(&mutexListaConsolas);
-
 							free(programa);
-
-							log_info(logger, "Se inicio programa pid %d",
-									nuevoPcb.pid);
-
 						}
 
 						break;
