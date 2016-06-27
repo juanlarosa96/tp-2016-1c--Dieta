@@ -10,6 +10,7 @@
 #define TAM_VAR 4
 
 #include <structs.h>
+#include <semaphore.h>
 
 int socketNucleo;
 int socketUMC;
@@ -23,5 +24,9 @@ int sigoEjecutando;
 int signalApagado;
 
 t_log * logger;
+
+sem_t semComenzarQuantum;
+sem_t semRecibirHeader;
+int header;
 
 #endif /* VARIABLES_GLOBALES_H_ */
