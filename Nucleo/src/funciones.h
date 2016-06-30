@@ -34,6 +34,9 @@ pthread_mutex_t mutexColaFinalizados;
 pthread_mutex_t mutexListaConsolas;
 pthread_mutex_t mutexListaFinalizacionesPendientes;
 
+pthread_mutex_t mutexUnidadesQuantum;
+pthread_mutex_t mutexRetardoQuantum;
+
 sem_t semaforoColaListos;
 
 
@@ -120,3 +123,4 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 void destruirPcb(t_pcb pcb);
 void destruirRegistroStack(t_registro_pila * registro);
 #endif /* FUNCIONES_H_ */
+
