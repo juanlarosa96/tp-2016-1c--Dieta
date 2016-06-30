@@ -855,6 +855,10 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	pthread_mutex_lock(&mutexSwap);
 	enviarPaginasRequeridasASwap(socketSwap, paginasRequeridas);
 	respuestaInicializacion = recibirRespuestaInicializacion(socketSwap);
+	if(respuestaInicializacion == -1) {
+		log_error(logger, "Se desconectó Swap. Abortando UMC");
+		abort();
+	}
 	log_info(logger, "Se envió nuevo programa pid %d a Swap", idPrograma);
 
 	if (respuestaInicializacion == inicioProgramaExito) {
