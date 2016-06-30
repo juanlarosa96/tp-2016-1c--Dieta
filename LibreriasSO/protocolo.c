@@ -120,9 +120,10 @@ void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codi
 
 int recibirRespuestaInicializacion(int socketUMC) {
 	int respuesta;
-	recibirTodo(socketUMC, &respuesta, sizeof(int));
+	if(recibirTodo(socketUMC, &respuesta, sizeof(int))){
+		return -1;
+	}
 	return respuesta;
-
 }
 
 void enviarRespuestaInicializacionExito(int socketDestino) {
