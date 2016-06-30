@@ -63,8 +63,6 @@ int main(int argc, char **argv) {
 		a++;
 	}
 
-
-
 	sem_init(&semaforoColaListos, 1, 0);
 
 	//Creo log para el Núcleo
@@ -255,13 +253,6 @@ int main(int argc, char **argv) {
 
 					switch (header) {
 
-					case 0:
-						;
-						close(i);
-						FD_CLR(i, &bolsaDeSockets);
-						log_info(logger, "Consola socket %d desconectada", i);
-						break;
-
 					case programaAnsisop:
 						;
 						int largoPrograma = recibirLargoProgramaAnsisop(i);
@@ -295,8 +286,14 @@ int main(int argc, char **argv) {
 
 						break;
 
-					case finalizacionPrograma:
-						;
+					default:
+						close(i);
+						FD_CLR(i, &bolsaDeSockets);
+						if (header == finalizacionPrograma) {
+							log_info(logger, "Consola socket %d envio finalizacion de programa", i);
+						} else {
+							log_info(logger, "Consola socket %d desconectada. Finalizando programa", i);
+						}
 						int j, sizeCola, sizeColaBloqueados, encontrado = 0;
 						//Busco pcb en cola de procesos listos
 						pthread_mutex_lock(&mutexColaListos);
@@ -348,13 +345,6 @@ int main(int argc, char **argv) {
 							pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 						}
 						break;
-
-					default:
-						close(i);
-						FD_CLR(i, &bolsaDeSockets);
-						log_info(logger, "Consola socket %d desconectada", i);
-						break;
-
 					}
 				}
 			}
@@ -363,6 +353,3 @@ int main(int argc, char **argv) {
 	log_destroy(logger);
 	return EXIT_SUCCESS;
 }
-
-//servidor para consola y cpu
-//cliente de umc
