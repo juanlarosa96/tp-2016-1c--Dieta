@@ -260,7 +260,13 @@ int main(int argc, char **argv) {
 
 						t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
-						if (iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK) == inicioProgramaError) {
+						int respuestaInicializacion = iniciarUnPrograma(clienteUMC, nuevoPcb, largoPrograma, programa, PAGINAS_STACK);
+
+						if (respuestaInicializacion == -1) {
+							log_error(logger, "Se desconectó UMC. Abortando Núcleo");
+							abort();
+
+						} else if(respuestaInicializacion == inicioProgramaError){
 
 							printf("No se pudo reservar espacio para el programa\n");
 							destruirPcb(nuevoPcb);
