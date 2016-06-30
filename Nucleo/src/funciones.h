@@ -69,6 +69,9 @@ typedef struct {
 }t_colaPcb;
 */
 
+fd_set bolsaDeSockets;
+fd_set bolsaAuxiliar;
+
 t_queue *cola_PCBListos;
 t_queue *cola_PCBNuevos;
 t_queue *cola_PCBFinalizados;

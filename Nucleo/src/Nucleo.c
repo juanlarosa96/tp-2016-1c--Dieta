@@ -141,8 +141,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexUnidadesQuantum, NULL);
 	pthread_mutex_init(&mutexRetardoQuantum, NULL);
 
-	fd_set bolsaDeSockets;
-	fd_set bolsaAuxiliar;  // temp file descriptor list for select()
+	  // temp file descriptor list for select()
 	int listener = servidorNucleo;     // listening socket descriptor
 
 	FD_ZERO(&bolsaDeSockets);    // clear the master and temp sets
@@ -287,6 +286,10 @@ int main(int argc, char **argv) {
 						break;
 
 					default:
+						if(!FD_ISSET(i,&bolsaDeSockets)){
+							log_info(logger, "Consola socket %d desconectada", i);
+							break;
+						}
 						close(i);
 						FD_CLR(i, &bolsaDeSockets);
 						if (header == finalizacionPrograma) {

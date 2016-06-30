@@ -387,6 +387,7 @@ int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * 
 }
 
 void finalizarProceso(t_pcbConConsola siguientePcb) {
+	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
 	enviarFinalizacionProgramaUMC(clienteUMC, siguientePcb.pcb.pid);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
 
