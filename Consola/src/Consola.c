@@ -21,9 +21,15 @@ int main(int argc, char **argv) {
 	strcpy(ruta, argv[1]); //Recibe ruta de programa ansisop
 
 	//Creo log para la consola
-	logger = log_create("Consola.log", "CONSOLA", 1, log_level_from_string("INFO"));
+	int id_consola = getpid();
+	char* nombreLogger = string_from_format("Consola ID %d.log", id_consola);
+	logger = log_create(nombreLogger, "Consola", 0, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
+
+	/*logger = log_create("Consola.log", "CONSOLA", 1, log_level_from_string("INFO"));
+	char *texto;
+	texto = "info";*/
 
 	int socketNucleo;
 	crearSocket(&socketNucleo);
