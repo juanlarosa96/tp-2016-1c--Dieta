@@ -97,7 +97,8 @@ int buscarEnTLB(uint32_t pid, int nroPagina) {
 	pthread_mutex_lock(&mutexTLB);
 	while (i < list_size(TLB) && acierto == 0) {
 		nodoAux = list_get(TLB, i);
-		if ((nodoAux->pid == pid) && (nodoAux->nroPagina == (uint32_t) nroPagina)) {
+		if ((nodoAux->pid == pid)
+				&& (nodoAux->nroPagina == (uint32_t) nroPagina)) {
 			frame = (int) nodoAux->nroFrame;
 			acierto = 1;
 		}
@@ -512,7 +513,7 @@ void actualizarPaginaAReemplazar(int indiceProceso, int idFrame,
 
 }
 
-void limpiarEntradaTLBPorFrame(uint32_t nroFrame){
+void limpiarEntradaTLBPorFrame(uint32_t nroFrame) {
 	t_entrada_tlb* nodoAux;
 	int i = 0;
 
@@ -605,13 +606,15 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
+	log_info(logger, "Página nro %d, del proceso PID %d, cargada en TLB", nroPagina, pid);
 }
 
-int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, int * idFrame) {
+int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
+		int * idFrame) {
 	t_nodo_lista_frames* aux;
 	t_nodo_lista_procesos * auxProceso;
 	int i = 0, j = 0;
-	int  permitido = 0, disponible = 0;
+	int permitido = 0, disponible = 0;
 
 	//Primero busco en la lista de procesos a ver si llego a su máximo de frames por proceso
 	pthread_mutex_lock(&mutexProcesos);
@@ -650,8 +653,8 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, int * 
 		}
 		pthread_mutex_unlock(&mutexFrames);
 		pthread_mutex_lock(&mutexProcesos);
-		auxProceso->framesAsignados ++;
-		if(auxProceso->framesAsignados == 1){
+		auxProceso->framesAsignados++;
+		if (auxProceso->framesAsignados == 1) {
 			auxProceso->punteroClock = i;
 		}
 		pthread_mutex_unlock(&mutexProcesos);
@@ -662,6 +665,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, int * 
 		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame);
 	}
 
+	log_info(logger, "Pagina nro %d perteneciente al proeso PID %d cargada en memoria", nroPagina, pid);
 	return 1; //Se logró cargar página en memoria
 }
 
@@ -694,12 +698,12 @@ void enviarASwapFinalizarPrograma(uint32_t pid) {
 void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
-	if(indiceListaProcesos >= 0){
-	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
-	liberarPaginas(indiceListaProcesos);
-	list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
-			(void*) destruirProceso);
-	pthread_mutex_unlock(&mutexProcesos);
+	if (indiceListaProcesos >= 0) {
+		pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
+		liberarPaginas(indiceListaProcesos);
+		list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
+				(void*) destruirProceso);
+		pthread_mutex_unlock(&mutexProcesos);
 	}
 
 	liberarFrames(idPrograma); //pongo ids en cero
@@ -732,6 +736,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		if (nroFrame > -1) { //TLB Hit
 			data = lecturaMemoria(nroFrame, offset, tamanio);
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
+			enviarPedidoMemoriaOK(socketCPU);
 			enviarBytesACPU(socketCPU, data, tamanio);
 			return;
 		}
@@ -792,6 +797,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 			escrituraMemoria(nroFrame, offset, tamanio, buffer);
 			actualizarBitModificado(nroFrame);
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
+			enviarPedidoMemoriaOK(socketCPU);
 			return;
 		}
 	}
@@ -855,7 +861,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	pthread_mutex_lock(&mutexSwap);
 	enviarPaginasRequeridasASwap(socketSwap, paginasRequeridas);
 	respuestaInicializacion = recibirRespuestaInicializacion(socketSwap);
-	if(respuestaInicializacion == -1) {
+	if (respuestaInicializacion == -1) {
 		log_error(logger, "Se desconectó Swap. Abortando UMC");
 		abort();
 	}
@@ -1044,8 +1050,13 @@ void consolaUMC(void) {
 
 			if (strncasecmp(comando, "tlb", 3) == 0) {
 				printf("Se ejecutará: flush TLB\n");
-				flushTLB();
-				log_info(logger, "Se ejecutó flush TLB\n");
+				if (entradasTLB > 0) {
+					flushTLB();
+					log_info(logger, "Se ejecutó flush TLB\n");
+				}
+				else {
+					printf("No se puede ejecutar flush TLB. No tiene entradas\n");
+				}
 			} else if (strncasecmp(comando, "memory", 6) == 0) {
 				printf("Se ejecutará: Flush Memoria Principal\n");
 				flushMemory();
