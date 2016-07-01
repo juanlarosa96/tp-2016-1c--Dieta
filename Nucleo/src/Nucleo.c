@@ -323,7 +323,6 @@ int main(int argc, char **argv) {
 									i);
 							break;
 						}
-						close(i);
 						FD_CLR(i, &bolsaDeSockets);
 						if (header == finalizacionPrograma) {
 							log_info(logger,
