@@ -606,6 +606,7 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
+	log_info(logger, "Página nro %d, del proceso PID %d, cargada en TLB", nroPagina, pid);
 }
 
 int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
@@ -664,6 +665,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame);
 	}
 
+	log_info(logger, "Pagina nro %d perteneciente al proeso PID %d cargada en memoria", nroPagina, pid);
 	return 1; //Se logró cargar página en memoria
 }
 
