@@ -23,21 +23,27 @@ t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb) {
 	return posicionPagina;
 }
 
-void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* lineaAnsisop) {
+void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina,
+		char* lineaAnsisop) {
 	recibirTodo(socketUMC, lineaAnsisop, posicionPagina.size);
 }
-int pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina) {
-	t_posicion_memoria posicion = obtenerPosicionPagina(tamanioPagina, pcbActual);
-	return enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *) lineaAnsisop, tamanioPagina);
+int pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual,
+		int tamanioPagina) {
+	t_posicion_memoria posicion = obtenerPosicionPagina(tamanioPagina,
+			pcbActual);
+	return enviarPedidosDePosicionMemoria(socketUMC, posicion,
+			(void *) lineaAnsisop, tamanioPagina);
 }
 
 int recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
 	return recibirTodo(socketUMC, buffer, largoPedido);
 }
 
-int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
+int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
+		void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size;
-	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size, multiplesPedidos = 0;
+	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina,
+			tamanio = posicion.size, multiplesPedidos = 0;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
@@ -55,7 +61,8 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 				abort();
 			}
 		}
-		if (recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos)) {
+		if (recibirBytesDePagina(socketUMC, tamanio,
+				(void *) buffer + bytesRecibidos)) {
 			log_error(logger, "Error conectando con UMC");
 			abort();
 		}
@@ -83,7 +90,8 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 				abort();
 			}
 		}
-		if (recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos)) {
+		if (recibirBytesDePagina(socketUMC, tamanio,
+				(void *) buffer + bytesRecibidos)) {
 			log_error(logger, "Error conectando con UMC");
 			abort();
 		}
@@ -91,9 +99,11 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 	return 0;
 }
 
-int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
+int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
+		t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size, header;
-	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size, multiplesPedidos = 0;
+	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina,
+			tamanio = posicion.size, multiplesPedidos = 0;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
@@ -101,7 +111,8 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 	}
 
 	while (bytesTotales >= tamanioPagina) {
-		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *) buffer + bytesEnviados);
+		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
+				(char *) buffer + bytesEnviados);
 		header = recibirHeader(socketUMC);
 		if (header != pedidoMemoriaOK) {
 			if (header == pedidoMemoriaFallo) {
@@ -124,7 +135,8 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 	}
 
 	if (tamanio != 0) {
-		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *) buffer + bytesEnviados);
+		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
+				(char *) buffer + bytesEnviados);
 		header = recibirHeader(socketUMC);
 		if (header != pedidoMemoriaOK) {
 			if (header == pedidoMemoriaFallo) {
@@ -159,4 +171,15 @@ void hiloSignalYHeader() {
 		sem_post(&semComenzarQuantum);
 	}
 
+}
+
+void borrarBarraTesYEnesDeString(char* variable) {
+	int i = 0;
+	while (variable[i] != '\0') {
+		if ((variable[i] == '\t') || (variable[i] == '\n')) {
+			variable[i] = '\0';
+			i--;
+		}
+		i++;
+	}
 }

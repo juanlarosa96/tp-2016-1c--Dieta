@@ -38,6 +38,7 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 void manejadorSIGUSR1(int signal_num);
 void avisarANucleoFinalizacionDeCPU(int socketNucleo);
 void hiloSignalYHeader();
+void borrarBarraTesYEnesDeString(char* variable);
 
 
 #endif /* FUNCIONES_H_ */

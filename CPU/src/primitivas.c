@@ -150,6 +150,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 	if (sigoEjecutando){
 		huboEntradaSalida = 1;
 		sigoEjecutando = 0;
+		borrarBarraTesYEnesDeString(dispositivo);
 		log_info(logger, "Envio io al dispositivo %s por %d unidades de tiempo", dispositivo, tiempo);
 		pcbRecibido.pc++;
 		enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
@@ -161,7 +162,7 @@ void parserWait(t_nombre_semaforo identificador_semaforo) {
 	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
 	 */
 	if (sigoEjecutando){
-		identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
+		borrarBarraTesYEnesDeString(identificador_semaforo);
 		log_info(logger, "Envio wait semaforo %s", identificador_semaforo);
 		enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 		if(recibirHeader(socketNucleo) == headerBloquear){
@@ -178,7 +179,7 @@ void parserSignal(t_nombre_semaforo identificador_semaforo) {
 	 * el prog ansisop hace un signal de este semaforo
 	 */
 	if (sigoEjecutando){
-		identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
+		borrarBarraTesYEnesDeString(identificador_semaforo);
 		log_info(logger, "Envio signal semaforo %s", identificador_semaforo);
 		enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 	}
@@ -189,6 +190,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta) {
 	 * cambio el pc a la primera instruccion de la etiqueta
 	 */
 	if (sigoEjecutando){
+		borrarBarraTesYEnesDeString(etiqueta);
 		pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta, pcbRecibido.indice_etiquetas.etiquetas, pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 		huboSaltoLinea = 1;
 		log_info(logger, "Hubo salto de linea a la etiqueta %s", etiqueta);
@@ -243,6 +245,7 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar) {
 	if (sigoEjecutando){
 		t_registro_pila * nuevoRegistroStack = malloc(sizeof(t_registro_pila));
 		t_registro_pila * registroStackAnterior = popPila(pcbRecibido.indice_stack);
+		borrarBarraTesYEnesDeString(etiqueta);
 		nuevoRegistroStack->posicionUltimaVariable = registroStackAnterior->posicionUltimaVariable;
 		nuevoRegistroStack->lista_argumentos = list_create();
 		nuevoRegistroStack->lista_variables = list_create();
@@ -263,6 +266,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	 */
 	if (sigoEjecutando){
 		t_valor_variable valorVariable;
+		borrarBarraTesYEnesDeString(variable);
 		if(pedirCompartidaNucleo(socketNucleo, variable, &valorVariable)){
 			log_error(logger, "Error conectando con Nucleo");
 			abort();
@@ -279,6 +283,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	 * le digo a nucleo que guarde el val de la var compartida
 	 */
 	if (sigoEjecutando){
+		borrarBarraTesYEnesDeString(variable);
 		asignarCompartidaNucleo(socketNucleo, variable, valor);
 		log_info(logger, "Asigno valor %d a la variable compartida %s",valor, variable);
 		return valor;

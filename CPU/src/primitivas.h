@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <commons/config.h>
 #include "variables_globales.h"
+#include "funciones.h"
 #include <protocolo.h>
 #include <pila.h>
 
