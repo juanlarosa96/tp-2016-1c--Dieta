@@ -153,7 +153,7 @@ void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lr
 	pthread_mutex_unlock(&mutexContadorMemoria);
 	/*list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar,
 	 (void *) entradaTLBdestroy);*/
-
+	log_info(logger, "Se ejecutó LRU para TLB");
 }
 
 int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
@@ -350,7 +350,7 @@ int buscarVictimaClock(uint32_t pid) {
 	int puntero;
 	int nuevoPuntero;
 	int victima;
-	int acierto;
+	int acierto = 0;
 	t_nodo_lista_procesos* nodoAux;
 	t_nodo_lista_frames* nodoFrame;
 	indice = encontrarPosicionEnListaProcesos(pid);
@@ -559,6 +559,8 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 	actualizarNodoPaginaNuevaCargadaEnM(indiceProceso, *idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
 
 	escrituraMemoria(*idFrame, 0, size_frames, codigoPagina);
+
+	log_info(logger, "Se ejecutó algoritmo de reemplazo en memoria para proceso %d.", pid);
 }
 
 void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
@@ -665,7 +667,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame);
 	}
 
-	log_info(logger, "Pagina nro %d perteneciente al proeso PID %d cargada en memoria", nroPagina, pid);
+	log_info(logger, "Página nro %d perteneciente al proceso PID %d cargada en memoria", nroPagina, pid);
 	return 1; //Se logró cargar página en memoria
 }
 
