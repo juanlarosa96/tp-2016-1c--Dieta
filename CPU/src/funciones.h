@@ -32,12 +32,15 @@
 t_posicion_memoria obtenerPosicionPagina(int tamanioPagina, t_pcb unPcb);
 void recibirLineaAnsisop(int socketUMC, t_posicion_memoria posicionPagina, char* holis); //no se quien fue pero mejor nombre de variable de la historia
 int pedirLineaAUMC(int socketUMC,char * lineaAnsisop, t_pcb pcbActual, int tamanioPagina);
-void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer);
+int recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer);
 int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina);
 int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina);
 void manejadorSIGUSR1(int signal_num);
 void avisarANucleoFinalizacionDeCPU(int socketNucleo);
 void hiloSignalYHeader();
+void borrarBarraTesYEnesDeString(char* variable);
+void destruirPcb(t_pcb pcb);
+void destruirRegistroStack(t_registro_pila * registro);
 
 
 #endif /* FUNCIONES_H_ */

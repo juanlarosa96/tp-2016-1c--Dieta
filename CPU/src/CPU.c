@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
 	signalApagado = 0;
 
-	int quantumTotal = 0, quantumRetardo = 0;
+	int quantumTotal = 0, quantumRetardo = 0, primeraVez = 0;
 
 	while (!signalApagado) {
 
@@ -111,7 +111,10 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case headerPcb:
-
+				if(primeraVez){
+					destruirPcb(pcbRecibido);
+				}
+				primeraVez = 1;
 				pcbRecibido = recibirPcb(socketNucleo);
 
 				avisarANucleoCPUListo(socketNucleo);

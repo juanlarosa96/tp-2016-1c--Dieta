@@ -35,8 +35,14 @@ void manejarCPU(void * socket) {
 		sem_wait(&semaforoColaListos);
 
 		siguientePcb = DevolverProcesoColaListos();
+		pthread_mutex_lock(&mutexUnidadesQuantum);
 		enviarUnidadesQuantum(socketCpu, cantidadQuantum);
+		pthread_mutex_unlock(&mutexUnidadesQuantum);
+
+		pthread_mutex_lock(&mutexRetardoQuantum);
 		enviarSleepQuantum(socketCpu, retardoQuantum);
+		pthread_mutex_unlock(&mutexRetardoQuantum);
+
 		enviarPcb(socketCpu, siguientePcb.pcb);
 
 		if (recibirHeader(socketCpu) != CPUListo) {
@@ -93,7 +99,7 @@ void manejarCPU(void * socket) {
 					destruirPcb(siguientePcb.pcb);
 					siguientePcb.pcb = recibirPcb(socketCpu);
 					log_info(logger, "Fin de quantum de proceso pid %d", siguientePcb.pcb.pid);
-					int j, sizeLista = list_size(listaFinalizacionesPendientes);
+					int j, sizeLista = list_size(listaFinalizacionesPendientes), finalizar = 0;
 					int * socketEnLista;
 
 					pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
@@ -101,7 +107,7 @@ void manejarCPU(void * socket) {
 					for (j = 0; j < sizeLista; j++) {
 						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
 						if (siguientePcb.socketConsola == *socketEnLista) {
-							finalizarProceso(siguientePcb);
+							finalizar = 1;
 							list_remove(listaFinalizacionesPendientes, j);
 							cambioProceso = 1;
 							j = sizeLista;
@@ -109,7 +115,7 @@ void manejarCPU(void * socket) {
 						}
 					}
 					pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
-
+					if(finalizar) finalizarProceso(siguientePcb);
 					if (!cambioProceso) {
 						AgregarAProcesoColaListos(siguientePcb);
 						cambioProceso = 1;
@@ -390,13 +396,13 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
 	enviarFinalizacionProgramaUMC(clienteUMC, siguientePcb.pcb.pid);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
-
 	pthread_mutex_lock(&mutexListaConsolas);
 	int largoLista = list_size(listaConsolas), i;
 	for (i = 0; i < largoLista; i++) {
 		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(listaConsolas, i);
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
 			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
+			close(pcbFinalizado->socketConsola);
 			free(pcbFinalizado);
 			break;
 		}
@@ -425,6 +431,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 
 void abortarProceso(t_pcbConConsola siguientePcb) {
 
+	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
 
 	pthread_mutex_lock(&mutexListaConsolas);
@@ -532,10 +539,8 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 	for (j = 0; j < sizeLista; j++) {
 		socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
 		if (siguientePcb.socketConsola == *socketEnLista) {
-			finalizarProceso(siguientePcb);
 			list_remove(listaFinalizacionesPendientes, j);
 			encontrado = 1;
-			finalizarProceso(siguientePcb);
 			j = sizeLista;
 		}
 	}
@@ -568,7 +573,10 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 			log_error(logger, "No existe el dispositivo solicitado por el proceso pid %d", pcbBloqueado.pcb.pcb.pid);
 		}
 
+	}else{
+		finalizarProceso(siguientePcb);
 	}
+
 
 }
 

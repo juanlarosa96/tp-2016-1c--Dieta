@@ -19,16 +19,18 @@ t_puntero definirVariable(t_nombre_variable variable) {
 		int aux = variable - '0';
 		if (aux >= 0 && aux <= 9) {
 			list_add(regPila->lista_argumentos, posicionVariable);
+			log_info(logger, "Se definio el argumento %c en la posicion %d", variable, regPila->posicionUltimaVariable - TAM_VAR);
 		} else {
 			t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof(t_identificadorConPosicionMemoria));
 			nuevaVariable->identificador = variable;
 			nuevaVariable->posicionDeVariable = *posicionVariable;
 			list_add(regPila->lista_variables, nuevaVariable);
+			log_info(logger, "Se definio la variable %c en la posicion %d", variable, regPila->posicionUltimaVariable - TAM_VAR);
 			free(posicionVariable);
 		}
 
 		pushPila(pcbRecibido.indice_stack, regPila);
-		log_info(logger, "Se definio la variable %c en la posicion ", variable, regPila->posicionUltimaVariable - TAM_VAR);
+
 		return regPila->posicionUltimaVariable - TAM_VAR;
 	} else {
 		return 0;
@@ -150,6 +152,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
 	if (sigoEjecutando){
 		huboEntradaSalida = 1;
 		sigoEjecutando = 0;
+		borrarBarraTesYEnesDeString(dispositivo);
 		log_info(logger, "Envio io al dispositivo %s por %d unidades de tiempo", dispositivo, tiempo);
 		pcbRecibido.pc++;
 		enviarEntradaSalida(socketNucleo, pcbRecibido, dispositivo, tiempo);
@@ -161,12 +164,12 @@ void parserWait(t_nombre_semaforo identificador_semaforo) {
 	 * le dice a nucleo que el proceso ansisop quiere hacer wait de este semaforo
 	 */
 	if (sigoEjecutando){
-		identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
-		log_info(logger, "Envio wait semaforo %c", identificador_semaforo);
+		borrarBarraTesYEnesDeString(identificador_semaforo);
+		log_info(logger, "Envio wait semaforo %s", identificador_semaforo);
 		enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 		if(recibirHeader(socketNucleo) == headerBloquear){
 			sigoEjecutando = 0;
-			log_info(logger, "Bloqueado por wait en el semaforo %c", identificador_semaforo);
+			log_info(logger, "Bloqueado por wait en el semaforo %s", identificador_semaforo);
 			pcbRecibido.pc++;
 			enviarPcb(socketNucleo, pcbRecibido);
 		}
@@ -178,8 +181,8 @@ void parserSignal(t_nombre_semaforo identificador_semaforo) {
 	 * el prog ansisop hace un signal de este semaforo
 	 */
 	if (sigoEjecutando){
-		identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
-		log_info(logger, "Envio signal semaforo %c", identificador_semaforo);
+		borrarBarraTesYEnesDeString(identificador_semaforo);
+		log_info(logger, "Envio signal semaforo %s", identificador_semaforo);
 		enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 	}
 }
@@ -189,6 +192,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta) {
 	 * cambio el pc a la primera instruccion de la etiqueta
 	 */
 	if (sigoEjecutando){
+		borrarBarraTesYEnesDeString(etiqueta);
 		pcbRecibido.pc = metadata_buscar_etiqueta(etiqueta, pcbRecibido.indice_etiquetas.etiquetas, pcbRecibido.indice_etiquetas.largoTotalEtiquetas);
 		huboSaltoLinea = 1;
 		log_info(logger, "Hubo salto de linea a la etiqueta %s", etiqueta);
@@ -243,6 +247,7 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar) {
 	if (sigoEjecutando){
 		t_registro_pila * nuevoRegistroStack = malloc(sizeof(t_registro_pila));
 		t_registro_pila * registroStackAnterior = popPila(pcbRecibido.indice_stack);
+		borrarBarraTesYEnesDeString(etiqueta);
 		nuevoRegistroStack->posicionUltimaVariable = registroStackAnterior->posicionUltimaVariable;
 		nuevoRegistroStack->lista_argumentos = list_create();
 		nuevoRegistroStack->lista_variables = list_create();
@@ -263,7 +268,11 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	 */
 	if (sigoEjecutando){
 		t_valor_variable valorVariable;
-		pedirCompartidaNucleo(socketNucleo, variable, &valorVariable);
+		borrarBarraTesYEnesDeString(variable);
+		if(pedirCompartidaNucleo(socketNucleo, variable, &valorVariable)){
+			log_error(logger, "Error conectando con Nucleo");
+			abort();
+		}
 		log_info(logger, "Pido valor variable compartida %s y es %d", variable, valorVariable);
 		return valorVariable;
 	} else {
@@ -276,10 +285,12 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	 * le digo a nucleo que guarde el val de la var compartida
 	 */
 	if (sigoEjecutando){
+		borrarBarraTesYEnesDeString(variable);
 		asignarCompartidaNucleo(socketNucleo, variable, valor);
 		log_info(logger, "Asigno valor %d a la variable compartida %s",valor, variable);
 		return valor;
 	}
+	return 0;
 }
 
 void finalizar() {
