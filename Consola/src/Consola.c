@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	//Creo log para la consola
 	int id_consola = getpid();
 	char* nombreLogger = string_from_format("Consola ID %d.log", id_consola);
-	logger = log_create(nombreLogger, "Consola", 0, log_level_from_string("INFO"));
+	logger = log_create(nombreLogger, "Consola", 1, log_level_from_string("INFO"));
 	char *texto;
 	texto = "info";
 
