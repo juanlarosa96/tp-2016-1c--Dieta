@@ -431,6 +431,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 
 void abortarProceso(t_pcbConConsola siguientePcb) {
 
+	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
 
 	pthread_mutex_lock(&mutexListaConsolas);

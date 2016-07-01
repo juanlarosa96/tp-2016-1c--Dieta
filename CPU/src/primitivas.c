@@ -162,11 +162,11 @@ void parserWait(t_nombre_semaforo identificador_semaforo) {
 	 */
 	if (sigoEjecutando){
 		identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
-		log_info(logger, "Envio wait semaforo %c", identificador_semaforo);
+		log_info(logger, "Envio wait semaforo %s", identificador_semaforo);
 		enviarWait(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 		if(recibirHeader(socketNucleo) == headerBloquear){
 			sigoEjecutando = 0;
-			log_info(logger, "Bloqueado por wait en el semaforo %c", identificador_semaforo);
+			log_info(logger, "Bloqueado por wait en el semaforo %s", identificador_semaforo);
 			pcbRecibido.pc++;
 			enviarPcb(socketNucleo, pcbRecibido);
 		}
@@ -179,7 +179,7 @@ void parserSignal(t_nombre_semaforo identificador_semaforo) {
 	 */
 	if (sigoEjecutando){
 		identificador_semaforo[strlen(identificador_semaforo) -1] = '\0';
-		log_info(logger, "Envio signal semaforo %c", identificador_semaforo);
+		log_info(logger, "Envio signal semaforo %s", identificador_semaforo);
 		enviarSignal(socketNucleo, pcbRecibido.pid, identificador_semaforo);
 	}
 }
@@ -263,7 +263,10 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	 */
 	if (sigoEjecutando){
 		t_valor_variable valorVariable;
-		pedirCompartidaNucleo(socketNucleo, variable, &valorVariable);
+		if(pedirCompartidaNucleo(socketNucleo, variable, &valorVariable)){
+			log_error(logger, "Error conectando con Nucleo");
+			abort();
+		}
 		log_info(logger, "Pido valor variable compartida %s y es %d", variable, valorVariable);
 		return valorVariable;
 	} else {
@@ -280,6 +283,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 		log_info(logger, "Asigno valor %d a la variable compartida %s",valor, variable);
 		return valor;
 	}
+	return 0;
 }
 
 void finalizar() {

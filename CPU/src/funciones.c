@@ -31,8 +31,8 @@ int pedirLineaAUMC(int socketUMC, char * lineaAnsisop, t_pcb pcbActual, int tama
 	return enviarPedidosDePosicionMemoria(socketUMC, posicion, (void *) lineaAnsisop, tamanioPagina);
 }
 
-void recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
-	recibirTodo(socketUMC, buffer, largoPedido);
+int recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
+	return recibirTodo(socketUMC, buffer, largoPedido);
 }
 
 int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
@@ -46,9 +46,19 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 
 	while (bytesTotales >= tamanioPagina) {
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
-			return 1;
-		recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
+		header = recibirHeader(socketUMC);
+		if (header != pedidoMemoriaOK) {
+			if (header == pedidoMemoriaFallo) {
+				return 1;
+			} else {
+				log_error(logger, "Error conectando con UMC");
+				abort();
+			}
+		}
+		if (recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos)) {
+			log_error(logger, "Error conectando con UMC");
+			abort();
+		}
 		bytesTotales -= tamanio;
 		bytesRecibidos += tamanio;
 		tamanio = tamanioPagina;
@@ -64,15 +74,25 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, v
 
 	if (tamanio != 0) {
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
-		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
-			return 1;
-		recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos);
+		header = recibirHeader(socketUMC);
+		if (header != pedidoMemoriaOK) {
+			if (header == pedidoMemoriaFallo) {
+				return 1;
+			} else {
+				log_error(logger, "Error conectando con UMC");
+				abort();
+			}
+		}
+		if (recibirBytesDePagina(socketUMC, tamanio, (void *) buffer + bytesRecibidos)) {
+			log_error(logger, "Error conectando con UMC");
+			abort();
+		}
 	}
 	return 0;
 }
 
 int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
-	int bytesTotales = posicion.offset + posicion.size;
+	int bytesTotales = posicion.offset + posicion.size, header;
 	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina, tamanio = posicion.size, multiplesPedidos = 0;
 
 	if (posicion.size + offset > tamanioPagina) {
@@ -82,8 +102,15 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 
 	while (bytesTotales >= tamanioPagina) {
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *) buffer + bytesEnviados);
-		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
-			return 1;
+		header = recibirHeader(socketUMC);
+		if (header != pedidoMemoriaOK) {
+			if (header == pedidoMemoriaFallo) {
+				return 1;
+			} else {
+				log_error(logger, "Error conectando con UMC");
+				abort();
+			}
+		}
 		bytesTotales -= tamanio;
 		bytesEnviados += tamanio;
 		tamanio = tamanioPagina;
@@ -98,10 +125,17 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC, t_posicion_memoria pos
 
 	if (tamanio != 0) {
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio, (char *) buffer + bytesEnviados);
-		if (recibirHeader(socketUMC) == pedidoMemoriaFallo)
-			return 1;
+		header = recibirHeader(socketUMC);
+		if (header != pedidoMemoriaOK) {
+			if (header == pedidoMemoriaFallo) {
+				return 1;
+			} else {
+				log_error(logger, "Error conectando con UMC");
+				abort();
+			}
+		}
+		return 0;
 	}
-	return 0;
 }
 
 void manejadorSIGUSR1(int signal_num) {

@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 		log_error(logger, "Se produjo un error conectandose a la UMC", texto);
 		return 1;
 	}
+	log_info(logger, "Se establecio la conexion con la UMC");
 
 	if (responderHandshake(clienteUMC, IDNUCLEO, IDUMC)) {
 		log_error(logger, "Error en el handshake", texto);
@@ -102,8 +103,9 @@ int main(int argc, char **argv) {
 		return 1;
 
 	}
+	log_info(logger, "Tamaño de pagina recibido: %d bytes", tamanioPagina);
 
-	log_info(logger, "Se estableció la conexion con la UMC", texto);
+
 
 	int servidorNucleo;
 	if (crearSocket(&servidorNucleo)) {
