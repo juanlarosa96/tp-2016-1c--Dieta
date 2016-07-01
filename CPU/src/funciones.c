@@ -146,8 +146,8 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 				abort();
 			}
 		}
-		return 0;
 	}
+	return 0;
 }
 
 void manejadorSIGUSR1(int signal_num) {
