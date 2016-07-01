@@ -19,16 +19,18 @@ t_puntero definirVariable(t_nombre_variable variable) {
 		int aux = variable - '0';
 		if (aux >= 0 && aux <= 9) {
 			list_add(regPila->lista_argumentos, posicionVariable);
+			log_info(logger, "Se definio el argumento %c en la posicion %d", variable, regPila->posicionUltimaVariable - TAM_VAR);
 		} else {
 			t_identificadorConPosicionMemoria * nuevaVariable = malloc(sizeof(t_identificadorConPosicionMemoria));
 			nuevaVariable->identificador = variable;
 			nuevaVariable->posicionDeVariable = *posicionVariable;
 			list_add(regPila->lista_variables, nuevaVariable);
+			log_info(logger, "Se definio la variable %c en la posicion %d", variable, regPila->posicionUltimaVariable - TAM_VAR);
 			free(posicionVariable);
 		}
 
 		pushPila(pcbRecibido.indice_stack, regPila);
-		log_info(logger, "Se definio la variable %c en la posicion ", variable, regPila->posicionUltimaVariable - TAM_VAR);
+
 		return regPila->posicionUltimaVariable - TAM_VAR;
 	} else {
 		return 0;
