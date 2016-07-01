@@ -35,8 +35,14 @@ void manejarCPU(void * socket) {
 		sem_wait(&semaforoColaListos);
 
 		siguientePcb = DevolverProcesoColaListos();
+		pthread_mutex_lock(&mutexUnidadesQuantum);
 		enviarUnidadesQuantum(socketCpu, cantidadQuantum);
+		pthread_mutex_unlock(&mutexUnidadesQuantum);
+
+		pthread_mutex_lock(&mutexRetardoQuantum);
 		enviarSleepQuantum(socketCpu, retardoQuantum);
+		pthread_mutex_unlock(&mutexRetardoQuantum);
+
 		enviarPcb(socketCpu, siguientePcb.pcb);
 
 		if (recibirHeader(socketCpu) != CPUListo) {
