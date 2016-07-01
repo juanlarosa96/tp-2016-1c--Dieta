@@ -39,6 +39,8 @@ void manejadorSIGUSR1(int signal_num);
 void avisarANucleoFinalizacionDeCPU(int socketNucleo);
 void hiloSignalYHeader();
 void borrarBarraTesYEnesDeString(char* variable);
+void destruirPcb(t_pcb pcb);
+void destruirRegistroStack(t_registro_pila * registro);
 
 
 #endif /* FUNCIONES_H_ */

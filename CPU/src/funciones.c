@@ -183,3 +183,14 @@ void borrarBarraTesYEnesDeString(char* variable) {
 		i++;
 	}
 }
+
+void destruirPcb(t_pcb pcb) {
+	free(pcb.indice_codigo.instrucciones);
+	free(pcb.indice_etiquetas.etiquetas);
+	list_destroy_and_destroy_elements(pcb.indice_stack, (void *) destruirRegistroStack);
+}
+
+void destruirRegistroStack(t_registro_pila * registro) {
+	list_destroy_and_destroy_elements(registro->lista_argumentos, free);
+	list_destroy_and_destroy_elements(registro->lista_variables, free);
+}
