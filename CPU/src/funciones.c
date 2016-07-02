@@ -43,11 +43,10 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 		void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size;
 	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina,
-			tamanio = posicion.size, multiplesPedidos = 0;
+			tamanio = posicion.size;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
-		multiplesPedidos = 1;
 	}
 
 	while (bytesTotales >= tamanioPagina) {
@@ -67,17 +66,14 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 			abort();
 		}
 		bytesTotales -= tamanio;
+		bytesTotales-=offset;
 		bytesRecibidos += tamanio;
 		tamanio = tamanioPagina;
 		offset = 0;
 		pagina++;
 	}
 
-	if (multiplesPedidos) {
-		tamanio = bytesTotales;
-	} else {
-		tamanio = bytesTotales - posicion.offset;
-	}
+	tamanio = bytesTotales;
 
 	if (tamanio != 0) {
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
@@ -103,11 +99,11 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 		t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size, header;
 	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina,
-			tamanio = posicion.size, multiplesPedidos = 0;
+			tamanio = posicion.size;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
-		multiplesPedidos = 1;
+
 	}
 
 	while (bytesTotales >= tamanioPagina) {
@@ -123,16 +119,14 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 			}
 		}
 		bytesTotales -= tamanio;
+		bytesTotales -= offset;
 		bytesEnviados += tamanio;
 		tamanio = tamanioPagina;
 		offset = 0;
 		pagina++;
 	}
-	if (multiplesPedidos) {
-		tamanio = bytesTotales;
-	} else {
-		tamanio = bytesTotales - posicion.offset;
-	}
+
+	tamanio = bytesTotales;
 
 	if (tamanio != 0) {
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
