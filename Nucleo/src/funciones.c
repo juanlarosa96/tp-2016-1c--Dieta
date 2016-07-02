@@ -36,11 +36,21 @@ void manejarCPU(void * socket) {
 
 		siguientePcb = DevolverProcesoColaListos();
 		pthread_mutex_lock(&mutexUnidadesQuantum);
-		enviarUnidadesQuantum(socketCpu, cantidadQuantum);
+		if (enviarUnidadesQuantum(socketCpu, cantidadQuantum) == -1) {
+			pthread_mutex_unlock(&mutexUnidadesQuantum);
+			log_info(logger, "CPU socket %d desconectado", socketCpu);
+			close(socketCpu);
+			pthread_exit(NULL);
+		}
 		pthread_mutex_unlock(&mutexUnidadesQuantum);
 
 		pthread_mutex_lock(&mutexRetardoQuantum);
-		enviarSleepQuantum(socketCpu, retardoQuantum);
+		if (enviarSleepQuantum(socketCpu, retardoQuantum) == -1) {
+			pthread_mutex_unlock(&mutexRetardoQuantum);
+			log_info(logger, "CPU socket %d desconectado", socketCpu);
+			close(socketCpu);
+			pthread_exit(NULL);
+		}
 		pthread_mutex_unlock(&mutexRetardoQuantum);
 
 		enviarPcb(socketCpu, siguientePcb.pcb);
