@@ -588,22 +588,24 @@ int recibirCantidadQuantum(int socketOrigen) {
 	}
 }
 
-void enviarUnidadesQuantum(int socketCPU, int unidades) {
-	int header = quantumUnidades;
+int enviarUnidadesQuantum(int socketCPU, int unidades) {
+	int header = quantumUnidades, fallo = 0;
 	void * data = malloc(sizeof(int) + sizeof(int));
 	memcpy(data, &header, sizeof(int));
 	memcpy(data + sizeof(int), &unidades, sizeof(int));
-	send(socketCPU, data, sizeof(int) * 2, 0);
+	fallo = send(socketCPU, data, sizeof(int) * 2, 0);
 	free(data);
+	return fallo;
 }
 
-void enviarSleepQuantum(int socketCPU, int sleep) {
-	int header = quantumSleep;
+int enviarSleepQuantum(int socketCPU, int sleep) {
+	int header = quantumSleep, fallo = 0;
 	void * data = malloc(sizeof(int) + sizeof(int));
 	memcpy(data, &header, sizeof(int));
 	memcpy(data + sizeof(int), &sleep, sizeof(int));
-	send(socketCPU, data, sizeof(int) * 2, 0);
+	fallo = send(socketCPU, data, sizeof(int) * 2, 0);
 	free(data);
+	return fallo;
 }
 
 void enviarFinalizacionProgramaNucleo(int socketNucleo) {

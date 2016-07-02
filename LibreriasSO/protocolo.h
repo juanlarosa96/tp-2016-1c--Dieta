@@ -101,8 +101,8 @@ void enviarSignal(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSema
 void recibirSignal(int socketOrigen, uint32_t *id_proceso,int *largoNombreSemaforo, t_nombre_semaforo * nombreSemaforo);
 
 int recibirCantidadQuantum(int socketOrigen);
-void enviarUnidadesQuantum(int socketCPU, int  unidades);
-void enviarSleepQuantum(int socketCPU, int  sleep);
+int enviarUnidadesQuantum(int socketCPU, int  unidades);
+int enviarSleepQuantum(int socketCPU, int  sleep);
 void enviarFinalizacionProgramaNucleo(int socketNucleo);
 void enviarAbortarProgramaNucleo(int socketNucleo);
 int pedirCompartidaNucleo(int socketNucleo, char * variable, int * punteroVariable);
