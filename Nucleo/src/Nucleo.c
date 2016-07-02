@@ -325,6 +325,7 @@ int main(int argc, char **argv) {
 						if (!FD_ISSET(i, &bolsaDeSockets)) {
 							log_info(logger, "Consola socket %d desconectada",
 									i);
+							close(i);
 							break;
 						}
 						FD_CLR(i, &bolsaDeSockets);
@@ -422,6 +423,8 @@ int main(int argc, char **argv) {
 									socketProcesoFinalizado);
 							pthread_mutex_unlock(
 									&mutexListaFinalizacionesPendientes);
+						} else{
+							close(i);
 						}
 						break;
 					}
