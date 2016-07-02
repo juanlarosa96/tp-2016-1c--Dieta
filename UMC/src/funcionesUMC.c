@@ -1162,7 +1162,7 @@ void procesarOperacionesNucleo(int * conexion) {
 
 void procesarSolicitudOperacionCPU(int * socketCPU) {
 
-	uint32_t idCambioProceso;
+	uint32_t idCambioProceso = 0;
 	int conexion = *socketCPU;
 	free(socketCPU);
 
@@ -1173,7 +1173,7 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		uint32_t offset;
 		uint32_t size;
 		void * bufferPedido;
-		uint32_t idNuevoProcesoActivo = 0;
+		uint32_t idNuevoProcesoActivo;
 
 		switch (header) {
 		case 0:
