@@ -147,6 +147,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexRetardoQuantum, NULL);
 
 	pthread_mutex_init(&mutexUMC, NULL);
+	pthread_mutex_init(&mutexBolsaSockets, NULL);
 
 	// temp file descriptor list for select()
 	int listener = servidorNucleo;     // listening socket descriptor
@@ -166,8 +167,9 @@ int main(int argc, char **argv) {
 	int i;
 
 	while (1) {
-
+		pthread_mutex_lock(&mutexBolsaSockets);
 		bolsaAuxiliar = bolsaDeSockets; // copy it
+		pthread_mutex_unlock(&mutexBolsaSockets);
 		if (select(fdmax + 1, &bolsaAuxiliar, NULL, NULL, NULL) == -1) {
 			perror("select");
 			return 1;
@@ -197,7 +199,9 @@ int main(int argc, char **argv) {
 						break;
 
 					case IDCONSOLA:
+						pthread_mutex_lock(&mutexBolsaSockets);
 						FD_SET(nuevaConexion, &bolsaDeSockets);
+						pthread_mutex_unlock(&mutexBolsaSockets);
 						log_info(logger, "Nueva consola conectada, socket %d",
 								nuevaConexion);
 						//Maneja consola
@@ -298,7 +302,9 @@ int main(int argc, char **argv) {
 									"No se pudo reservar espacio para el programa\n");
 							destruirPcb(nuevoPcb);
 							enviarFinalizacionProgramaConsola(i);
+							pthread_mutex_lock(&mutexBolsaSockets);
 							FD_CLR(i, &bolsaDeSockets);
+							pthread_mutex_unlock(&mutexBolsaSockets);
 							log_error(logger, "Espacio en memoria insuficiente",
 									texto);
 
@@ -322,13 +328,16 @@ int main(int argc, char **argv) {
 						break;
 
 					default:
+						pthread_mutex_lock(&mutexBolsaSockets);
 						if (!FD_ISSET(i, &bolsaDeSockets)) {
 							log_info(logger, "Consola socket %d desconectada",
 									i);
 							close(i);
+							pthread_mutex_unlock(&mutexBolsaSockets);
 							break;
 						}
 						FD_CLR(i, &bolsaDeSockets);
+						pthread_mutex_unlock(&mutexBolsaSockets);
 						if (header == finalizacionPrograma) {
 							log_info(logger,
 									"Consola socket %d envio finalizacion de programa",
