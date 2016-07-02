@@ -441,7 +441,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
 			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
 			free(pcbFinalizado);
-			break;
+			i=largoLista;
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
@@ -479,6 +479,7 @@ void abortarProceso(t_pcbConConsola siguientePcb) {
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
 			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
 			free(pcbFinalizado);
+			i=largoLista;
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
