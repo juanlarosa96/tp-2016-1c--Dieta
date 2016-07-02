@@ -49,8 +49,30 @@ void manejarCPU(void * socket) {
 
 			cambioProceso = 1;
 			desconectado = 1;
+
 			log_info(logger, "CPU socket %d desconectado", socketCpu);
-			AgregarAProcesoColaListos(siguientePcb);
+			close(socketCpu);
+			pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+			int j, sizeLista = list_size(listaFinalizacionesPendientes), finalizar = 0;
+			int * socketEnLista;
+
+			for (j = 0; j < sizeLista; j++) {
+				socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
+				if (siguientePcb.socketConsola == *socketEnLista) {
+					finalizar = 1;
+					list_remove(listaFinalizacionesPendientes, j);
+					cambioProceso = 1;
+					j = sizeLista;
+					free(socketEnLista);
+				}
+			}
+			pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+			if (finalizar) {
+				finalizarProceso(siguientePcb);
+			} else {
+				AgregarAProcesoColaListos(siguientePcb);
+			}
+			pthread_exit(NULL);
 		}
 
 		while (!cambioProceso) {
@@ -59,6 +81,7 @@ void manejarCPU(void * socket) {
 				finalizarProceso(siguientePcb);
 				desconectado = 1;
 				log_info(logger, "Se desconectó el CPU socket %d", socketCpu);
+				close(socketCpu);
 				pthread_exit(NULL);
 			}
 
@@ -115,7 +138,8 @@ void manejarCPU(void * socket) {
 						}
 					}
 					pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
-					if(finalizar) finalizarProceso(siguientePcb);
+					if (finalizar)
+						finalizarProceso(siguientePcb);
 					if (!cambioProceso) {
 						AgregarAProcesoColaListos(siguientePcb);
 						cambioProceso = 1;
@@ -404,7 +428,6 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(listaConsolas, i);
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
 			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
-			close(pcbFinalizado->socketConsola);
 			free(pcbFinalizado);
 			break;
 		}
@@ -575,10 +598,9 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 			log_error(logger, "No existe el dispositivo solicitado por el proceso pid %d", pcbBloqueado.pcb.pcb.pid);
 		}
 
-	}else{
+	} else {
 		finalizarProceso(siguientePcb);
 	}
-
 
 }
 
