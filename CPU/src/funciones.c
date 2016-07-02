@@ -43,13 +43,14 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 		void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size;
 	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina,
-			tamanio = posicion.size;
+			tamanio = posicion.size, multiplesPedidos = 0;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
+		multiplesPedidos = 1;
 	}
 
-	while (bytesTotales >= tamanioPagina) {
+	while (bytesTotales > tamanioPagina) {
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
 		header = recibirHeader(socketUMC);
 		if (header != pedidoMemoriaOK) {
@@ -66,7 +67,7 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 			abort();
 		}
 		bytesTotales -= tamanio;
-		bytesTotales-=offset;
+		bytesTotales -= offset;
 		bytesRecibidos += tamanio;
 		tamanio = tamanioPagina;
 		offset = 0;
@@ -74,6 +75,9 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 	}
 
 	tamanio = bytesTotales;
+	if (!multiplesPedidos) {
+			tamanio -= posicion.offset;
+		}
 
 	if (tamanio != 0) {
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
@@ -99,14 +103,15 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 		t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
 	int bytesTotales = posicion.offset + posicion.size, header;
 	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina,
-			tamanio = posicion.size;
+			tamanio = posicion.size, multiplesPedidos = 1;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
+		multiplesPedidos = 1;
 
 	}
 
-	while (bytesTotales >= tamanioPagina) {
+	while (bytesTotales > tamanioPagina) {
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
 				(char *) buffer + bytesEnviados);
 		header = recibirHeader(socketUMC);
@@ -127,6 +132,9 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 	}
 
 	tamanio = bytesTotales;
+	if (!multiplesPedidos) {
+		tamanio -= posicion.offset;
+	}
 
 	if (tamanio != 0) {
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
@@ -181,7 +189,8 @@ void borrarBarraTesYEnesDeString(char* variable) {
 void destruirPcb(t_pcb pcb) {
 	free(pcb.indice_codigo.instrucciones);
 	free(pcb.indice_etiquetas.etiquetas);
-	list_destroy_and_destroy_elements(pcb.indice_stack, (void *) destruirRegistroStack);
+	list_destroy_and_destroy_elements(pcb.indice_stack,
+			(void *) destruirRegistroStack);
 }
 
 void destruirRegistroStack(t_registro_pila * registro) {
