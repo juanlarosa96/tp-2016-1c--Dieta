@@ -394,7 +394,9 @@ int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * 
 
 void finalizarProceso(t_pcbConConsola siguientePcb) {
 	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
+	pthread_mutex_lock(&mutexUMC);
 	enviarFinalizacionProgramaUMC(clienteUMC, siguientePcb.pcb.pid);
+	pthread_mutex_unlock(&mutexUMC);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
 	pthread_mutex_lock(&mutexListaConsolas);
 	int largoLista = list_size(listaConsolas), i;

@@ -146,6 +146,8 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexUnidadesQuantum, NULL);
 	pthread_mutex_init(&mutexRetardoQuantum, NULL);
 
+	pthread_mutex_init(&mutexUMC, NULL);
+
 	// temp file descriptor list for select()
 	int listener = servidorNucleo;     // listening socket descriptor
 
@@ -278,9 +280,11 @@ int main(int argc, char **argv) {
 
 						t_pcb nuevoPcb = crearPcb(programa, largoPrograma);
 
+						pthread_mutex_lock(&mutexUMC);
 						int respuestaInicializacion = iniciarUnPrograma(
 								clienteUMC, nuevoPcb, largoPrograma, programa,
 								PAGINAS_STACK);
+						pthread_mutex_unlock(&mutexUMC);
 
 						if (respuestaInicializacion == -1) {
 							log_error(logger,
