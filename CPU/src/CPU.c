@@ -51,11 +51,14 @@ int main(int argc, char *argv[]) {
 		log_error(logger, "No se pudo conectar al Nucleo", texto);
 		return 1;
 	}
+
 	//handshake
 	if (responderHandshake(socketNucleo, IDCPU, IDNUCLEO)) {
 		log_error(logger, "Error en el handshake", texto);
 		return 1;
 	}
+
+	log_info(logger, "Conectado a Nucleo");
 
 	//creo socket umc
 	crearSocket(&socketUMC);
@@ -71,6 +74,9 @@ int main(int argc, char *argv[]) {
 		log_error(logger, "Error en el handshake", texto);
 		return 1;
 	}
+
+	log_info(logger, "Conectado a UMC");
+
 	if (recibirHeader(socketUMC) == tamanioDePagina) {
 		tamanioPagina = recibirTamanioPagina(socketUMC);
 	} else {
@@ -78,6 +84,9 @@ int main(int argc, char *argv[]) {
 		log_error(logger, "Error recibiendo el tamaño de pagina", texto);
 		return 1;
 	}
+
+	log_info(logger, "Recibido tamaño de pagina: %d", tamanioPagina);
+
 	signal(SIGUSR1, manejadorSIGUSR1);
 	pthread_t nuevoHilo;
 	pthread_attr_t attr;
