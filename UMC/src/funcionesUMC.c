@@ -560,7 +560,9 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 
 	escrituraMemoria(*idFrame, 0, size_frames, codigoPagina);
 
-	log_info(logger, "Se ejecutó algoritmo de reemplazo en memoria para proceso %d.", pid);
+	log_info(logger,
+			"Se ejecutó algoritmo de reemplazo en memoria para proceso %d.",
+			pid);
 }
 
 void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
@@ -608,7 +610,8 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
-	log_info(logger, "Página nro %d, del proceso PID %d, cargada en TLB", nroPagina, pid);
+	log_info(logger, "Página nro %d, del proceso PID %d, cargada en TLB",
+			nroPagina, pid);
 }
 
 int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
@@ -667,7 +670,9 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame);
 	}
 
-	log_info(logger, "Página nro %d perteneciente al proceso PID %d cargada en memoria", nroPagina, pid);
+	log_info(logger,
+			"Página nro %d perteneciente al proceso PID %d cargada en memoria",
+			nroPagina, pid);
 	return 1; //Se logró cargar página en memoria
 }
 
@@ -740,6 +745,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			enviarPedidoMemoriaOK(socketCPU);
 			enviarBytesACPU(socketCPU, data, tamanio);
+			enviarPedidoMemoriaOK(socketCPU);
 			return;
 		}
 	}
@@ -925,9 +931,12 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 }
 
 void cambioProceso(uint32_t idNuevoPrograma, uint32_t * idProcesoActivo) { //ya tiene logger
+	if (*idProcesoActivo != idNuevoPrograma) {
 
-	if (entradasTLB > 0) {
-		limpiarEntradasTLBporPID(*idProcesoActivo);
+		if (entradasTLB > 0) {
+			limpiarEntradasTLBporPID(*idProcesoActivo);
+		}
+
 	}
 
 	(*idProcesoActivo) = idNuevoPrograma;
@@ -986,7 +995,7 @@ void dumpTodosLosProcesos() {
 void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo) {
 	int i = 0;
 	t_nodo_lista_paginas* nodoAuxPagina;
-	printf("\nDump memoria del PID:\n");
+	//printf("\nDump memoria del PID:\n");
 	fprintf(archivo, "\nDump memoria del PID:\n");
 	pthread_mutex_lock(&mutexProcesos);
 	while (i < list_size(nodoAux->lista_paginas)) {
@@ -1051,13 +1060,23 @@ void consolaUMC(void) {
 			scanf("%s", comando);
 
 			if (strncasecmp(comando, "tlb", 3) == 0) {
+				if (entradasTLB > 0) {
+					printf("Se ejecutará: flush TLB\n");
+					flushTLB();
+					log_info(logger, "Se ejecutó flush TLB\n");
+
+				} else {
+					printf(
+							"No se puede ejecutar flush TLB porque no tiene entradas\n");
+
+				}
 				printf("Se ejecutará: flush TLB\n");
 				if (entradasTLB > 0) {
 					flushTLB();
 					log_info(logger, "Se ejecutó flush TLB\n");
-				}
-				else {
-					printf("No se puede ejecutar flush TLB. No tiene entradas\n");
+				} else {
+					printf(
+							"No se puede ejecutar flush TLB. No tiene entradas\n");
 				}
 			} else if (strncasecmp(comando, "memory", 6) == 0) {
 				printf("Se ejecutará: Flush Memoria Principal\n");
