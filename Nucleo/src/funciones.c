@@ -40,6 +40,7 @@ void manejarCPU(void * socket) {
 			pthread_mutex_unlock(&mutexUnidadesQuantum);
 			log_info(logger, "CPU socket %d desconectado", socketCpu);
 			close(socketCpu);
+			AgregarAProcesoColaListos(siguientePcb);
 			pthread_exit(NULL);
 		}
 		pthread_mutex_unlock(&mutexUnidadesQuantum);
@@ -49,6 +50,7 @@ void manejarCPU(void * socket) {
 			pthread_mutex_unlock(&mutexRetardoQuantum);
 			log_info(logger, "CPU socket %d desconectado", socketCpu);
 			close(socketCpu);
+			AgregarAProcesoColaListos(siguientePcb);
 			pthread_exit(NULL);
 		}
 		pthread_mutex_unlock(&mutexRetardoQuantum);
@@ -140,10 +142,9 @@ void manejarCPU(void * socket) {
 						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
 						if (siguientePcb.socketConsola == *socketEnLista) {
 							finalizar = 1;
-							list_remove(listaFinalizacionesPendientes, j);
+							free(list_remove(listaFinalizacionesPendientes, j));
 							cambioProceso = 1;
 							j = sizeLista;
-							free(socketEnLista);
 						}
 					}
 					pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
@@ -457,6 +458,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 		if (*socketBusqueda == siguientePcb.socketConsola) {
 
 			free(list_remove(listaFinalizacionesPendientes, i));
+			i = cantElementos;
 		}
 
 	}
@@ -495,6 +497,7 @@ void abortarProceso(t_pcbConConsola siguientePcb) {
 		if (*socketBusqueda == siguientePcb.socketConsola) {
 
 			free(list_remove(listaFinalizacionesPendientes, i));
+			i = cantElementos;
 		}
 
 	}
@@ -517,15 +520,17 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		log_info(logger, "Programa pid %d termino IO", pedidoDeIO.pcb.pcb.pid);
 
 		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
-
+		pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
 		for (i = 0; i < sizeLista; i++) {
 
 			int * socket = list_get(listaFinalizacionesPendientes, i);
 			if (*socket == pedidoDeIO.pcb.socketConsola) {
 				encontrado = pedidoDeIO.pcb.socketConsola;
 				free(list_remove(listaFinalizacionesPendientes, i));
+				i = sizeLista;
 			}
 		}
+		pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 		if (encontrado == -1) {
 			AgregarAProcesoColaListos(pedidoDeIO.pcb);
 		} else {
@@ -578,7 +583,7 @@ void ponerEnColaBloqueados(t_pcbConConsola siguientePcb, char * nombre, int larg
 	for (j = 0; j < sizeLista; j++) {
 		socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
 		if (siguientePcb.socketConsola == *socketEnLista) {
-			list_remove(listaFinalizacionesPendientes, j);
+			free(list_remove(listaFinalizacionesPendientes, j));
 			encontrado = 1;
 			j = sizeLista;
 		}
