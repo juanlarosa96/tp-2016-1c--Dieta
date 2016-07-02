@@ -498,7 +498,7 @@ void actualizarPaginaAReemplazar(int indiceProceso, int idFrame,
 
 	while (i < list_size(nodoProceso->lista_paginas)) {
 		nodoPagina = list_get(nodoProceso->lista_paginas, i);
-		if (nodoPagina->nroFrame == (uint32_t) idFrame) {
+		if (nodoPagina->nroFrame == (uint32_t) idFrame && nodoPagina->status == 'M') {
 			nodoPagina->status = 'S';
 			break;
 		}
@@ -745,7 +745,6 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			enviarPedidoMemoriaOK(socketCPU);
 			enviarBytesACPU(socketCPU, data, tamanio);
-			enviarPedidoMemoriaOK(socketCPU);
 			return;
 		}
 	}
@@ -1174,7 +1173,7 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		uint32_t offset;
 		uint32_t size;
 		void * bufferPedido;
-		uint32_t idNuevoProcesoActivo;
+		uint32_t idNuevoProcesoActivo = 0;
 
 		switch (header) {
 		case 0:
