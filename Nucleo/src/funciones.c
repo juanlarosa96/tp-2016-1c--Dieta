@@ -101,7 +101,6 @@ void manejarCPU(void * socket) {
 				if (recibirHeader(socketCpu) == headerPcb) {
 					destruirPcb(siguientePcb.pcb);
 					siguientePcb.pcb = recibirPcb(socketCpu);
-					log_info(logger, "Se finalizo el proceso pid %d", siguientePcb.pcb.pid);
 					finalizarProceso(siguientePcb);
 					cambioProceso = 1;
 				} else {
@@ -131,10 +130,11 @@ void manejarCPU(void * socket) {
 					destruirPcb(siguientePcb.pcb);
 					siguientePcb.pcb = recibirPcb(socketCpu);
 					log_info(logger, "Fin de quantum de proceso pid %d", siguientePcb.pcb.pid);
+					pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
 					int j, sizeLista = list_size(listaFinalizacionesPendientes), finalizar = 0;
 					int * socketEnLista;
 
-					pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+
 
 					for (j = 0; j < sizeLista; j++) {
 						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
@@ -174,9 +174,10 @@ void manejarCPU(void * socket) {
 				char *texto;
 				uint32_t pid;
 				recibirValorAImprimir(socketCpu, &pid, &largoTexto, &texto);
+				pthread_mutex_lock(&mutexListaConsolas);
 				int listSize = list_size(listaConsolas), i;
 
-				pthread_mutex_lock(&mutexListaConsolas);
+
 				for (i = 0; i < listSize; i++) {
 					t_pidConConsola * elemento = (t_pidConConsola *) list_get(listaConsolas, i);
 					if (elemento->pid == pid) {
@@ -426,7 +427,9 @@ int iniciarUnPrograma(int clienteUMC, t_pcb nuevoPcb, int largoPrograma, char * 
 }
 
 void finalizarProceso(t_pcbConConsola siguientePcb) {
+	pthread_mutex_lock(&mutexBolsaSockets);
 	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
+	pthread_mutex_unlock(&mutexBolsaSockets);
 	pthread_mutex_lock(&mutexUMC);
 	enviarFinalizacionProgramaUMC(clienteUMC, siguientePcb.pcb.pid);
 	pthread_mutex_unlock(&mutexUMC);
@@ -464,8 +467,9 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 }
 
 void abortarProceso(t_pcbConConsola siguientePcb) {
-
+	pthread_mutex_lock(&mutexBolsaSockets);
 	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
+	pthread_mutex_unlock(&mutexBolsaSockets);
 	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
 
 	pthread_mutex_lock(&mutexListaConsolas);

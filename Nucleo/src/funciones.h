@@ -34,6 +34,7 @@ pthread_mutex_t mutexColaFinalizados;
 pthread_mutex_t mutexListaConsolas;
 pthread_mutex_t mutexListaFinalizacionesPendientes;
 pthread_mutex_t mutexUMC;
+pthread_mutex_t mutexBolsaSockets;
 
 pthread_mutex_t mutexUnidadesQuantum;
 pthread_mutex_t mutexRetardoQuantum;
