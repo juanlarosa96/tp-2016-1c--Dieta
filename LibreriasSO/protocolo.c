@@ -235,7 +235,7 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 
 	int cantidadElementosStack = 0, cursorMemoria = 0, i = 0;
 
-	void* buffer = malloc(3000);
+	void* buffer = malloc(5000);
 
 	memcpy(buffer, &(pcb.pid), sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
