@@ -923,7 +923,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 	list_add(listaProcesos, unNodo);
 	pthread_mutex_unlock(&mutexProcesos);
 
-	log_info(logger, "Se inicializó nuevo programa pid %d", idPrograma);
+	log_info(logger, "Se inicializó nuevo programa pid %d. Cantidad de páginas totales: %d", idPrograma, paginasRequeridas);
 
 	free(codigoPrograma);
 

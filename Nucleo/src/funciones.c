@@ -115,7 +115,6 @@ void manejarCPU(void * socket) {
 				if (recibirHeader(socketCpu) == headerPcb) {
 					destruirPcb(siguientePcb.pcb);
 					siguientePcb.pcb = recibirPcb(socketCpu);
-					log_info(logger, "Se aborto el proceso pid %d", siguientePcb.pcb.pid);
 					abortarProceso(siguientePcb);
 					cambioProceso = 1;
 				} else {
