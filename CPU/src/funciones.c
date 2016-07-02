@@ -41,6 +41,7 @@ int recibirBytesDePagina(int socketUMC, int largoPedido, void * buffer) {
 
 int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 		void * buffer, int tamanioPagina) {
+	log_info(logger, "Se solicitaran bytes en pagina %d, offset %d, size total %d a UMC", posicion.pagina, posicion.offset, posicion.size);
 	int bytesTotales = posicion.offset + posicion.size;
 	int bytesRecibidos = 0, offset = posicion.offset, pagina = posicion.pagina,
 			tamanio = posicion.size, multiplesPedidos = 0;
@@ -51,6 +52,7 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 	}
 
 	while (bytesTotales > tamanioPagina) {
+		log_info(logger, "Solicito bytes en pagina %d, offset %d, size %d a UMC", pagina, offset, tamanio);
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
 		header = recibirHeader(socketUMC);
 		if (header != pedidoMemoriaOK) {
@@ -80,6 +82,7 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 		}
 
 	if (tamanio != 0) {
+		log_info(logger, "Solicito bytes en pagina %d, offset %d, size %d a UMC", pagina, offset, tamanio);
 		enviarSolicitudDeBytes(socketUMC, pagina, offset, tamanio);
 		header = recibirHeader(socketUMC);
 		if (header != pedidoMemoriaOK) {
@@ -101,6 +104,7 @@ int enviarPedidosDePosicionMemoria(int socketUMC, t_posicion_memoria posicion,
 
 int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 		t_posicion_memoria posicion, void * buffer, int tamanioPagina) {
+	log_info(logger, "Se almacenaran bytes en pagina %d, offset %d, size total %d a UMC", posicion.pagina, posicion.offset, posicion.size);
 	int bytesTotales = posicion.offset + posicion.size, header;
 	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina,
 			tamanio = posicion.size, multiplesPedidos = 1;
@@ -112,6 +116,7 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 	}
 
 	while (bytesTotales > tamanioPagina) {
+		log_info(logger, "Solicito almacenar en pagina %d, offset %d, size %d a UMC", pagina, offset, tamanio);
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
 				(char *) buffer + bytesEnviados);
 		header = recibirHeader(socketUMC);
@@ -137,6 +142,7 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 	}
 
 	if (tamanio != 0) {
+		log_info(logger, "Solicito almacenar en pagina %d, offset %d, size %d a UMC", pagina, offset, tamanio);
 		enviarPedidoAlmacenarBytes(socketUMC, pagina, offset, tamanio,
 				(char *) buffer + bytesEnviados);
 		header = recibirHeader(socketUMC);
