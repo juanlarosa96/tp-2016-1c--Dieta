@@ -81,7 +81,7 @@ void enviarResultadoDeEjecucionAnsisop(int socketDestino, char * mensaje, int la
 		memcpy(data + offset, mensaje, str_size);
 		offset += str_size;
 
-		send(socketDestino, data, offset, 0);
+		send(socketDestino, data, offset, MSG_NOSIGNAL);
 
 		free(data);
 }
@@ -593,7 +593,7 @@ int enviarUnidadesQuantum(int socketCPU, int unidades) {
 	void * data = malloc(sizeof(int) + sizeof(int));
 	memcpy(data, &header, sizeof(int));
 	memcpy(data + sizeof(int), &unidades, sizeof(int));
-	fallo = send(socketCPU, data, sizeof(int) * 2, 0);
+	fallo = send(socketCPU, data, sizeof(int) * 2, MSG_NOSIGNAL);
 	free(data);
 	return fallo;
 }
@@ -603,7 +603,7 @@ int enviarSleepQuantum(int socketCPU, int sleep) {
 	void * data = malloc(sizeof(int) + sizeof(int));
 	memcpy(data, &header, sizeof(int));
 	memcpy(data + sizeof(int), &sleep, sizeof(int));
-	fallo = send(socketCPU, data, sizeof(int) * 2, 0);
+	fallo = send(socketCPU, data, sizeof(int) * 2, MSG_NOSIGNAL);
 	free(data);
 	return fallo;
 }
