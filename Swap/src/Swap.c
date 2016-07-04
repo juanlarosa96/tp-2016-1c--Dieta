@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 	};
 
 	char*archivoSwap = mmap((caddr_t)  0, sizeTotal, PROT_READ | PROT_WRITE,
-	MAP_PRIVATE, fd, 0);
+	MAP_SHARED, fd, 0);
 
 	int i;
 	bitMap = malloc(sizeof(int) * cantidadDeFrames);
@@ -111,6 +111,7 @@ int main(int argc, char *argv[]) {
 	if (idRecibido != IDUMC) {
 		printf("ERROR NO SE CONECTO A UMC");
 		log_error(logger, "Se produjo un error al conectarse a UMC");
+		close(fd);
 		return -1;
 	}
 
@@ -122,6 +123,7 @@ int main(int argc, char *argv[]) {
 		switch (header) {
 		case 0:
 			log_error(logger, "Se desconectó UMC. Abortando Swap");
+			close(fd);
 			abort();
 			break;
 		case inicializarProgramaSwap:
