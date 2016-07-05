@@ -107,7 +107,7 @@ int enviarAlmacenamientosDePosicionMemoria(int socketUMC,
 	log_info(logger, "Se almacenaran bytes en pagina %d, offset %d, size total %d a UMC", posicion.pagina, posicion.offset, posicion.size);
 	int bytesTotales = posicion.offset + posicion.size, header;
 	int bytesEnviados = 0, offset = posicion.offset, pagina = posicion.pagina,
-			tamanio = posicion.size, multiplesPedidos = 1;
+			tamanio = posicion.size, multiplesPedidos = 0;
 
 	if (posicion.size + offset > tamanioPagina) {
 		tamanio = tamanioPagina - offset;
