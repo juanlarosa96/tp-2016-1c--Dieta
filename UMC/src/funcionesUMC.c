@@ -1086,7 +1086,7 @@ void procesarOperacionesNucleo(int * conexion) {
 
 		int header = recibirHeader(socketNucleo);
 		uint32_t pid;
-		int largo_codigo;
+		int largo_codigo, respuesta;
 		uint32_t paginas_requeridas;
 		char * programa;
 
@@ -1097,10 +1097,17 @@ void procesarOperacionesNucleo(int * conexion) {
 			abort();
 			break;
 		case iniciarPrograma:
-
-			recibirInicializacionPrograma(socketNucleo, &pid, &paginas_requeridas, &largo_codigo);
+			respuesta = recibirInicializacionPrograma(socketNucleo, &pid, &paginas_requeridas, &largo_codigo);
+			if (respuesta == -1) {
+				log_error(logger, "Se desconectó Núcleo");
+				abort();
+			}
 			programa = malloc(largo_codigo);
-			recibirCodigoInicializarPrograma(socketNucleo, largo_codigo, programa);
+			respuesta = recibirCodigoInicializarPrograma(socketNucleo, largo_codigo, programa);
+			if (respuesta == -1) {
+				log_error(logger, "Se desconectó Núcleo");
+				abort();
+			}
 			inicializarPrograma(pid, paginas_requeridas, programa, socketNucleo);
 			break;
 		case finalizacionPrograma:
