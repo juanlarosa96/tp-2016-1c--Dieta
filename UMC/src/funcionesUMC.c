@@ -619,18 +619,16 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 	t_nodo_lista_frames* aux;
 	t_nodo_lista_procesos * auxProceso;
 	int i = 0, j = 0;
-	int permitido = 0, disponible = 0;
+	int permitido = 0;
+	int disponible = cantidadFramesDisponibles();
 
 	//Primero busco en la lista de procesos a ver si llego a su máximo de frames por proceso
 	pthread_mutex_lock(&mutexProcesos);
 	while (j < list_size(listaProcesos)) {
 		auxProceso = list_get(listaProcesos, j);
 		if ((auxProceso->pid) == pid) {
-			if ((auxProceso->framesAsignados) < framesPorProceso) {
+			if ((auxProceso->framesAsignados) < framesPorProceso && (disponible != 0)) {
 				permitido = 1;
-				if ((auxProceso->framesAsignados) == 0) {
-					disponible = cantidadFramesDisponibles();
-				}
 			}
 			break;
 		}
