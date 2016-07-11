@@ -1040,13 +1040,6 @@ void consolaUMC(void) {
 					printf("No se puede ejecutar flush TLB porque no tiene entradas\n");
 
 				}
-				printf("Se ejecutará: flush TLB\n");
-				if (entradasTLB > 0) {
-					flushTLB();
-					log_info(logger, "Se ejecutó flush TLB\n");
-				} else {
-					printf("No se puede ejecutar flush TLB. No tiene entradas\n");
-				}
 			} else if (strncasecmp(comando, "memory", 6) == 0) {
 				printf("Se ejecutará: Flush Memoria Principal\n");
 				flushMemory();
