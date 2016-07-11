@@ -108,14 +108,22 @@ void enviarInicializacionPrograma(int socketUMC, uint32_t pid, int largoCodigo, 
 	free(buffer);
 }
 
-void recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *paginasRequeridas, int *largoCodigo) {
+int recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *paginasRequeridas, int *largoCodigo) {
+	int respuesta;
 	recibirTodo(socketUMC, pid, sizeof(uint32_t));
 	recibirTodo(socketUMC, paginasRequeridas, sizeof(uint32_t));
-	recibirTodo(socketUMC, largoCodigo, sizeof(int));
+	if(recibirTodo(socketUMC, largoCodigo, sizeof(int))){
+		return -1;
+	}
+	return respuesta;
 }
 
-void recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo) {
-	recibirTodo(socketUMC, codigo, largoCodigo);
+int recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo) {
+	int respuesta;
+	if(recibirTodo(socketUMC, codigo, largoCodigo)){
+		return -1;
+	}
+	return respuesta;
 }
 
 int recibirRespuestaInicializacion(int socketUMC) {
@@ -650,7 +658,7 @@ void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina){ //Sofi comme
 	offset += sizeof(uint32_t);
 	memcpy(data + offset, &nroPagina, sizeof(int));
 	offset += sizeof(int);
-	send(socketSwap, data, offset, 0);
+	send(socketSwap, data, offset, MSG_NOSIGNAL);
 	free(data);
 }
 
@@ -662,7 +670,7 @@ void enviarAbortarProceso(int socketCPU){
 
 void enviarPedidoMemoriaOK(int socketCPU){
 	int header = pedidoMemoriaOK;
-	send(socketCPU, &header, sizeof(int), 0);
+	send(socketCPU, &header, sizeof(int), MSG_NOSIGNAL);
 }
 
 void enviarSenialDeApagadoDeCPU(int socketNucleo){
