@@ -321,6 +321,7 @@ int main(int argc, char **argv) {
 								finalizarProceso(*elementoAux);
 								encontrado = 1;
 								free(elementoAux);
+								sem_wait(&semaforoColaListos);
 							} else {
 								queue_push(cola_PCBListos, (void *) elementoAux);
 							}
