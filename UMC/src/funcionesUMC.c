@@ -75,7 +75,7 @@ int cantidadFramesDisponibles() {
 	int i = 0;
 	int contador = 0;
 	t_nodo_lista_frames* nodoAux;
-	pthread_mutex_lock(&mutexFrames);
+	//pthread_mutex_lock(&mutexFrames);
 	while (i < list_size(listaFrames)) {
 		nodoAux = list_get(listaFrames, i);
 		if (nodoAux->pid == 0) {
@@ -83,7 +83,7 @@ int cantidadFramesDisponibles() {
 		}
 		i++;
 	}
-	pthread_mutex_unlock(&mutexFrames);
+	//pthread_mutex_unlock(&mutexFrames);
 	return contador;
 }
 
@@ -138,7 +138,7 @@ void entradaTLBdestroy(t_entrada_tlb* self) {
 	free(self);
 }
 
-void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lru mutex TLB
+void lru(int paginaNueva, uint32_t pid, uint32_t frame, int socketCPU) { //antes de llamar a lru mutex TLB
 
 	int indiceVictima = buscarEntradaMenosUsadaRecientemente();
 	uint32_t paginaAnterior, pidAnterior;
@@ -155,10 +155,9 @@ void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lr
 	pthread_mutex_unlock(&mutexContadorMemoria);
 	/*list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar,
 	 (void *) entradaTLBdestroy);*/
-	pthread_t tid = pthread_self();
 	log_info(logger,
-			"Thread %d - Se ejecutó LRU para TLB. Se reemplazó página %d del proceso PID %d por página %d del proceso PID %d.",
-			tid, paginaAnterior, pidAnterior, paginaNueva, pid);
+			"Thread CPU %d - Se ejecutó LRU para TLB. Se reemplazó página %d del proceso PID %d por página %d del proceso PID %d.",
+			socketCPU, paginaAnterior, pidAnterior, paginaNueva, pid);
 }
 
 int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
@@ -255,7 +254,7 @@ void flushMemory() {
 }
 
 void actualizarBitReferencia(uint32_t frame) {
-	int i = 0;
+	int i = frame; //ojoo con esto
 	int acierto = 0;
 	t_nodo_lista_frames * nodoAuxiliar;
 	pthread_mutex_lock(&mutexFrames);
@@ -274,7 +273,7 @@ void actualizarBitReferencia(uint32_t frame) {
 }
 
 void actualizarBitModificado(uint32_t frame) {
-	int i = 0;
+	int i = frame;
 	int acierto = 0;
 	t_nodo_lista_frames * nodoAuxiliar;
 	pthread_mutex_lock(&mutexFrames);
@@ -499,7 +498,7 @@ void enviarPaginaASwap(int nroPagina, uint32_t pid, void * pagina) {
 }
 
 void actualizarPaginaAReemplazar(t_nodo_lista_procesos * nodoProceso,
-		int idFrame, int bitModificado) {
+		int idFrame, int bitModificado, int socketCPU) {
 	//t_nodo_lista_procesos * nodoProceso;
 	t_nodo_lista_paginas * nodoPagina;
 	int i = 0;
@@ -517,10 +516,13 @@ void actualizarPaginaAReemplazar(t_nodo_lista_procesos * nodoProceso,
 
 		i++;
 	}
+
+	log_info(logger, "Thread CPU %d - Se reemplaza página nro %d, del proceso PID %d", socketCPU, nodoPagina->nro_pagina, nodoProceso->pid);
 	//pthread_mutex_unlock(&mutexProcesos);
 	if (bitModificado == 1) {
 		void * pagina = lecturaMemoria(idFrame, 0, size_frames);
 		enviarPaginaASwap(nodoPagina->nro_pagina, nodoProceso->pid, pagina);
+		log_info(logger, "Thread CPU %d - Se envía a Swap página nro %d, del proceso PID %d", socketCPU, nodoPagina->nro_pagina, nodoProceso->pid);
 	}
 
 }
@@ -543,14 +545,14 @@ void limpiarEntradaTLBPorFrame(uint32_t nroFrame) {
 }
 
 void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
-		void * codigoPagina, int * idFrame, t_nodo_lista_procesos * nodoProceso) {
+		void * codigoPagina, int * idFrame, t_nodo_lista_procesos * nodoProceso, int socketCPU) {
 	int indiceFrame;
 	int bitModificado;
 	t_nodo_lista_frames * frameAux;
 	//t_nodo_lista_procesos * nodoProceso;
 	//int indiceProceso;
 
-	pthread_mutex_lock(&mutexFrames);
+	//pthread_mutex_lock(&mutexFrames);
 	if (strcmp(algoritmo, "CLOCK") == 0) {
 		indiceFrame = buscarVictimaClock(nodoProceso, pid);
 	} else {
@@ -565,7 +567,7 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 	frameAux->bitModificado = 0;
 	pthread_mutex_unlock(&mutexFrames);
 
-	actualizarPaginaAReemplazar(nodoProceso, *idFrame, bitModificado); //cambia status de pagina anterior de 'M' a 'S'
+	actualizarPaginaAReemplazar(nodoProceso, *idFrame, bitModificado, socketCPU); //cambia status de pagina anterior de 'M' a 'S'
 
 	limpiarEntradaTLBPorFrame(*idFrame);
 
@@ -573,9 +575,8 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 
 	escrituraMemoria(*idFrame, 0, size_frames, codigoPagina);
 
-	pthread_t tid = pthread_self();
 	log_info(logger,
-			"Thread %d - Se ejecutó algoritmo de reemplazo de páginas en memoria para proceso %d.", tid,
+			"Thread CPU %d - Se ejecutó algoritmo de reemplazo de páginas %s en memoria del proceso PID %d.", socketCPU, algoritmo,
 			pid);
 }
 
@@ -599,7 +600,7 @@ void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
 
 }
 
-void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
+void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame, int socketCPU) {
 	t_entrada_tlb* aux;
 	int i = 0;
 	int acierto = 0;
@@ -620,25 +621,26 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame) {
 	}
 
 	if (acierto == 0) {
-		lru(nroPagina, pid, nroFrame);
+		lru(nroPagina, pid, nroFrame, socketCPU);
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
-	pthread_t tid = pthread_self();
-	log_info(logger, "Thread %d - Página nro %d, del proceso PID %d, cargada en TLB", tid,
+	log_info(logger, "Thread CPU %d - Página nro %d, del proceso PID %d, cargada en TLB", socketCPU,
 			nroPagina, pid);
 }
 
 int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
-		int * idFrame) {
+		int * idFrame, int socketCPU) {
 	t_nodo_lista_frames* aux;
 	t_nodo_lista_procesos * auxProceso;
 	int i = 0, j = 0;
 	int permitido = 0;
+
+	pthread_mutex_lock(&mutexProcesos);
+	pthread_mutex_lock(&mutexFrames);
 	int disponible = cantidadFramesDisponibles();
 
 	//Primero busco en la lista de procesos a ver si llego a su máximo de frames por proceso
-	pthread_mutex_lock(&mutexProcesos);
 	while (j < list_size(listaProcesos)) {
 		auxProceso = list_get(listaProcesos, j);
 		if ((auxProceso->pid) == pid) {
@@ -654,12 +656,13 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 
 	if ((disponible == 0) && ((auxProceso->framesAsignados) == 0)) {
 		free(buffer);
+		pthread_mutex_unlock(&mutexFrames);
 		pthread_mutex_unlock(&mutexProcesos);
 		return -1; //No se puede cargar página en memoria.
 	}
 
 	if (permitido == 1) {
-		pthread_mutex_lock(&mutexFrames);
+		//pthread_mutex_lock(&mutexFrames);
 		while (i < list_size(listaFrames)) {
 			aux = list_get(listaFrames, i);
 			if (aux->pid == 0) {
@@ -671,7 +674,6 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 			}
 			i++;
 		}
-		pthread_mutex_unlock(&mutexFrames);
 		//pthread_mutex_lock(&mutexProcesos);
 		auxProceso->framesAsignados++;
 		if (auxProceso->framesAsignados == 1) {
@@ -679,16 +681,16 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 		}
 		//pthread_mutex_unlock(&mutexProcesos);
 		actualizarNodoPaginaNuevaCargadaEnM(auxProceso, *idFrame, nroPagina);
+		pthread_mutex_unlock(&mutexFrames);
 		pthread_mutex_unlock(&mutexProcesos);
 		escrituraMemoria(*idFrame, 0, size_frames, buffer);
 
 	} else {
-		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame, auxProceso);
+		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame, auxProceso, socketCPU);
 		pthread_mutex_unlock(&mutexProcesos);
 	}
 
-	pthread_t tid = pthread_self();
-	log_info(logger, "Thread %d - Se cargó en memoria página nro %d del proceso PID %d", tid,
+	log_info(logger, "Thread CPU %d - Se cargó en memoria página nro %d del proceso PID %d", socketCPU,
 			nroPagina, pid);
 	return 1; //Se logró cargar página en memoria
 }
@@ -743,8 +745,8 @@ void enviarBytesACPU(int socketCPU, void * data, int tamanio) {
 	int fallo = 0;
 	fallo = send(socketCPU, data, tamanio, MSG_NOSIGNAL);
 	if (fallo == -1) {
-		pthread_t tid = pthread_self();
-		log_info(logger, "Thread %d - Se desconectó CPU (socket %d)", tid, socketCPU);
+		pthread_t socketCPU = pthread_self();
+		log_info(logger, "Thread %d - Se desconectó CPU", socketCPU);
 		free(data);
 		pthread_exit(NULL);
 	}
@@ -756,20 +758,22 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	void * data;
 	int nroFrame;
-	pthread_t tid = pthread_self();
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
-			log_info(logger, "Thread %d - TLB hit", tid);
+			log_info(logger, "Thread CPU %d - TLB hit", socketCPU);
 			data = lecturaMemoria(nroFrame, offset, tamanio);
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			enviarPedidoMemoriaOK(socketCPU);
 			enviarBytesACPU(socketCPU, data, tamanio);
+			log_info(logger,
+					"Thread CPU %d - Se enviaron a CPU %d bytes de la página %d, offset %d, del proceso PID %d.", socketCPU,
+					tamanio, nroPagina, offset, pid);
 			return;
 		}
 	}
-	log_info(logger, "Thread %d - TLB miss", tid); //TLB Miss
+	log_info(logger, "Thread CPU %d - TLB miss", socketCPU); //TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
 	if (nroFrame == -1) { //tengo que traer pagina de swap
@@ -779,12 +783,12 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		pedirPaginaASwap(socketSwap, pid, nroPagina);
 		recibirPaginaDeSwap(bufferPagina);
 		pthread_mutex_unlock(&mutexSwap);
-		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina, &nroFrame);
+		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina, &nroFrame, socketCPU);
 		if (exito == -1) {
 			finalizarPrograma(pid); //En finalizarPrograma se avisa a Swap para que borre las páginas
 			enviarAbortarProceso(socketCPU); //Le avisa a CPU que finalice el programa
 			log_error(logger,
-					"Thread %d - No se pudo cargar página en memoria del proceso PID %d. No hay frames disponibles.", tid,
+					"Thread CPU %d - No se pudo cargar página en memoria del proceso PID %d. No hay frames disponibles.", socketCPU,
 					pid);
 			return;
 		}
@@ -793,7 +797,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		finalizarPrograma(pid);
 		enviarAbortarProceso(socketCPU);
 		log_error(logger,
-				"Thread %d - Pedido inválido del proceso PID %d. Fuera del espacio de direcciones.", tid,
+				"Thread CPU %d - Pedido inválido del proceso PID %d. Fuera del espacio de direcciones.", socketCPU,
 				pid);
 		return;
 	}
@@ -801,7 +805,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	data = lecturaMemoria(nroFrame, offset, tamanio);
 
 	if (entradasTLB > 0) {
-		cargarEnTLB(pid, nroPagina, nroFrame);
+		cargarEnTLB(pid, nroPagina, nroFrame, socketCPU);
 		//actualizarBitUltimoAccesoTLB(pid, nroFrame);
 	}
 
@@ -809,7 +813,7 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 	enviarBytesACPU(socketCPU, data, tamanio);
 
 	log_info(logger,
-			"Thread %d - Se enviaron a CPU %d bytes de la página %d, offset %d, del proceso PID %d.", tid,
+			"Thread CPU %d - Se enviaron a CPU %d bytes de la página %d, offset %d, del proceso PID %d.", socketCPU,
 			tamanio, nroPagina, offset, pid);
 
 }
@@ -818,20 +822,22 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		void * buffer, uint32_t pid, int socketCPU) {
 
 	int nroFrame;
-	pthread_t tid = pthread_self();
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
-			log_info(logger, "Thread %d - TLB hit", tid);
+			log_info(logger, "Thread CPU %d - TLB hit", socketCPU);
 			escrituraMemoria(nroFrame, offset, tamanio, buffer);
 			actualizarBitUltimoAccesoTLB(pid, nroFrame);
 			actualizarBitModificado(nroFrame);
 			enviarPedidoMemoriaOK(socketCPU);
+			log_info(logger,
+					"Thread CPU %d - Se almacenaron %d bytes en la página %d, offset %d, del proceso PID %d.", socketCPU,
+					tamanio, nroPagina, offset, pid);
 			return;
 		}
 	}
-	log_info(logger, "Thread %d - TLB miss", tid);
+	log_info(logger, "Thread CPU %d - TLB miss", socketCPU);
 	//TLB Miss
 	nroFrame = buscarEnListaProcesos(pid, nroPagina);
 
@@ -842,12 +848,12 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		pedirPaginaASwap(socketSwap, pid, nroPagina);
 		recibirPaginaDeSwap(bufferPagina);
 		pthread_mutex_unlock(&mutexSwap);
-		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina, &nroFrame);
+		exito = cargarPaginaEnMemoria(pid, nroPagina, bufferPagina, &nroFrame, socketCPU);
 		if (exito == -1) {
 			enviarAbortarProceso(socketCPU); //Le avisa a CPU que finalice el programa
 			finalizarPrograma(pid); //En finalizarPrograma se avisa a Swap para que borre las páginas
 			log_error(logger,
-					"Thread %d - No se pudo cargar página en memoria del proceso PID %d. No hay frames disponibles.", tid,
+					"Thread CPU %d - No se pudo cargar página en memoria del proceso PID %d. No hay frames disponibles.", socketCPU,
 					pid);
 			return;
 		}
@@ -856,7 +862,7 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		enviarAbortarProceso(socketCPU);
 		finalizarPrograma(pid);
 		log_error(logger,
-				"Thread %d - Pedido inválido del proceso PID %d. Fuera del espacio de direcciones.", tid,
+				"Thread CPU %d - Pedido inválido del proceso PID %d. Fuera del espacio de direcciones.", socketCPU,
 				pid);
 		return;
 	}
@@ -865,13 +871,13 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 	actualizarBitModificado(nroFrame);
 
 	if (entradasTLB > 0) {
-		cargarEnTLB(pid, nroPagina, nroFrame);
+		cargarEnTLB(pid, nroPagina, nroFrame, socketCPU);
 		//actualizarBitUltimoAccesoTLB(pid, nroFrame);
 	}
 
 	enviarPedidoMemoriaOK(socketCPU);
 	log_info(logger,
-			"Thread %d - Se almacenaron %d bytes en la página %d, offset %d, del proceso PID %d.", tid,
+			"Thread CPU %d - Se almacenaron %d bytes en la página %d, offset %d, del proceso PID %d.", socketCPU,
 			tamanio, nroPagina, offset, pid);
 
 }
@@ -997,8 +1003,8 @@ void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo) {
 
 void dumpPIDAuxiliar(t_nodo_lista_procesos*nodoAux, FILE*archivo) {
 	fprintf(archivo,
-			"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
-	printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+			"PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
+	printf("PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
 	printf("%d\t%d                            \t%d\n", nodoAux->pid,
 			nodoAux->framesAsignados, nodoAux->cantPaginas);
 	fprintf(archivo, "%d\t%d                            \t%d\n", nodoAux->pid,
@@ -1054,8 +1060,8 @@ void dumpPID(uint32_t pid) {
 
 	FILE* reporte = fopen("dumpPID.txt", "w+");
 	fprintf(reporte,
-			"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
-	printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+			"PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
+	printf("PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
 
 	pthread_mutex_lock(&mutexProcesos);
 	t_nodo_lista_procesos*nodoAux = list_get(listaProcesos, indiceProceso);
@@ -1211,11 +1217,10 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		uint32_t size;
 		void * bufferPedido;
 		uint32_t idNuevoProcesoActivo;
-		pthread_t tid = pthread_self();
 
 		switch (header) {
 		case 0:
-			log_info(logger, "Thread %d - Se desconectó CPU (socket %d)", tid, conexion);
+			log_info(logger, "Thread CPU %d - Se desconectó CPU", conexion);
 			pthread_exit(NULL);
 			break;
 
@@ -1237,15 +1242,14 @@ void procesarSolicitudOperacionCPU(int * socketCPU) {
 		case cambiarProcesoActivo:
 			recibirPID(conexion, &idNuevoProcesoActivo);
 			log_info(logger,
-					"Thread %d - Se cambió el proceso activo de una CPU (socket %d). PID proceso anterior: %d. PID nuevo proceso activo: %d.", tid,
+					"Thread CPU %d - Cambio proceso activo. PID proceso anterior: %d. PID nuevo proceso activo: %d.",
 					conexion, idCambioProceso, idNuevoProcesoActivo);
 			cambioProceso(idNuevoProcesoActivo, &idCambioProceso);
 
 			break;
 
 		default:
-			log_error(logger, "Thread %d - Hubo problema de conexion con CPU (socket %d)", tid,
-					conexion);
+			log_error(logger, "Thread CPU %d - Hubo problema de conexion con CPU", conexion);
 			pthread_exit(NULL);
 
 			break;
