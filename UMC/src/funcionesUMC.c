@@ -139,11 +139,13 @@ void entradaTLBdestroy(t_entrada_tlb* self) {
 void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lru mutex TLB
 
 	int indiceVictima = buscarEntradaMenosUsadaRecientemente();
-
+	uint32_t paginaAnterior, pidAnterior;
 	t_entrada_tlb* entradaAuxiliar;
 
 	entradaAuxiliar = list_get(TLB, indiceVictima);
+	paginaAnterior = entradaAuxiliar->nroPagina;
 	entradaAuxiliar->nroPagina = paginaNueva;
+	pidAnterior = entradaAuxiliar->pid;
 	entradaAuxiliar->pid = pid;
 	entradaAuxiliar->nroFrame = frame;
 	pthread_mutex_lock(&mutexContadorMemoria);
@@ -151,7 +153,7 @@ void lru(int paginaNueva, uint32_t pid, uint32_t frame) { //antes de llamar a lr
 	pthread_mutex_unlock(&mutexContadorMemoria);
 	/*list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar,
 	 (void *) entradaTLBdestroy);*/
-	log_info(logger, "Se ejecutó LRU para TLB");
+	log_info(logger, "Se ejecutó LRU para TLB. Se reemplazó página %d del proceso PID %d por página %d del proceso PID %d.", paginaAnterior, pidAnterior, paginaNueva, pid);
 }
 
 int buscarEnListaProcesos(uint32_t pid, int nroPagina) {
