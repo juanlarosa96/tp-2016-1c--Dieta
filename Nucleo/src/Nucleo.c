@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
 					}
 
 				} else if (i == inotify) {
-					//ARREGLAR ESTOOO
+
 					char buffer[sizeof(struct inotify_event) + 100];
 					read(i, buffer, sizeof(struct inotify_event) + 100);
 					struct inotify_event *event = (struct inotify_event *) &buffer[0];
@@ -234,14 +234,14 @@ int main(int argc, char **argv) {
 							pthread_mutex_lock(&mutexUnidadesQuantum);
 							if (cantidadQuantum != config_get_int_value(cfgAux, "QUANTUM")) {
 								cantidadQuantum = config_get_int_value(cfgAux, "QUANTUM");
-								printf("El Quantum se actualizo a: %d\n", (int) cantidadQuantum);
+								log_info("El Quantum se actualizo a: %d\n", (int) cantidadQuantum);
 							}
 							pthread_mutex_unlock(&mutexUnidadesQuantum);
 
 							pthread_mutex_lock(&mutexRetardoQuantum);
 							if (retardoQuantum != config_get_int_value(cfgAux, "QUANTUM_SLEEP")) {
 								retardoQuantum = config_get_int_value(cfgAux, "QUANTUM_SLEEP");
-								printf("El Quantum Sleep se actualizo a: %d\n", (int) retardoQuantum);
+								log_info("El Quantum Sleep se actualizo a: %d\n", (int) retardoQuantum);
 							}
 							pthread_mutex_unlock(&mutexRetardoQuantum);
 							config_destroy(cfgAux);
@@ -270,7 +270,6 @@ int main(int argc, char **argv) {
 
 						} else if (respuestaInicializacion == inicioProgramaError) {
 
-							printf("No se pudo reservar espacio para el programa\n");
 							destruirPcb(nuevoPcb);
 							enviarFinalizacionProgramaConsola(i);
 							pthread_mutex_lock(&mutexBolsaSockets);
