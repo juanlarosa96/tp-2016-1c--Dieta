@@ -496,7 +496,7 @@ void recibirEntradaSalida(int socketOrigen, int *largoNombreDispositivo, char **
 
 void enviarFinalizacionProgramaConsola(int socketConsola) {
 	int header = finalizacionPrograma;
-	send(socketConsola, &header, sizeof(int), 0);
+	send(socketConsola, &header, sizeof(int), MSG_NOSIGNAL);
 
 }
 
