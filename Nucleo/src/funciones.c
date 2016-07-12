@@ -136,8 +136,6 @@ void manejarCPU(void * socket) {
 					int j, sizeLista = list_size(listaFinalizacionesPendientes), finalizar = 0;
 					int * socketEnLista;
 
-
-
 					for (j = 0; j < sizeLista; j++) {
 						socketEnLista = (int *) list_get(listaFinalizacionesPendientes, j);
 						if (siguientePcb.socketConsola == *socketEnLista) {
@@ -148,11 +146,13 @@ void manejarCPU(void * socket) {
 						}
 					}
 					pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
-					if (finalizar)
+					if (finalizar) {
 						finalizarProceso(siguientePcb);
-					if (!cambioProceso) {
-						AgregarAProcesoColaListos(siguientePcb);
-						cambioProceso = 1;
+					} else {
+						if (!cambioProceso) {
+							AgregarAProcesoColaListos(siguientePcb);
+							cambioProceso = 1;
+						}
 					}
 				} else {
 					log_error(logger, "El CPU no envio un Pcb", texto);
@@ -177,7 +177,6 @@ void manejarCPU(void * socket) {
 				recibirValorAImprimir(socketCpu, &pid, &largoTexto, &texto);
 				pthread_mutex_lock(&mutexListaConsolas);
 				int listSize = list_size(listaConsolas), i;
-
 
 				for (i = 0; i < listSize; i++) {
 					t_pidConConsola * elemento = (t_pidConConsola *) list_get(listaConsolas, i);
@@ -445,7 +444,7 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
 			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
 			free(pcbFinalizado);
-			i=largoLista;
+			i = largoLista;
 		}
 	}
 	pthread_mutex_unlock(&mutexListaConsolas);
@@ -473,39 +472,39 @@ void finalizarProceso(t_pcbConConsola siguientePcb) {
 
 void abortarProceso(t_pcbConConsola siguientePcb) {
 	pthread_mutex_lock(&mutexBolsaSockets);
-		FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
-		pthread_mutex_unlock(&mutexBolsaSockets);
-		enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
-		pthread_mutex_lock(&mutexListaConsolas);
-		int largoLista = list_size(listaConsolas), i;
-		for (i = 0; i < largoLista; i++) {
-			t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(listaConsolas, i);
-			if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
-				t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
-				free(pcbFinalizado);
-				i=largoLista;
-			}
+	FD_CLR(siguientePcb.socketConsola, &bolsaDeSockets);
+	pthread_mutex_unlock(&mutexBolsaSockets);
+	enviarFinalizacionProgramaConsola(siguientePcb.socketConsola);
+	pthread_mutex_lock(&mutexListaConsolas);
+	int largoLista = list_size(listaConsolas), i;
+	for (i = 0; i < largoLista; i++) {
+		t_pidConConsola * pcbBusqueda = (t_pidConConsola *) list_get(listaConsolas, i);
+		if (pcbBusqueda->socketConsola == siguientePcb.socketConsola) {
+			t_pidConConsola * pcbFinalizado = (t_pidConConsola *) list_remove(listaConsolas, i);
+			free(pcbFinalizado);
+			i = largoLista;
 		}
-		pthread_mutex_unlock(&mutexListaConsolas);
-		log_info(logger, "Se abortó programa pid %d", siguientePcb.pcb.pid);
+	}
+	pthread_mutex_unlock(&mutexListaConsolas);
+	log_info(logger, "Se abortó programa pid %d", siguientePcb.pcb.pid);
 
-		pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
-		int cantElementos = list_size(listaFinalizacionesPendientes);
-		int * socketBusqueda;
-		for (i = 0; i < cantElementos; i++) {
+	pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+	int cantElementos = list_size(listaFinalizacionesPendientes);
+	int * socketBusqueda;
+	for (i = 0; i < cantElementos; i++) {
 
-			socketBusqueda = (int *) list_get(listaFinalizacionesPendientes, i);
+		socketBusqueda = (int *) list_get(listaFinalizacionesPendientes, i);
 
-			if (*socketBusqueda == siguientePcb.socketConsola) {
+		if (*socketBusqueda == siguientePcb.socketConsola) {
 
-				free(list_remove(listaFinalizacionesPendientes, i));
-				i = cantElementos;
-			}
-
+			free(list_remove(listaFinalizacionesPendientes, i));
+			i = cantElementos;
 		}
-		pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
 
-		destruirPcb(siguientePcb.pcb);
+	}
+	pthread_mutex_unlock(&mutexListaFinalizacionesPendientes);
+
+	destruirPcb(siguientePcb.pcb);
 }
 
 void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
@@ -521,8 +520,9 @@ void manejarIO(t_parametroThreadDispositivoIO * datosHilo) {
 		usleep(pedidoDeIO.unidadesTiempoIO * datosHilo->retardoDispositivo * 1000);
 		log_info(logger, "Programa pid %d termino IO", pedidoDeIO.pcb.pcb.pid);
 
-		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
 		pthread_mutex_lock(&mutexListaFinalizacionesPendientes);
+		int sizeLista = list_size(listaFinalizacionesPendientes), encontrado = -1, i;
+
 		for (i = 0; i < sizeLista; i++) {
 
 			int * socket = list_get(listaFinalizacionesPendientes, i);
