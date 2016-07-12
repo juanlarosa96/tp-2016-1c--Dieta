@@ -83,7 +83,7 @@ t_pcb recibirPcb (int socketNucleo);
 //header: 13 //header: 14 (las operaciones dentro de UMC son diferentes, pero se manejan los mismos datos)
 void enviarFinalizacionProgramaUMC(int socketUMC, uint32_t pid);
 void enviarCambioProcesoActivo(int socketUMC, uint32_t pid);
-void recibirPID(int socketUMC, uint32_t * pid);
+int recibirPID(int socketUMC, uint32_t * pid);
 void enviarFinalizacionProgramaConsola(int socketConsola);
 
 //header: 15

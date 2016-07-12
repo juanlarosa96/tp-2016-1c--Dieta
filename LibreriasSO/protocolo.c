@@ -109,7 +109,7 @@ void enviarInicializacionPrograma(int socketUMC, uint32_t pid, int largoCodigo, 
 }
 
 int recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *paginasRequeridas, int *largoCodigo) {
-	int respuesta;
+	int respuesta = 0;
 	recibirTodo(socketUMC, pid, sizeof(uint32_t));
 	recibirTodo(socketUMC, paginasRequeridas, sizeof(uint32_t));
 	if(recibirTodo(socketUMC, largoCodigo, sizeof(int))){
@@ -119,7 +119,7 @@ int recibirInicializacionPrograma(int socketUMC, uint32_t *pid, uint32_t *pagina
 }
 
 int recibirCodigoInicializarPrograma(int socketUMC, int largoCodigo, char *codigo) {
-	int respuesta;
+	int respuesta = 0;
 	if(recibirTodo(socketUMC, codigo, largoCodigo)){
 		return -1;
 	}
@@ -136,12 +136,12 @@ int recibirRespuestaInicializacion(int socketUMC) {
 
 void enviarRespuestaInicializacionExito(int socketDestino) {
 	int header = inicioProgramaExito;
-	send(socketDestino, &header, sizeof(int), 0);
+	send(socketDestino, &header, sizeof(int), MSG_NOSIGNAL);
 }
 
 void enviarRespuestaInicializacionError(int socketDestino) {
 	int header = inicioProgramaError;
-	send(socketDestino, &header, sizeof(int), 0);
+	send(socketDestino, &header, sizeof(int), MSG_NOSIGNAL);
 }
 
 void enviarSolicitudDeBytes(int socketUMC, uint32_t nroPagina, uint32_t offset, uint32_t size) {
@@ -455,8 +455,11 @@ void enviarCambioProcesoActivo(int socketUMC, uint32_t pid) {
 	free(data);
 }
 
-void recibirPID(int socketUMC, uint32_t * pid) {
-	recibirTodo(socketUMC, pid, sizeof(uint32_t));
+int recibirPID(int socketUMC, uint32_t * pid) {
+	if(recibirTodo(socketUMC, pid, sizeof(uint32_t))){
+		return -1;
+	}
+	return 0;
 }
 
 void enviarEntradaSalida(int socketNucleo, t_pcb pcb, t_nombre_dispositivo dispositivo, int tiempo) {
@@ -664,7 +667,7 @@ void pedirPaginaASwap(int socketSwap, uint32_t pid, int nroPagina){ //Sofi comme
 
 void enviarAbortarProceso(int socketCPU){
 	int header = pedidoMemoriaFallo;
-	send(socketCPU, &header, sizeof(int), 0);
+	send(socketCPU, &header, sizeof(int), MSG_NOSIGNAL);
 
 }
 
