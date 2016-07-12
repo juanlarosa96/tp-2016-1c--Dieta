@@ -513,7 +513,7 @@ void enviarPaginasRequeridasASwap(int socketSwap, int paginasRequeridas) {
 
 	offset += size;
 
-	send(socketSwap, data, offset, 0);
+	send(socketSwap, data, offset, MSG_NOSIGNAL);
 }
 
 void enviarWait(int socketNucleo, int id_proceso, t_nombre_semaforo nombreSemaforo) {
