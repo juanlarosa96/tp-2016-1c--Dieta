@@ -43,7 +43,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 			usleep(retardoAcceso * 1000);
 
 		}
-
+		printf("%d\n",frameInicial);
 		bitMap[frameInicial] = 1;
 		frameInicial++;
 	}
@@ -177,12 +177,12 @@ int compactar(char*archivo) {
 	log_info(logger, "Comienzo de compactación.");
 	for (i = 0; i < cantidadDeFrames - 1; i++) {
 		if (bitMap[i] == 0 && bitMap[i + 1] == 1) {
-			archivo[i * sizePagina] = archivo[(i + 1) * sizePagina];
+			memcpy(&(archivo[i * sizePagina]), &(archivo[(i + 1) * sizePagina]),sizePagina);
 			bitMap[i] = 1;
 			bitMap[i + 1] = 0;
 			i = ultimoFrameLibre - 1;
-		}
-		if (bitMap[i] == 1) {
+
+		} else if (bitMap[i] == 1) {
 			ultimoFrameLibre++;
 		}
 	}
