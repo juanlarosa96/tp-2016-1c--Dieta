@@ -1,0 +1,8 @@
+#!/home/utnso/tp-2016-1c-SO-2016-1C/Consola/src/Consola
+begin
+variables a
+	#Imprimi 300 lugares despues de donde se definio a
+	print *&a+300
+end
+
+

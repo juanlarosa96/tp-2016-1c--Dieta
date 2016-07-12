@@ -1,0 +1,14 @@
+#!/home/utnso/tp-2016-1c-SO-2016-1C/Consola/src/Consola
+begin	
+	:etiqueta
+	
+	wait c
+		print !colas
+	signal b
+	
+	#Ciclar indefinidamente
+	goto etiqueta
+
+end
+
+
