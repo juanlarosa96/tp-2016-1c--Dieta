@@ -243,7 +243,7 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 
 	int cantidadElementosStack = 0, cursorMemoria = 0, i = 0;
 
-	void* buffer = malloc(5000);
+	void* buffer = calloc(1,5000);
 
 	memcpy(buffer, &(pcb.pid), sizeof(uint32_t));
 	cursorMemoria += sizeof(uint32_t);
@@ -329,7 +329,6 @@ void enviarPcb(int socketCPU, t_pcb pcb) {
 		memcpy(buffer + cursorMemoria, &(registro->variable_retorno.size), sizeof(uint32_t));
 		cursorMemoria += sizeof(uint32_t);
 	}
-
 	send(socketCPU, buffer, cursorMemoria, 0);
 	free(buffer);
 }
