@@ -43,7 +43,6 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 			usleep(retardoAcceso * 1000);
 
 		}
-		printf("%d\n",frameInicial);
 		bitMap[frameInicial] = 1;
 		frameInicial++;
 	}
@@ -70,16 +69,13 @@ void guardarPaginas(int cliente, char*archivo) {
 
 		if (procesoAux->pID == pID) {
 			usleep(retardoAcceso * 1000);
-			memcpy(
-					&(archivo[(procesoAux->frameInicial + nroPagina)
-							* sizePagina]), pagina, sizePagina);
+			memcpy(&(archivo[(procesoAux->frameInicial + nroPagina) * sizePagina]), pagina, sizePagina);
 			break;
 		}
 
 	}
 
-	log_info(logger, "Se almacenó página nro %d, del proceso con PID %d, a UMC",
-			nroPagina, pID);
+	log_info(logger, "Se almacenó página nro %d, del proceso con PID %d, a UMC", nroPagina, pID);
 }
 
 void enviarPaginas(int cliente, char*archivo) {
@@ -96,15 +92,12 @@ void enviarPaginas(int cliente, char*archivo) {
 
 		if (procesoAux->pID == pID) {
 			usleep(retardoAcceso * 1000);
-			send(cliente,
-					&(archivo[(procesoAux->frameInicial + nroPagina)
-							* sizePagina]), sizePagina, 0);
+			send(cliente, &(archivo[(procesoAux->frameInicial + nroPagina) * sizePagina]), sizePagina, 0);
 			break;
 		}
 
 	}
-	log_info(logger, "Se envió página nro %d, del proceso con PID %d, a UMC",
-			nroPagina, pID);
+	log_info(logger, "Se envió página nro %d, del proceso con PID %d, a UMC", nroPagina, pID);
 
 }
 
@@ -172,15 +165,26 @@ void avisarUMCExito(int cliente) {
 }
 
 int compactar(char*archivo) {
-	int i;
+	int i, j;
 	int ultimoFrameLibre = 0;
 	log_info(logger, "Comienzo de compactación.");
 	for (i = 0; i < cantidadDeFrames - 1; i++) {
 		if (bitMap[i] == 0 && bitMap[i + 1] == 1) {
-			memcpy(&(archivo[i * sizePagina]), &(archivo[(i + 1) * sizePagina]),sizePagina);
+			memcpy(&(archivo[i * sizePagina]), &(archivo[(i + 1) * sizePagina]), sizePagina);
 			bitMap[i] = 1;
 			bitMap[i + 1] = 0;
-			i = ultimoFrameLibre - 1;
+			for (j = 0; j < list_size(listaProcesos); j++) {
+
+				t_proceso * proceso = list_get(listaProcesos, j);
+				printf("%d Frame inicial, pid %d con i %d\n", proceso->frameInicial, proceso->pID, i);
+				if (proceso->frameInicial == i + 1) {
+					proceso->frameInicial--;
+					break;
+
+				}
+				i = ultimoFrameLibre - 1;
+
+			}
 
 		} else if (bitMap[i] == 1) {
 			ultimoFrameLibre++;
