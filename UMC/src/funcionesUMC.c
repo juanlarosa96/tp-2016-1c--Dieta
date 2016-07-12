@@ -517,6 +517,7 @@ void actualizarPaginaAReemplazar(t_nodo_lista_procesos * nodoProceso,
 		i++;
 	}
 
+	pthread_mutex_unlock(&mutexFrames); //este unlock vieene de cargarPaginaEnMemoria
 	log_info(logger, "Thread CPU %d - Se reemplaza página nro %d, del proceso PID %d", socketCPU, nodoPagina->nro_pagina, nodoProceso->pid);
 	//pthread_mutex_unlock(&mutexProcesos);
 	if (bitModificado == 1) {
@@ -565,7 +566,6 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 	*idFrame = frameAux->nroFrame;
 	bitModificado = frameAux->bitModificado;
 	frameAux->bitModificado = 0;
-	pthread_mutex_unlock(&mutexFrames);
 
 	actualizarPaginaAReemplazar(nodoProceso, *idFrame, bitModificado, socketCPU); //cambia status de pagina anterior de 'M' a 'S'
 
@@ -682,13 +682,13 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 		//pthread_mutex_unlock(&mutexProcesos);
 		actualizarNodoPaginaNuevaCargadaEnM(auxProceso, *idFrame, nroPagina);
 		pthread_mutex_unlock(&mutexFrames);
-		pthread_mutex_unlock(&mutexProcesos);
 		escrituraMemoria(*idFrame, 0, size_frames, buffer);
 
 	} else {
 		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame, auxProceso, socketCPU);
-		pthread_mutex_unlock(&mutexProcesos);
 	}
+
+	pthread_mutex_unlock(&mutexProcesos);
 
 	log_info(logger, "Thread CPU %d - Se cargó en memoria página nro %d del proceso PID %d", socketCPU,
 			nroPagina, pid);
