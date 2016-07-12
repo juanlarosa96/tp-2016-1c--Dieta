@@ -16,6 +16,7 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 	int frameInicial = chequearMemoriaDisponible(cantPaginasTotal, archivo);
 	if (frameInicial == -1) {
 		avisarUMCFallo(cliente);
+		log_info(logger, "No hay espacio para inicializar un nuevo programa.");
 		return 0;
 	} else {
 		avisarUMCExito(cliente);
