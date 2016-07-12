@@ -176,7 +176,6 @@ int compactar(char*archivo) {
 			for (j = 0; j < list_size(listaProcesos); j++) {
 
 				t_proceso * proceso = list_get(listaProcesos, j);
-				printf("%d Frame inicial, pid %d con i %d\n", proceso->frameInicial, proceso->pID, i);
 				if (proceso->frameInicial == i + 1) {
 					proceso->frameInicial--;
 					break;
