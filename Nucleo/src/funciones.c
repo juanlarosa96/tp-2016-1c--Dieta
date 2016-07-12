@@ -27,14 +27,18 @@ void manejarCPU(void * socket) {
 	int desconectado = 0, cambioProceso;
 	int respuesta;
 	t_pcbConConsola siguientePcb;
+	siguientePcb.socketConsola = 0;
 
 	while (!desconectado) {
 
 		cambioProceso = 0;
-
 		sem_wait(&semaforoColaListos);
-
 		siguientePcb = DevolverProcesoColaListos();
+
+		while(siguientePcb.socketConsola == -1){
+			sem_wait(&semaforoColaListos);
+			siguientePcb = DevolverProcesoColaListos();
+		}
 		pthread_mutex_lock(&mutexUnidadesQuantum);
 		if (enviarUnidadesQuantum(socketCpu, cantidadQuantum) == -1) {
 			pthread_mutex_unlock(&mutexUnidadesQuantum);
@@ -55,6 +59,7 @@ void manejarCPU(void * socket) {
 		}
 		pthread_mutex_unlock(&mutexRetardoQuantum);
 
+		log_info(logger, "Envio pcb de pid %d a CPU socket %d", siguientePcb.pcb.pid, socketCpu);
 		enviarPcb(socketCpu, siguientePcb.pcb);
 
 		if (recibirHeader(socketCpu) != CPUListo) {
