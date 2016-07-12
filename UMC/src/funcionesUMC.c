@@ -343,22 +343,22 @@ int moverPuntero(uint32_t pid, int puntero) { //busco el proximo frame que tenga
 	return punteroADevolver;
 }
 
-int buscarVictimaClock(uint32_t pid) {
-	int indice;
+int buscarVictimaClock(t_nodo_lista_procesos* nodoAux, uint32_t pid) {
+	//int indice;
 	int puntero;
 	int nuevoPuntero;
 	int victima;
 	int acierto = 0;
-	t_nodo_lista_procesos* nodoAux;
+	//t_nodo_lista_procesos* nodoAux;
 	t_nodo_lista_frames* nodoFrame;
-	indice = encontrarPosicionEnListaProcesos(pid);
+	//indice = encontrarPosicionEnListaProcesos(pid);
 
-	pthread_mutex_lock(&mutexProcesos);
-	nodoAux = list_get(listaProcesos, indice);
+	//pthread_mutex_lock(&mutexProcesos);
+	//nodoAux = list_get(listaProcesos, indice);
 	puntero = nodoAux->punteroClock;
-	pthread_mutex_unlock(&mutexProcesos);
+	//pthread_mutex_unlock(&mutexProcesos);
 
-	pthread_mutex_lock(&mutexFrames);
+	//pthread_mutex_lock(&mutexFrames);
 	while (puntero < list_size(listaFrames) && acierto == 0) {
 		nodoFrame = list_get(listaFrames, puntero);
 		if (nodoFrame->pid == pid) {
@@ -378,30 +378,30 @@ int buscarVictimaClock(uint32_t pid) {
 		}
 
 	}
-	pthread_mutex_unlock(&mutexFrames);
+	//pthread_mutex_unlock(&mutexFrames);
 
 	return victima;
 
 }
 
-int buscarVictimaClockModificado(uint32_t pid) {
-	int indice;
+int buscarVictimaClockModificado(t_nodo_lista_procesos * nodoAux, uint32_t pid) {
+	//int indice;
 	int puntero, punteroInicial;
 	int nuevoPuntero;
 	int victima;
 	int acierto = 0;
 	int cantVueltas = 0;
-	t_nodo_lista_procesos* nodoAux;
+	//t_nodo_lista_procesos* nodoAux;
 	t_nodo_lista_frames* nodoFrame;
-	indice = encontrarPosicionEnListaProcesos(pid);
+	//indice = encontrarPosicionEnListaProcesos(pid);
 
-	pthread_mutex_lock(&mutexProcesos);
-	nodoAux = list_get(listaProcesos, indice);
+	//pthread_mutex_lock(&mutexProcesos);
+	//nodoAux = list_get(listaProcesos, indice);
 	puntero = nodoAux->punteroClock;
-	pthread_mutex_unlock(&mutexProcesos);
+	//pthread_mutex_unlock(&mutexProcesos);
 	punteroInicial = puntero;
 
-	pthread_mutex_lock(&mutexFrames);
+	//pthread_mutex_lock(&mutexFrames);
 	while (puntero < list_size(listaFrames) && acierto == 0) {
 		nodoFrame = list_get(listaFrames, puntero);
 		if (nodoFrame->pid == pid && cantVueltas == 0) {
@@ -434,20 +434,20 @@ int buscarVictimaClockModificado(uint32_t pid) {
 		}
 	}
 
-	pthread_mutex_unlock(&mutexFrames);
+	//pthread_mutex_unlock(&mutexFrames);
 
 	return victima;
 
 }
 
-void actualizarNodoPaginaNuevaCargadaEnM(int indiceProceso, uint32_t idFrame, uint32_t paginaNueva) {
-	t_nodo_lista_procesos * nodoProceso;
+void actualizarNodoPaginaNuevaCargadaEnM(t_nodo_lista_procesos * nodoProceso, uint32_t idFrame, uint32_t paginaNueva) {
+
 	t_nodo_lista_paginas * nodoPagina;
 	int i = 0;
 	int acierto = 0;
 
-	pthread_mutex_lock(&mutexProcesos);
-	nodoProceso = list_get(listaProcesos, indiceProceso);
+	//pthread_mutex_lock(&mutexProcesos);
+	//nodoProceso = list_get(listaProcesos, indiceProceso);
 
 	while (i < list_size(nodoProceso->lista_paginas) && acierto == 0) {
 		nodoPagina = list_get(nodoProceso->lista_paginas, i);
@@ -459,7 +459,7 @@ void actualizarNodoPaginaNuevaCargadaEnM(int indiceProceso, uint32_t idFrame, ui
 
 		i++;
 	}
-	pthread_mutex_unlock(&mutexProcesos);
+	//pthread_mutex_unlock(&mutexProcesos);
 
 }
 
@@ -488,13 +488,13 @@ void enviarPaginaASwap(int nroPagina, uint32_t pid, void * pagina) {
 	free(data);
 }
 
-void actualizarPaginaAReemplazar(int indiceProceso, int idFrame, int bitModificado) {
-	t_nodo_lista_procesos * nodoProceso;
+void actualizarPaginaAReemplazar(t_nodo_lista_procesos * nodoProceso, int idFrame, int bitModificado) {
+	//t_nodo_lista_procesos * nodoProceso;
 	t_nodo_lista_paginas * nodoPagina;
 	int i = 0;
 
-	pthread_mutex_lock(&mutexProcesos);
-	nodoProceso = list_get(listaProcesos, indiceProceso);
+	//pthread_mutex_lock(&mutexProcesos);
+	//nodoProceso = list_get(listaProcesos, indiceProceso);
 
 	while (i < list_size(nodoProceso->lista_paginas)) {
 		nodoPagina = list_get(nodoProceso->lista_paginas, i);
@@ -505,9 +505,9 @@ void actualizarPaginaAReemplazar(int indiceProceso, int idFrame, int bitModifica
 
 		i++;
 	}
-	pthread_mutex_unlock(&mutexProcesos);
-	void * pagina = lecturaMemoria(idFrame, 0, size_frames);
+	//pthread_mutex_unlock(&mutexProcesos);
 	if (bitModificado == 1) {
+		void * pagina = lecturaMemoria(idFrame, 0, size_frames);
 		enviarPaginaASwap(nodoPagina->nro_pagina, nodoProceso->pid, pagina);
 	}
 
@@ -530,32 +530,33 @@ void limpiarEntradaTLBPorFrame(uint32_t nroFrame) {
 
 }
 
-void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva, void * codigoPagina, int * idFrame) {
+void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva, void * codigoPagina, int * idFrame, t_nodo_lista_procesos * nodoProceso) {
 	int indiceFrame;
 	int bitModificado;
 	t_nodo_lista_frames * frameAux;
-	int indiceProceso;
-
-	if (strcmp(algoritmo, "CLOCK") == 0) {
-		indiceFrame = buscarVictimaClock(pid);
-	} else {
-		indiceFrame = buscarVictimaClockModificado(pid);
-	}
-
-	indiceProceso = encontrarPosicionEnListaProcesos(pid); //carajooo, modificar esto. ojo con los retardos!!
+	//t_nodo_lista_procesos * nodoProceso;
+	//int indiceProceso;
 
 	pthread_mutex_lock(&mutexFrames);
+	if (strcmp(algoritmo, "CLOCK") == 0) {
+		indiceFrame = buscarVictimaClock(nodoProceso, pid);
+	} else {
+		indiceFrame = buscarVictimaClockModificado(nodoProceso, pid);
+	}
+
+	//indiceProceso = encontrarPosicionEnListaProcesos(pid); //carajooo, modificar esto. ojo con los retardos!!
+	//nodoProceso = list_get(listaProcesos, indiceProceso);
 	frameAux = list_get(listaFrames, indiceFrame);
 	*idFrame = frameAux->nroFrame;
 	bitModificado = frameAux->bitModificado;
 	frameAux->bitModificado = 0;
 	pthread_mutex_unlock(&mutexFrames);
 
+	actualizarPaginaAReemplazar(nodoProceso, *idFrame, bitModificado); //cambia status de pagina anterior de 'M' a 'S'
+
 	limpiarEntradaTLBPorFrame(*idFrame);
 
-	actualizarPaginaAReemplazar(indiceProceso, *idFrame, bitModificado); //cambia status de pagina anterior de 'M' a 'S'
-
-	actualizarNodoPaginaNuevaCargadaEnM(indiceProceso, *idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
+	actualizarNodoPaginaNuevaCargadaEnM(nodoProceso, *idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
 
 	escrituraMemoria(*idFrame, 0, size_frames, codigoPagina);
 
@@ -629,10 +630,11 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, int * 
 		}
 		j++;
 	}
-	pthread_mutex_unlock(&mutexProcesos);
+	//pthread_mutex_unlock(&mutexProcesos);
 
 	if ((disponible == 0) && ((auxProceso->framesAsignados) == 0)) {
 		free(buffer);
+		pthread_mutex_unlock(&mutexProcesos);
 		return -1; //No se puede cargar página en memoria.
 	}
 
@@ -650,20 +652,22 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer, int * 
 			i++;
 		}
 		pthread_mutex_unlock(&mutexFrames);
-		pthread_mutex_lock(&mutexProcesos);
+		//pthread_mutex_lock(&mutexProcesos);
 		auxProceso->framesAsignados++;
 		if (auxProceso->framesAsignados == 1) {
 			auxProceso->punteroClock = i;
 		}
+		//pthread_mutex_unlock(&mutexProcesos);
+		actualizarNodoPaginaNuevaCargadaEnM(auxProceso, *idFrame, nroPagina);
 		pthread_mutex_unlock(&mutexProcesos);
-		actualizarNodoPaginaNuevaCargadaEnM(j, *idFrame, nroPagina);
 		escrituraMemoria(*idFrame, 0, size_frames, buffer);
 
 	} else {
-		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame);
+		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame, auxProceso);
+		pthread_mutex_unlock(&mutexProcesos);
 	}
 
-	log_info(logger, "Página nro %d perteneciente al proceso PID %d cargada en memoria", nroPagina, pid);
+	log_info(logger, "Se cargó en memoria página nro %d del proceso PID %d", nroPagina, pid);
 	return 1; //Se logró cargar página en memoria
 }
 
