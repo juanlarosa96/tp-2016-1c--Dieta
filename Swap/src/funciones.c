@@ -76,7 +76,7 @@ void guardarPaginas(int cliente, char*archivo) {
 
 	}
 
-	log_info(logger, "Se almacenó página nro %d, del proceso con PID %d, a UMC", nroPagina, pID);
+	log_info(logger, "Se almacenó página nro %d del proceso PID %d.", nroPagina, pID);
 }
 
 void enviarPaginas(int cliente, char*archivo) {
