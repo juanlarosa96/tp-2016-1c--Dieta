@@ -234,14 +234,14 @@ int main(int argc, char **argv) {
 							pthread_mutex_lock(&mutexUnidadesQuantum);
 							if (cantidadQuantum != config_get_int_value(cfgAux, "QUANTUM")) {
 								cantidadQuantum = config_get_int_value(cfgAux, "QUANTUM");
-								log_info("El Quantum se actualizo a: %d\n", (int) cantidadQuantum);
+								log_info(logger, "El Quantum se actualizo a: %d\n", (int) cantidadQuantum);
 							}
 							pthread_mutex_unlock(&mutexUnidadesQuantum);
 
 							pthread_mutex_lock(&mutexRetardoQuantum);
 							if (retardoQuantum != config_get_int_value(cfgAux, "QUANTUM_SLEEP")) {
 								retardoQuantum = config_get_int_value(cfgAux, "QUANTUM_SLEEP");
-								log_info("El Quantum Sleep se actualizo a: %d\n", (int) retardoQuantum);
+								log_info(logger, "El Quantum Sleep se actualizo a: %d\n", (int) retardoQuantum);
 							}
 							pthread_mutex_unlock(&mutexRetardoQuantum);
 							config_destroy(cfgAux);
