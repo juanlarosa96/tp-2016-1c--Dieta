@@ -92,7 +92,7 @@ int recibirRespuestaCPU(int socketCpu, int * respuesta) {
 
 void enviarInicializacionPrograma(int socketUMC, uint32_t pid, int largoCodigo, char * programa, uint32_t paginasRequeridas) {
 	int header = iniciarPrograma;
-	send(socketUMC, &header, sizeof(int), 0);
+	send(socketUMC, &header, sizeof(int), MSG_NOSIGNAL);
 	void * buffer = malloc(sizeof(uint32_t) * 2 + sizeof(int) + largoCodigo);
 	int cursorMemoria = 0;
 
@@ -104,7 +104,7 @@ void enviarInicializacionPrograma(int socketUMC, uint32_t pid, int largoCodigo, 
 	cursorMemoria += sizeof(int);
 	memcpy(buffer + cursorMemoria, programa, largoCodigo);
 	cursorMemoria += largoCodigo;
-	send(socketUMC, buffer, cursorMemoria, 0);
+	send(socketUMC, buffer, cursorMemoria, MSG_NOSIGNAL);
 	free(buffer);
 }
 
