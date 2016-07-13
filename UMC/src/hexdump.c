@@ -6,20 +6,16 @@
  */
 
 
-#ifndef HEXDUMP_COLS
-#define HEXDUMP_COLS 16
-#endif
-
 #include "hexdump.h"
 
-void hexdump(FILE* archivo, void *memoria, unsigned int len)
+void hexdump(FILE* archivo, void *memoria, unsigned int len, unsigned int columnas)
 {
         unsigned int i, j;
 
-        for(i = 0; i < len + ((len % HEXDUMP_COLS) ? (HEXDUMP_COLS - len % HEXDUMP_COLS) : 0); i++)
+        for(i = 0; i < len + ((len % columnas) ? (columnas - len % columnas) : 0); i++)
         {
                 /* print offset */
-                if(i % HEXDUMP_COLS == 0)
+                if(i % columnas == 0)
                 {
                         fprintf(archivo,"0x%06x: ", i);
                 }
@@ -35,9 +31,9 @@ void hexdump(FILE* archivo, void *memoria, unsigned int len)
                 }
 
                 /* print ASCII dump */
-                if(i % HEXDUMP_COLS == (HEXDUMP_COLS - 1))
+                if(i % columnas == (columnas - 1))
                 {
-                        for(j = i - (HEXDUMP_COLS - 1); j <= i; j++)
+                        for(j = i - (columnas - 1); j <= i; j++)
                         {
                                 if(j >= len) /* end of block, not really printing */
                                 {
