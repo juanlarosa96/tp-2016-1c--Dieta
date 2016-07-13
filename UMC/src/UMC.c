@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 	accesoMemoria = 0;
 
 	//Inicializo log para UMC
-	logger = log_create("UMC.log", "UMC", 1, log_level_from_string("INFO"));
+	logger = log_create("UMC.log", "UMC", 0, log_level_from_string("INFO"));
 
 	//Hilo para Consola de UMC
 	pthread_t hiloConsola;
