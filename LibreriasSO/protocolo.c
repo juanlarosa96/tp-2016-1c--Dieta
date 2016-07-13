@@ -431,7 +431,7 @@ void enviarFinalizacionProgramaUMC(int socketUMC, uint32_t pid) {
 	memcpy(data + offset, &pid, size);
 	offset += size;
 
-	send(socketUMC, data, offset, 0);
+	send(socketUMC, data, offset, MSG_NOSIGNAL);
 
 	free(data);
 }
