@@ -1,1 +1,1 @@
-scp -rpC tp-2016-1c--Dieta/ ansisop-parser/ so-commons-library/ 192.168.3.3:/home/utnso
+scp -rpC tp-2016-1c--Dieta/ ansisop-parser/ so-commons-library/ utnso@192.168.3.3:/home/utnso

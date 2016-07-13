@@ -17,31 +17,31 @@ sudo make install
 
 echo "LibreriasSO instalada."
 
-cd /home/utnso/tp-2016-1c-SO-2016-1C/Consola/src/
+cd /home/utnso/tp-2016-1c--Dieta/Consola/src/
 
 sudo make all
 
 echo "Proceso Consola compilado."
 
-cd /home/utnso/tp-2016-1c-SO-2016-1C/CPU/src/
+cd /home/utnso/tp-2016-1c--Dieta/CPU/src/
 
 sudo make all
 
 echo "Proceso CPU compilado."
 
-cd /home/utnso/tp-2016-1c-SO-2016-1C/Nucleo/src/
+cd /home/utnso/tp-2016-1c--Dieta/Nucleo/src/
 
 sudo make all
 
 echo "Proceso Nucleo compilado."
 
-cd /home/utnso/tp-2016-1c-SO-2016-1C/UMC/src/
+cd /home/utnso/tp-2016-1c--Dieta/UMC/src/
 
 sudo make all
 
 echo "Proceso UMC compilado."
 
-cd /home/utnso/tp-2016-1c-SO-2016-1C/Swap/src/
+cd /home/utnso/tp-2016-1c--Dieta/Swap/src/
 
 sudo make all
 

@@ -1,5 +1,5 @@
 #Creo directorio usb
-mkdir /media/usb
+sudo mkdir /media/usb
 
 #Me fijo que dispositivos hay en el sistema
 ls -l /dev/sd*
@@ -13,7 +13,7 @@ ls -l /dev/sd*
 #sdb1 es el nombre del pendrive si es el unico usb conectado, pero podria tener otro
 
 #Si es FAT
-mount -t vfat /dev/sdb1 /media/usb
+sudo mount -t vfat /dev/sdb1 /media/usb
 
 #Si es NTFS
-mount -t ntfs-3g /dev/sdb1 /media/usb
+sudo mount -t ntfs-3g /dev/sdb1 /media/usb
