@@ -37,7 +37,7 @@ int encontrarPosicionEnListaProcesos(uint32_t pid) {
 
 	usleep(retardo * 1000);
 
-	pthread_mutex_lock(&mutexProcesos);
+	//pthread_mutex_lock(&mutexProcesos);
 	while ((i < list_size(listaProcesos)) && encontrado == 0) {
 		aux = list_get(listaProcesos, i);
 
@@ -47,7 +47,7 @@ int encontrarPosicionEnListaProcesos(uint32_t pid) {
 			i++;
 		}
 	}
-	pthread_mutex_unlock(&mutexProcesos);
+	//pthread_mutex_unlock(&mutexProcesos);
 
 	if (encontrado == 0) {
 		return -1; //no se encontró el pid
@@ -717,15 +717,15 @@ void enviarASwapFinalizarPrograma(uint32_t pid) {
 }
 
 void finalizarPrograma(uint32_t idPrograma) { //creo que está terminada
+	pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
 	int indiceListaProcesos = encontrarPosicionEnListaProcesos(idPrograma);
 
 	if (indiceListaProcesos >= 0) {
-		pthread_mutex_lock(&mutexProcesos); //NO PONER RETARDO ACA PORQUE YA ESTA EN ENCONTRAR POS EN LISTA PROCESOS
 		liberarPaginas(indiceListaProcesos);
 		list_remove_and_destroy_element(listaProcesos, indiceListaProcesos,
 				(void*) destruirProceso);
-		pthread_mutex_unlock(&mutexProcesos);
 	}
+	pthread_mutex_unlock(&mutexProcesos);
 
 	liberarFrames(idPrograma); //pongo ids en cero
 
@@ -745,8 +745,7 @@ void enviarBytesACPU(int socketCPU, void * data, int tamanio) {
 	int fallo = 0;
 	fallo = send(socketCPU, data, tamanio, MSG_NOSIGNAL);
 	if (fallo == -1) {
-		pthread_t socketCPU = pthread_self();
-		log_info(logger, "Thread %d - Se desconectó CPU", socketCPU);
+		log_info(logger, "Thread CPU %d - Se desconectó CPU", socketCPU);
 		free(data);
 		pthread_exit(NULL);
 	}
@@ -1003,8 +1002,8 @@ void dumpEstructuraPaginas(t_nodo_lista_procesos* nodoAux, FILE* archivo) {
 
 void dumpPIDAuxiliar(t_nodo_lista_procesos*nodoAux, FILE*archivo) {
 	fprintf(archivo,
-			"PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
-	printf("PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
+			"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+	printf("PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
 	printf("%d\t%d                            \t%d\n", nodoAux->pid,
 			nodoAux->framesAsignados, nodoAux->cantPaginas);
 	fprintf(archivo, "%d\t%d                            \t%d\n", nodoAux->pid,
@@ -1026,7 +1025,7 @@ void dumpTodosLosProcesos() {
 
 	fprintf(archivo, "\nDump de Memoria Principal\n");
 	pthread_mutex_lock(&mutexMemoriaPrincipal);
-	hexdump(archivo, memoriaPrincipal, tamanioMemoria);
+	hexdump(archivo, memoriaPrincipal, tamanioMemoria, size_frames);
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	fclose(archivo);
 }
@@ -1036,36 +1035,37 @@ void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo) {
 	t_nodo_lista_paginas* nodoAuxPagina;
 	//printf("\nDump memoria del PID:\n");
 	fprintf(archivo, "\nDump memoria del PID:\n");
-	pthread_mutex_lock(&mutexProcesos);
+	//pthread_mutex_lock(&mutexProcesos);
 	while (i < list_size(nodoAux->lista_paginas)) {
 		nodoAuxPagina = list_get(nodoAux->lista_paginas, i);
 		if (nodoAuxPagina->status == 'M') {
 			void*buffer = lecturaMemoria(nodoAuxPagina->nroFrame, 0,
 					size_frames);
-			hexdump(archivo, buffer, size_frames);
+			hexdump(archivo, buffer, size_frames, size_frames);
 			free(buffer);
 		}
 		i++;
 	}
-	pthread_mutex_unlock(&mutexProcesos);
+	//pthread_mutex_unlock(&mutexProcesos);
 }
 
 void dumpPID(uint32_t pid) {
+	pthread_mutex_lock(&mutexProcesos);
 	int indiceProceso = encontrarPosicionEnListaProcesos(pid);
 
 	if (indiceProceso == -1) {
 		printf("PID no valido\n");
+		pthread_mutex_unlock(&mutexProcesos);
 		return;
 	}
 
 	FILE* reporte = fopen("dumpPID.txt", "w+");
 	fprintf(reporte,
-			"PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
-	printf("PID\tCansocketCPUad de Frames Asignados\tCansocketCPUad de Paginas\n");
+			"PID\tCantidad de Frames Asignados\tCantidad de Paginas\n");
+	printf("PID\tCanntidad de Frames Asignados\tCantidad de Paginas\n");
 
-	pthread_mutex_lock(&mutexProcesos);
+	//pthread_mutex_lock(&mutexProcesos);
 	t_nodo_lista_procesos*nodoAux = list_get(listaProcesos, indiceProceso);
-	pthread_mutex_unlock(&mutexProcesos);
 
 	printf("%d\t%d                            \t%d\n", pid,
 			nodoAux->framesAsignados, nodoAux->cantPaginas);
@@ -1074,6 +1074,7 @@ void dumpPID(uint32_t pid) {
 
 	dumpEstructuraPaginas(nodoAux, reporte);
 	dumpMemoriaPID(nodoAux, reporte);
+	pthread_mutex_unlock(&mutexProcesos);
 
 	fclose(reporte);
 
@@ -1095,7 +1096,7 @@ void consolaUMC(void) {
 		printf("Ingrese comando:\n");
 		scanf("%s", comando);
 		if (strncasecmp(comando, "flush", 5) == 0) {
-			printf("¿Sobre que quiere hacer flush?\n-tlb\n-memory");
+			printf("¿Sobre que quiere hacer flush?\n-tlb \n-memory \n");
 			scanf("%s", comando);
 
 			if (strncasecmp(comando, "tlb", 3) == 0) {
