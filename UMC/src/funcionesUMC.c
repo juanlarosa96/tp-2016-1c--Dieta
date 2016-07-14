@@ -138,7 +138,7 @@ void entradaTLBdestroy(t_entrada_tlb* self) {
 	free(self);
 }
 
-void lru(int paginaNueva, uint32_t pid, uint32_t frame, int socketCPU) { //antes de llamar a lru mutex TLB
+void lru(int paginaNueva, uint32_t pid, uint32_t frame, int socketCPU, int acceso) { //antes de llamar a lru mutex TLB
 
 	int indiceVictima = buscarEntradaMenosUsadaRecientemente();
 	uint32_t paginaAnterior, pidAnterior;
@@ -150,9 +150,9 @@ void lru(int paginaNueva, uint32_t pid, uint32_t frame, int socketCPU) { //antes
 	pidAnterior = entradaAuxiliar->pid;
 	entradaAuxiliar->pid = pid;
 	entradaAuxiliar->nroFrame = frame;
-	pthread_mutex_lock(&mutexContadorMemoria);
-	entradaAuxiliar->ultAcceso = accesoMemoria; //OJO VARIABLE GLOBAL
-	pthread_mutex_unlock(&mutexContadorMemoria);
+	//pthread_mutex_lock(&mutexContadorMemoria);
+	entradaAuxiliar->ultAcceso = acceso; //OJO VARIABLE GLOBAL
+	//pthread_mutex_unlock(&mutexContadorMemoria);
 	/*list_replace_and_destroy_element(TLB, indiceVictima, entradaAuxiliar,
 	 (void *) entradaTLBdestroy);*/
 	log_info(logger,
@@ -290,8 +290,22 @@ void actualizarBitModificado(uint32_t frame) {
 	pthread_mutex_unlock(&mutexFrames);
 
 }
+void * leerPagina(uint32_t frame) {
+	void * bytes = malloc(size_frames);
+	int posicion = (int) frame * size_frames;
 
-void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
+	usleep(retardo * 1000);
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
+	void * posicionAux = memoriaPrincipal + posicion;
+	memcpy(bytes, posicionAux, size_frames);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	pthread_mutex_lock(&mutexContadorMemoria);
+	accesoMemoria++;
+	pthread_mutex_unlock(&mutexContadorMemoria);
+	return bytes;
+}
+
+void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio, int * acceso) {
 	void * bytes = malloc(tamanio);
 	int posicion = (int) frame * size_frames + offset;
 
@@ -302,13 +316,28 @@ void * lecturaMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio) {
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	pthread_mutex_lock(&mutexContadorMemoria);
 	accesoMemoria++;
+	*acceso = accesoMemoria;
 	pthread_mutex_unlock(&mutexContadorMemoria);
 	actualizarBitReferencia(frame);
 	return bytes;
 }
 
+void escribirPagina(uint32_t frame, void * buffer) {
+	int posicion = (int) frame * size_frames;
+	usleep(retardo * 1000);
+	pthread_mutex_lock(&mutexMemoriaPrincipal);
+	void * posicionAux = memoriaPrincipal + posicion;
+	memcpy(posicionAux, buffer, size_frames);
+	pthread_mutex_unlock(&mutexMemoriaPrincipal);
+	pthread_mutex_lock(&mutexContadorMemoria);
+	accesoMemoria++;
+	pthread_mutex_unlock(&mutexContadorMemoria);
+	actualizarBitReferencia(frame);
+	free(buffer);
+}
+
 void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
-		void * buffer) {
+		void * buffer, int * acceso) {
 	int posicion = (int) frame * size_frames + offset;
 	usleep(retardo * 1000);
 	pthread_mutex_lock(&mutexMemoriaPrincipal);
@@ -317,6 +346,7 @@ void escrituraMemoria(uint32_t frame, uint32_t offset, uint32_t tamanio,
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	pthread_mutex_lock(&mutexContadorMemoria);
 	accesoMemoria++;
+	*acceso = accesoMemoria;
 	pthread_mutex_unlock(&mutexContadorMemoria);
 	actualizarBitReferencia(frame);
 	free(buffer);
@@ -521,7 +551,7 @@ void actualizarPaginaAReemplazar(t_nodo_lista_procesos * nodoProceso,
 	log_info(logger, "Thread CPU %d - Se reemplaza página nro %d, del proceso PID %d", socketCPU, nodoPagina->nro_pagina, nodoProceso->pid);
 	//pthread_mutex_unlock(&mutexProcesos);
 	if (bitModificado == 1) {
-		void * pagina = lecturaMemoria(idFrame, 0, size_frames);
+		void * pagina = leerPagina(idFrame);
 		enviarPaginaASwap(nodoPagina->nro_pagina, nodoProceso->pid, pagina);
 		log_info(logger, "Thread CPU %d - Se envía a Swap página nro %d, del proceso PID %d", socketCPU, nodoPagina->nro_pagina, nodoProceso->pid);
 	}
@@ -573,14 +603,15 @@ void algoritmoDeReemplazo(uint32_t pid, uint32_t paginaNueva,
 
 	actualizarNodoPaginaNuevaCargadaEnM(nodoProceso, *idFrame, paginaNueva); //cambia status de nueva pagina cargada en memoria
 
-	escrituraMemoria(*idFrame, 0, size_frames, codigoPagina);
+	//escrituraMemoria(*idFrame, 0, size_frames, codigoPagina);
+	escribirPagina(*idFrame, codigoPagina);
 
 	log_info(logger,
 			"Thread CPU %d - Se ejecutó algoritmo de reemplazo de páginas %s en memoria del proceso PID %d.", socketCPU, algoritmo,
 			pid);
 }
 
-void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
+void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame, int acceso) {
 	t_entrada_tlb* nodoAux;
 	int i = 0;
 	int acierto = 0;
@@ -589,9 +620,9 @@ void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
 	while (i < list_size(TLB) && acierto == 0) {
 		nodoAux = list_get(TLB, i);
 		if (nodoAux->pid == pid && nodoAux->nroFrame == (uint32_t) nroFrame) {
-			pthread_mutex_lock(&mutexContadorMemoria);
-			nodoAux->ultAcceso = accesoMemoria;
-			pthread_mutex_unlock(&mutexContadorMemoria);
+			//pthread_mutex_lock(&mutexContadorMemoria);
+			nodoAux->ultAcceso = acceso;
+			//pthread_mutex_unlock(&mutexContadorMemoria);
 			acierto = 1;
 		}
 		i++;
@@ -600,7 +631,7 @@ void actualizarBitUltimoAccesoTLB(uint32_t pid, int nroFrame) {
 
 }
 
-void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame, int socketCPU) {
+void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame, int socketCPU, int acceso) {
 	t_entrada_tlb* aux;
 	int i = 0;
 	int acierto = 0;
@@ -612,16 +643,16 @@ void cargarEnTLB(uint32_t pid, uint32_t nroPagina, uint32_t nroFrame, int socket
 			aux->pid = pid;
 			aux->nroFrame = nroFrame;
 			aux->nroPagina = nroPagina;
-			pthread_mutex_lock(&mutexContadorMemoria);
-			aux->ultAcceso = accesoMemoria;
-			pthread_mutex_unlock(&mutexContadorMemoria);
+			//pthread_mutex_lock(&mutexContadorMemoria);
+			aux->ultAcceso = acceso;
+			//pthread_mutex_unlock(&mutexContadorMemoria);
 			acierto = 1;
 		}
 		i++;
 	}
 
 	if (acierto == 0) {
-		lru(nroPagina, pid, nroFrame, socketCPU);
+		lru(nroPagina, pid, nroFrame, socketCPU, acceso);
 	}
 	pthread_mutex_unlock(&mutexTLB);
 
@@ -682,7 +713,7 @@ int cargarPaginaEnMemoria(uint32_t pid, uint32_t nroPagina, void *buffer,
 		//pthread_mutex_unlock(&mutexProcesos);
 		actualizarNodoPaginaNuevaCargadaEnM(auxProceso, *idFrame, nroPagina);
 		pthread_mutex_unlock(&mutexFrames);
-		escrituraMemoria(*idFrame, 0, size_frames, buffer);
+		escribirPagina(*idFrame, buffer);
 
 	} else {
 		algoritmoDeReemplazo(pid, nroPagina, buffer, idFrame, auxProceso, socketCPU);
@@ -757,13 +788,14 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 
 	void * data;
 	int nroFrame;
+	int acceso;
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
 			log_info(logger, "Thread CPU %d - TLB hit", socketCPU);
-			data = lecturaMemoria(nroFrame, offset, tamanio);
-			actualizarBitUltimoAccesoTLB(pid, nroFrame);
+			data = lecturaMemoria(nroFrame, offset, tamanio, &acceso);
+			actualizarBitUltimoAccesoTLB(pid, nroFrame, acceso);
 			enviarPedidoMemoriaOK(socketCPU);
 			enviarBytesACPU(socketCPU, data, tamanio);
 			log_info(logger,
@@ -801,10 +833,10 @@ void solicitarBytesDeUnaPag(int nroPagina, int offset, int tamanio,
 		return;
 	}
 
-	data = lecturaMemoria(nroFrame, offset, tamanio);
+	data = lecturaMemoria(nroFrame, offset, tamanio, &acceso);
 
 	if (entradasTLB > 0) {
-		cargarEnTLB(pid, nroPagina, nroFrame, socketCPU);
+		cargarEnTLB(pid, nroPagina, nroFrame, socketCPU, acceso);
 		//actualizarBitUltimoAccesoTLB(pid, nroFrame);
 	}
 
@@ -821,13 +853,14 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		void * buffer, uint32_t pid, int socketCPU) {
 
 	int nroFrame;
+	int acceso;
 
 	if (entradasTLB > 0) {
 		nroFrame = buscarEnTLB(pid, nroPagina);
 		if (nroFrame > -1) { //TLB Hit
 			log_info(logger, "Thread CPU %d - TLB hit", socketCPU);
-			escrituraMemoria(nroFrame, offset, tamanio, buffer);
-			actualizarBitUltimoAccesoTLB(pid, nroFrame);
+			escrituraMemoria(nroFrame, offset, tamanio, buffer, &acceso);
+			actualizarBitUltimoAccesoTLB(pid, nroFrame, acceso);
 			actualizarBitModificado(nroFrame);
 			enviarPedidoMemoriaOK(socketCPU);
 			log_info(logger,
@@ -866,11 +899,11 @@ void almacenarBytesEnUnaPag(int nroPagina, int offset, int tamanio,
 		return;
 	}
 
-	escrituraMemoria(nroFrame, offset, tamanio, buffer);
+	escrituraMemoria(nroFrame, offset, tamanio, buffer, &acceso);
 	actualizarBitModificado(nroFrame);
 
 	if (entradasTLB > 0) {
-		cargarEnTLB(pid, nroPagina, nroFrame, socketCPU);
+		cargarEnTLB(pid, nroPagina, nroFrame, socketCPU, acceso);
 		//actualizarBitUltimoAccesoTLB(pid, nroFrame);
 	}
 
@@ -1039,8 +1072,7 @@ void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo) {
 	while (i < list_size(nodoAux->lista_paginas)) {
 		nodoAuxPagina = list_get(nodoAux->lista_paginas, i);
 		if (nodoAuxPagina->status == 'M') {
-			void*buffer = lecturaMemoria(nodoAuxPagina->nroFrame, 0,
-					size_frames);
+			void*buffer = leerPagina(nodoAuxPagina->nroFrame);
 			hexdump(archivo, buffer, size_frames, size_frames);
 			free(buffer);
 		}
