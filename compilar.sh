@@ -4,7 +4,7 @@ cd /home/utnso/so-commons-library/
 
 sudo make install
 
-cd /home/utnso/parser-ansisop/parser/
+cd /home/utnso/ansisop-parser/parser/
 
 sudo make all
 sudo make install
