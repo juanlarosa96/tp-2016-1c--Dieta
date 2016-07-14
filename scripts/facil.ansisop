@@ -1,4 +1,4 @@
-#!/home/utnso/tp-2016-1c-SO-2016-1C/Consola/src/Consola
+#!/home/utnso/Escritorio/TP/tp-2016-1c--Dieta/Consola/src/Consola
 begin
 	variables a, b
 	a = 3

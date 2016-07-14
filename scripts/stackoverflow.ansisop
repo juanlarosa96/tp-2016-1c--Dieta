@@ -1,4 +1,4 @@
-#!/home/utnso/tp-2016-1c-SO-2016-1C/Consola/src/Consola
+#!/home/utnso/Escritorio/TP/tp-2016-1c--Dieta/Consola/src/Consola
 #Overflow en el numero 3*4 + 5 % 300 = 16
 begin
 	variables r
