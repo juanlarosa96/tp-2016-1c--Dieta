@@ -8,8 +8,6 @@
 
 int iniciarProgramaAnsisop(int cliente, char*archivo) {
 
-	t_proceso * proceso = malloc(sizeof(t_proceso));
-
 	int cantPaginasTotal;
 	recibirTodo(cliente, &cantPaginasTotal, sizeof(int));
 
@@ -21,6 +19,8 @@ int iniciarProgramaAnsisop(int cliente, char*archivo) {
 	} else {
 		avisarUMCExito(cliente);
 	}
+
+	t_proceso * proceso = malloc(sizeof(t_proceso));
 
 	uint32_t pid;
 	recibirTodo(cliente, &pid, sizeof(uint32_t));
@@ -74,7 +74,7 @@ void guardarPaginas(int cliente, char*archivo) {
 			break;
 		}
 
-	}
+	} //aca no le falta el free de la pagina?
 
 	log_info(logger, "Se almacenó página nro %d del proceso PID %d.", nroPagina, pID);
 }
