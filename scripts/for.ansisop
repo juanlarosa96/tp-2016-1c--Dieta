@@ -1,4 +1,4 @@
-#!/home/utnso/Escritorio/TP/tp-2016-1c--Dieta/Consola/src/Consola
+#!/home/utnso/tp-2016-1c--Dieta/Consola/src/Consola
 begin
 variables f, i, t
 
