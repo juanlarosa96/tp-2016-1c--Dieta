@@ -991,6 +991,7 @@ void inicializarPrograma(uint32_t idPrograma, int paginasRequeridas,
 		log_info(logger,
 				"Thread Nucleo - No se pudo inicializar programa PID %d. No hay espacio en Swap",
 				idPrograma);
+		free(codigoPrograma);
 		pthread_mutex_unlock(&mutexSwap);
 		return;
 	}
