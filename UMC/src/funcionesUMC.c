@@ -1058,7 +1058,7 @@ void dumpTodosLosProcesos() {
 
 	fprintf(archivo, "\nDump de Memoria Principal\n");
 	pthread_mutex_lock(&mutexMemoriaPrincipal);
-	hexdump(archivo, memoriaPrincipal, tamanioMemoria, size_frames);
+	hexdump(archivo, memoriaPrincipal, tamanioMemoria);
 	pthread_mutex_unlock(&mutexMemoriaPrincipal);
 	fclose(archivo);
 }
@@ -1073,7 +1073,7 @@ void dumpMemoriaPID(t_nodo_lista_procesos* nodoAux, FILE*archivo) {
 		nodoAuxPagina = list_get(nodoAux->lista_paginas, i);
 		if (nodoAuxPagina->status == 'M') {
 			void*buffer = leerPagina(nodoAuxPagina->nroFrame);
-			hexdump(archivo, buffer, size_frames, size_frames);
+			hexdump(archivo, buffer, size_frames);
 			free(buffer);
 		}
 		i++;

@@ -12,6 +12,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-void hexdump(FILE * archivo, void *memoria, unsigned int len, unsigned int columnas);
+void hexdump(FILE * archivo, void *memoria, unsigned int len);
 
 #endif /* HEXDUMP_H_ */
