@@ -15,7 +15,8 @@
 AnSISOP_funciones functions = { .AnSISOP_definirVariable = definirVariable, .AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable,
 		.AnSISOP_dereferenciar = dereferenciar, .AnSISOP_asignar = asignar, .AnSISOP_imprimir = imprimir, .AnSISOP_imprimirTexto = imprimirTexto,
 		.AnSISOP_retornar = retornar, .AnSISOP_llamarConRetorno = llamarConRetorno, .AnSISOP_finalizar = finalizar, .AnSISOP_entradaSalida =
-				entradaSalida, .AnSISOP_irAlLabel = irAlLabel, .AnSISOP_obtenerValorCompartida = obtenerValorCompartida, .AnSISOP_asignarValorCompartida = asignarValorCompartida };
+				entradaSalida, .AnSISOP_irAlLabel = irAlLabel, .AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida };
 
 AnSISOP_kernel kernel_functions = { .AnSISOP_wait = parserWait, .AnSISOP_signal = parserSignal };
 
@@ -101,7 +102,6 @@ int main(int argc, char *argv[]) {
 
 	while (!signalApagado) {
 
-
 		sem_post(&semRecibirHeader);
 		sem_wait(&semComenzarQuantum);
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case headerPcb:
-				if(primeraVez){
+				if (primeraVez) {
 					destruirPcb(pcbRecibido);
 				}
 				primeraVez = 1;
@@ -128,7 +128,6 @@ int main(int argc, char *argv[]) {
 
 				avisarANucleoCPUListo(socketNucleo);
 				if (!signalApagado) {
-
 
 					enviarCambioProcesoActivo(socketUMC, pcbRecibido.pid);
 					log_info(logger, "Nuevo proceso activo PID: %d\n", pcbRecibido.pid);
@@ -171,7 +170,6 @@ int main(int argc, char *argv[]) {
 				} else {
 
 					avisarANucleoFinalizacionDeCPU(socketNucleo);
-
 
 				}
 				break;

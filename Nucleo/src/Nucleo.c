@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 	if (inotify < 0) {
 		log_error(logger, "Error inicializando inotify");
 	}
-	int watch_descriptor = inotify_add_watch(inotify, argv[1], IN_CLOSE_WRITE);
+	inotify_add_watch(inotify, argv[1], IN_CLOSE_WRITE);
 
 	if (crearSocket(&clienteUMC)) {
 		printf("Error creando socket\n");
